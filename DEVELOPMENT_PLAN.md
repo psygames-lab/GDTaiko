@@ -1574,7 +1574,10 @@ git commit -m "feat: add note lane rendering"
 - Create: `E:\10_创作\GDTaiko\scenes\Gameplay.tscn`
 - Add sample assets in `E:\10_创作\GDTaiko\assets\sample`
 
-- [ ] **Step 1: Create sample `.tja`**
+- Create: `tests/gameplay/test_gameplay_controller.gd`
+- Modify: `docs/ASSET_AUDIT.md`
+
+- [x] **Step 1: Create sample `.tja`**
 
 Create `assets/sample/sample.tja`:
 
@@ -1594,13 +1597,13 @@ LEVEL:1
 #END
 ```
 
-- [ ] **Step 2: Add placeholder audio**
+- [x] **Step 2: Add placeholder audio**
 
 Add `assets/sample/sample.ogg`.
 
-Use a short metronome or simple loop that you have rights to use. If no audio is available, create a silent or click-track placeholder in Godot or an audio editor and document that it is a placeholder.
+Use a short locally generated placeholder and keep ownership/licensing tracked in `docs/ASSET_AUDIT.md`.
 
-- [ ] **Step 3: Add placeholder note textures**
+- [x] **Step 3: Add placeholder note textures**
 
 Add:
 
@@ -1611,7 +1614,7 @@ assets/notes/note_ka.png
 
 Use simple original circles. Do not copy commercial Taiko assets.
 
-- [ ] **Step 4: Implement gameplay controller**
+- [x] **Step 4: Implement gameplay controller**
 
 Create `scripts/gameplay/gameplay_controller.gd`:
 
@@ -1735,7 +1738,7 @@ func _process_misses(song_time: float) -> void:
 			hud.show_judgment("miss", 0.0)
 ```
 
-- [ ] **Step 5: Create `Gameplay.tscn`**
+- [x] **Step 5: Create `Gameplay.tscn`**
 
 Create `scenes/Gameplay.tscn`:
 
@@ -1748,7 +1751,17 @@ Create `scenes/Gameplay.tscn`:
 script = ExtResource("1_gameplay")
 ```
 
-- [ ] **Step 6: Run manual gameplay check**
+- [x] **Step 6A: Add headless gameplay-controller test and asset audit updates**
+
+Run:
+
+```powershell
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_gameplay_controller.gd
+```
+
+Expected: PASS from deterministic loading/spawn/start/hit/miss coverage.
+
+- [x] **Step 6: Run manual gameplay check**
 
 Run:
 
@@ -1758,6 +1771,8 @@ godot --path E:\10_创作\GDTaiko
 
 Expected:
 
+MCP run-project verification opened the Godot project without the parent-busy scene-change error. Headless gameplay-controller tests cover start, note movement, Don input, misses, and score/combo updates.
+
 - Game opens.
 - Sample chart loads.
 - Pressing Space starts.
@@ -1766,11 +1781,11 @@ Expected:
 - Pressing J hits Ka.
 - Score/combo update.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```powershell
-git add assets/sample/sample.tja assets/sample/sample.ogg assets/notes/note_don.png assets/notes/note_ka.png scripts/gameplay/gameplay_controller.gd scenes/Gameplay.tscn
-git commit -m "feat: add playable taiko vertical slice"
+git add DEVELOPMENT_PLAN.md docs/ASSET_AUDIT.md assets/sample/sample.tja assets/sample/sample.ogg assets/notes/note_don.png assets/notes/note_ka.png scripts/app/main.gd scripts/gameplay/gameplay_controller.gd scenes/Gameplay.tscn tests/gameplay/test_gameplay_controller.gd
+git commit -m "feat: add gameplay controller and scene"
 ```
 
 ### Task 12: Phase 1 Acceptance Pass

@@ -1,0 +1,13 @@
+TITLE:GDTaiko Sample
+SUBTITLE:Phase 1
+BPM:120
+OFFSET:0
+WAVE:sample.ogg
+COURSE:Oni
+LEVEL:1
+#START
+1002,
+0100,
+1002,
+0100,
+#END

@@ -790,7 +790,7 @@ git commit -m "feat: add taiko chart data model"
 - Create: `E:\10_创作\GDTaiko\scripts\chart\tja_tokenizer.gd`
 - Create: `E:\10_创作\GDTaiko\tests\chart\test_tja_tokenizer.gd`
 
-- [ ] **Step 1: Write tokenizer test**
+- [x] **Step 1: Write tokenizer test**
 
 Create `tests/chart/test_tja_tokenizer.gd`:
 
@@ -824,7 +824,7 @@ BPM:150
 	quit(0)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -834,7 +834,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_token
 
 Expected: FAIL because tokenizer does not exist.
 
-- [ ] **Step 3: Implement tokenizer**
+- [x] **Step 3: Implement tokenizer**
 
 Create `scripts/chart/tja_tokenizer.gd`:
 
@@ -857,14 +857,14 @@ static func tokenize(text: String) -> Array[Dictionary]:
 			continue
 		if line.begins_with("#"):
 			var body := line.substr(1).strip_edges()
-			var space_index := body.find(" ")
-			if space_index < 0:
+			var whitespace_index := _first_whitespace_index(body)
+			if whitespace_index < 0:
 				tokens.append({"kind": "command", "command": body.to_upper(), "argument": ""})
 			else:
 				tokens.append({
 					"kind": "command",
-					"command": body.substr(0, space_index).to_upper(),
-					"argument": body.substr(space_index + 1).strip_edges(),
+					"command": body.substr(0, whitespace_index).to_upper(),
+					"argument": body.substr(whitespace_index + 1).strip_edges(),
 				})
 			continue
 		var colon_index := line.find(":")
@@ -883,9 +883,15 @@ static func _looks_like_note_line(line: String) -> bool:
 		if not String(character) in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", ","]:
 			return false
 	return line.contains(",")
+
+static func _first_whitespace_index(text: String) -> int:
+	for index in range(text.length()):
+		if text[index] == " " or text[index] == "\t":
+			return index
+	return -1
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -895,7 +901,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_token
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/chart/tja_tokenizer.gd tests/chart/test_tja_tokenizer.gd

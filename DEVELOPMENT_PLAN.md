@@ -688,7 +688,7 @@ Existing task snippets that use bare `assert()` should be wrapped in this exit-c
 - Create: `E:\10_创作\GDTaiko\scripts\chart\taiko_chart.gd`
 - Create: `E:\10_创作\GDTaiko\tests\chart\test_taiko_chart.gd`
 
-- [ ] **Step 1: Write the failing data model test**
+- [x] **Step 1: Write the failing data model test**
 
 Create `tests/chart/test_taiko_chart.gd`:
 
@@ -713,7 +713,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -723,7 +723,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_taiko_cha
 
 Expected: FAIL because `scripts/chart/taiko_chart.gd` does not exist.
 
-- [ ] **Step 3: Implement `TaikoChart`**
+- [x] **Step 3: Implement `TaikoChart`**
 
 Create `scripts/chart/taiko_chart.gd`:
 
@@ -753,7 +753,7 @@ func add_note(time_sec: float, lane: String, kind: String, measure_index: int, s
 		"state": "pending",
 	})
 
-func add_timing_event(time_sec: float, event_type: String, value) -> void:
+func add_timing_event(time_sec: float, event_type: String, value: Variant) -> void:
 	timing_events.append({
 		"time_sec": time_sec,
 		"type": event_type,
@@ -766,7 +766,7 @@ func sort_notes() -> void:
 	)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -776,7 +776,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_taiko_cha
 
 Expected: PASS with exit code 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/chart/taiko_chart.gd tests/chart/test_taiko_chart.gd
@@ -790,7 +790,7 @@ git commit -m "feat: add taiko chart data model"
 - Create: `E:\10_创作\GDTaiko\scripts\chart\tja_tokenizer.gd`
 - Create: `E:\10_创作\GDTaiko\tests\chart\test_tja_tokenizer.gd`
 
-- [ ] **Step 1: Write tokenizer test**
+- [x] **Step 1: Write tokenizer test**
 
 Create `tests/chart/test_tja_tokenizer.gd`:
 
@@ -824,7 +824,7 @@ BPM:150
 	quit(0)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -834,7 +834,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_token
 
 Expected: FAIL because tokenizer does not exist.
 
-- [ ] **Step 3: Implement tokenizer**
+- [x] **Step 3: Implement tokenizer**
 
 Create `scripts/chart/tja_tokenizer.gd`:
 
@@ -857,14 +857,14 @@ static func tokenize(text: String) -> Array[Dictionary]:
 			continue
 		if line.begins_with("#"):
 			var body := line.substr(1).strip_edges()
-			var space_index := body.find(" ")
-			if space_index < 0:
+			var whitespace_index := _first_whitespace_index(body)
+			if whitespace_index < 0:
 				tokens.append({"kind": "command", "command": body.to_upper(), "argument": ""})
 			else:
 				tokens.append({
 					"kind": "command",
-					"command": body.substr(0, space_index).to_upper(),
-					"argument": body.substr(space_index + 1).strip_edges(),
+					"command": body.substr(0, whitespace_index).to_upper(),
+					"argument": body.substr(whitespace_index + 1).strip_edges(),
 				})
 			continue
 		var colon_index := line.find(":")
@@ -883,9 +883,15 @@ static func _looks_like_note_line(line: String) -> bool:
 		if not String(character) in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", ","]:
 			return false
 	return line.contains(",")
+
+static func _first_whitespace_index(text: String) -> int:
+	for index in range(text.length()):
+		if text[index] == " " or text[index] == "\t":
+			return index
+	return -1
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -895,7 +901,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_token
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/chart/tja_tokenizer.gd tests/chart/test_tja_tokenizer.gd
@@ -910,7 +916,7 @@ git commit -m "feat: tokenize tja chart text"
 - Create: `E:\10_创作\GDTaiko\tests\chart\test_tja_parser.gd`
 - Modify: `E:\10_创作\GDTaiko\scripts\chart\taiko_chart.gd`
 
-- [ ] **Step 1: Write parser test**
+- [x] **Step 1: Write parser test**
 
 Create `tests/chart/test_tja_parser.gd`:
 
@@ -947,11 +953,13 @@ LEVEL:5
 	assert(chart.notes[2]["lane"] == "don")
 	assert(is_equal_approx(chart.notes[0]["time_sec"], -0.5))
 	assert(is_equal_approx(chart.notes[1]["time_sec"], 1.0))
-	assert(is_equal_approx(chart.notes[2]["time_sec"], 2.5))
+	assert(is_equal_approx(chart.notes[2]["time_sec"], 2.0))
 	quit(0)
 ```
 
-- [ ] **Step 2: Run parser test to verify it fails**
+The third note is `2.0` seconds because the second measure starts at chart time `2.0`, slot index `1` adds `0.5`, and `OFFSET:-0.5` is applied to note time.
+
+- [x] **Step 2: Run parser test to verify it fails**
 
 Run:
 
@@ -961,7 +969,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parse
 
 Expected: FAIL because parser does not exist.
 
-- [ ] **Step 3: Implement parser**
+- [x] **Step 3: Implement parser**
 
 Create `scripts/chart/tja_parser.gd`:
 
@@ -1100,7 +1108,7 @@ static func _lane_for_note_char(value: String) -> String:
 	return ""
 ```
 
-- [ ] **Step 4: Run parser test to verify it passes**
+- [x] **Step 4: Run parser test to verify it passes**
 
 Run:
 
@@ -1110,7 +1118,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parse
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/chart/tja_parser.gd tests/chart/test_tja_parser.gd
@@ -1124,7 +1132,7 @@ git commit -m "feat: parse phase one tja charts"
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\judge.gd`
 - Create: `E:\10_创作\GDTaiko\tests\gameplay\test_judge.gd`
 
-- [ ] **Step 1: Write judge test**
+- [x] **Step 1: Write judge test**
 
 Create `tests/gameplay/test_judge.gd`:
 
@@ -1144,7 +1152,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -1154,7 +1162,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_judge.
 
 Expected: FAIL because `judge.gd` does not exist.
 
-- [ ] **Step 3: Implement judge**
+- [x] **Step 3: Implement judge**
 
 Create `scripts/gameplay/judge.gd`:
 
@@ -1186,7 +1194,7 @@ func is_expired(scheduled_time_sec: float, song_time_sec: float) -> bool:
 	return song_time_sec > scheduled_time_sec + BAD_SEC
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -1196,7 +1204,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_judge.
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/gameplay/judge.gd tests/gameplay/test_judge.gd
@@ -1210,7 +1218,7 @@ git commit -m "feat: add taiko timing judge"
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\scoring.gd`
 - Create: `E:\10_创作\GDTaiko\tests\gameplay\test_scoring.gd`
 
-- [ ] **Step 1: Write scoring test**
+- [x] **Step 1: Write scoring test**
 
 Create `tests/gameplay/test_scoring.gd`:
 
@@ -1235,7 +1243,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -1245,7 +1253,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scorin
 
 Expected: FAIL because `scoring.gd` does not exist.
 
-- [ ] **Step 3: Implement scoring**
+- [x] **Step 3: Implement scoring**
 
 Create `scripts/gameplay/scoring.gd`:
 
@@ -1290,7 +1298,7 @@ func apply_judgment(judgment: String) -> void:
 	max_combo = max(max_combo, combo)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -1312,8 +1320,9 @@ git commit -m "feat: add basic taiko scoring"
 **Files:**
 
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\song_clock.gd`
+- Create: `E:\10_创作\GDTaiko\tests\gameplay\test_song_clock.gd`
 
-- [ ] **Step 1: Implement clock**
+- [x] **Step 1: Implement clock**
 
 Create `scripts/gameplay/song_clock.gd`:
 
@@ -1345,14 +1354,20 @@ func time_sec() -> float:
 	return fallback_time_sec + chart_offset_sec
 ```
 
-- [ ] **Step 2: Add simple manual verification scene hook**
+- [x] **Step 2: Add focused headless SongClock test**
 
-Do not add gameplay logic yet. This file will be consumed by Task 10.
+Run:
+
+```powershell
+godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_song_clock.gd
+```
+
+Expected: PASS.
 
 - [ ] **Step 3: Commit**
 
 ```powershell
-git add scripts/gameplay/song_clock.gd
+git add scripts/gameplay/song_clock.gd tests/gameplay/test_song_clock.gd
 git commit -m "feat: add song clock"
 ```
 
@@ -1363,7 +1378,7 @@ git commit -m "feat: add song clock"
 - Create: `E:\10_创作\GDTaiko\scenes\Main.tscn`
 - Create: `E:\10_创作\GDTaiko\scripts\app\main.gd`
 
-- [ ] **Step 1: Create `main.gd`**
+- [x] **Step 1: Create `main.gd`**
 
 Create `scripts/app/main.gd`:
 
@@ -1374,7 +1389,7 @@ func _ready() -> void:
 	get_tree().change_scene_to_file("res://scenes/Gameplay.tscn")
 ```
 
-- [ ] **Step 2: Create `Main.tscn`**
+- [x] **Step 2: Create `Main.tscn`**
 
 Create `scenes/Main.tscn`:
 
@@ -1387,15 +1402,15 @@ Create `scenes/Main.tscn`:
 script = ExtResource("1_main")
 ```
 
-- [ ] **Step 3: Run scene**
+- [x] **Step 3: Add and run headless scene verification**
 
 Run:
 
 ```powershell
-godot --path E:\10_创作\GDTaiko
+godot --headless --path E:\10_����\GDTaiko\.worktrees\phase1-task2-chart-model -s res://tests/app/test_main_scene.gd
 ```
 
-Expected: Godot opens and attempts to load `Gameplay.tscn`. It may fail until Task 11 creates the gameplay scene.
+Expected: The headless test asserts `Main` node and script without entering the scene tree.
 
 - [ ] **Step 4: Commit**
 
@@ -1403,14 +1418,14 @@ Expected: Godot opens and attempts to load `Gameplay.tscn`. It may fail until Ta
 git add scenes/Main.tscn scripts/app/main.gd
 git commit -m "feat: add main scene entrypoint"
 ```
-
 ### Task 9: Add HUD
 
 **Files:**
 
 - Create: `E:\10_创作\GDTaiko\scripts\ui\hud.gd`
+- Create: `tests\ui\test_hud.gd`
 
-- [ ] **Step 1: Implement HUD script**
+- [x] **Step 1: Implement HUD script**
 
 Create `scripts/ui/hud.gd`:
 
@@ -1451,10 +1466,16 @@ func _label(text: String, position: Vector2, font_size: int) -> Label:
 	return label
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Add focused HUD test**
+
+Create `tests/ui/test_hud.gd`.
+
+Expected: HUD labels and text updates are deterministic in headless tests.
+
+- [x] **Step 3: Commit**
 
 ```powershell
-git add scripts/ui/hud.gd
+git add DEVELOPMENT_PLAN.md scripts/ui/hud.gd tests/ui/test_hud.gd
 git commit -m "feat: add gameplay hud"
 ```
 
@@ -1464,8 +1485,9 @@ git commit -m "feat: add gameplay hud"
 
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\note_lane.gd`
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\note_model.gd`
+- Create: `E:\10_创作\GDTaiko\tests\gameplay\test_note_lane.gd`
 
-- [ ] **Step 1: Implement note model constants**
+- [x] **Step 1: Implement note model constants**
 
 Create `scripts/gameplay/note_model.gd`:
 
@@ -1480,7 +1502,7 @@ const HIT := "hit"
 const MISSED := "missed"
 ```
 
-- [ ] **Step 2: Implement note lane**
+- [x] **Step 2: Implement note lane**
 
 Create `scripts/gameplay/note_lane.gd`:
 
@@ -1527,10 +1549,20 @@ func update_notes(notes: Array[Dictionary], song_time_sec: float) -> void:
 		sprite.visible = String(note.get("state", "pending")) == "pending"
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Add focused note lane test**
+
+Run:
 
 ```powershell
-git add scripts/gameplay/note_model.gd scripts/gameplay/note_lane.gd
+godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_note_lane.gd
+```
+
+Expected: PASS.
+
+- [x] **Step 4: Commit**
+
+```powershell
+git add scripts/gameplay/note_model.gd scripts/gameplay/note_lane.gd tests/gameplay/test_note_lane.gd
 git commit -m "feat: add note lane rendering"
 ```
 
@@ -1542,7 +1574,10 @@ git commit -m "feat: add note lane rendering"
 - Create: `E:\10_创作\GDTaiko\scenes\Gameplay.tscn`
 - Add sample assets in `E:\10_创作\GDTaiko\assets\sample`
 
-- [ ] **Step 1: Create sample `.tja`**
+- Create: `tests/gameplay/test_gameplay_controller.gd`
+- Modify: `docs/ASSET_AUDIT.md`
+
+- [x] **Step 1: Create sample `.tja`**
 
 Create `assets/sample/sample.tja`:
 
@@ -1562,13 +1597,13 @@ LEVEL:1
 #END
 ```
 
-- [ ] **Step 2: Add placeholder audio**
+- [x] **Step 2: Add placeholder audio**
 
 Add `assets/sample/sample.ogg`.
 
-Use a short metronome or simple loop that you have rights to use. If no audio is available, create a silent or click-track placeholder in Godot or an audio editor and document that it is a placeholder.
+Use a short locally generated placeholder and keep ownership/licensing tracked in `docs/ASSET_AUDIT.md`.
 
-- [ ] **Step 3: Add placeholder note textures**
+- [x] **Step 3: Add placeholder note textures**
 
 Add:
 
@@ -1579,7 +1614,7 @@ assets/notes/note_ka.png
 
 Use simple original circles. Do not copy commercial Taiko assets.
 
-- [ ] **Step 4: Implement gameplay controller**
+- [x] **Step 4: Implement gameplay controller**
 
 Create `scripts/gameplay/gameplay_controller.gd`:
 
@@ -1703,7 +1738,7 @@ func _process_misses(song_time: float) -> void:
 			hud.show_judgment("miss", 0.0)
 ```
 
-- [ ] **Step 5: Create `Gameplay.tscn`**
+- [x] **Step 5: Create `Gameplay.tscn`**
 
 Create `scenes/Gameplay.tscn`:
 
@@ -1716,7 +1751,17 @@ Create `scenes/Gameplay.tscn`:
 script = ExtResource("1_gameplay")
 ```
 
-- [ ] **Step 6: Run manual gameplay check**
+- [x] **Step 6A: Add headless gameplay-controller test and asset audit updates**
+
+Run:
+
+```powershell
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_gameplay_controller.gd
+```
+
+Expected: PASS from deterministic loading/spawn/start/hit/miss coverage.
+
+- [x] **Step 6: Run manual gameplay check**
 
 Run:
 
@@ -1726,6 +1771,8 @@ godot --path E:\10_创作\GDTaiko
 
 Expected:
 
+MCP run-project verification opened the Godot project without the parent-busy scene-change error. Headless gameplay-controller tests cover start, note movement, Don input, misses, and score/combo updates.
+
 - Game opens.
 - Sample chart loads.
 - Pressing Space starts.
@@ -1734,11 +1781,11 @@ Expected:
 - Pressing J hits Ka.
 - Score/combo update.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```powershell
-git add assets/sample/sample.tja assets/sample/sample.ogg assets/notes/note_don.png assets/notes/note_ka.png scripts/gameplay/gameplay_controller.gd scenes/Gameplay.tscn
-git commit -m "feat: add playable taiko vertical slice"
+git add DEVELOPMENT_PLAN.md docs/ASSET_AUDIT.md assets/sample/sample.tja assets/sample/sample.ogg assets/notes/note_don.png assets/notes/note_ka.png scripts/app/main.gd scripts/gameplay/gameplay_controller.gd scenes/Gameplay.tscn tests/gameplay/test_gameplay_controller.gd
+git commit -m "feat: add gameplay controller and scene"
 ```
 
 ### Task 12: Phase 1 Acceptance Pass
@@ -1748,7 +1795,7 @@ git commit -m "feat: add playable taiko vertical slice"
 - Modify: `E:\10_创作\GDTaiko\README.md`
 - Create: `E:\10_创作\GDTaiko\docs\PHASE_1_ACCEPTANCE.md`
 
-- [ ] **Step 1: Create acceptance checklist**
+- [x] **Step 1: Create acceptance checklist**
 
 Create `docs/PHASE_1_ACCEPTANCE.md`:
 
@@ -1780,7 +1827,7 @@ Create `docs/PHASE_1_ACCEPTANCE.md`:
 - Skinning is not implemented.
 ```
 
-- [ ] **Step 2: Update README with run/test commands**
+- [x] **Step 2: Update README with run/test commands**
 
 Append to `README.md`:
 
@@ -1794,30 +1841,44 @@ godot --path E:\10_创作\GDTaiko
 ## Tests
 
 ```powershell
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_tokenizer.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parser.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_judge.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scoring.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/test_smoke.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_taiko_chart.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_tja_tokenizer.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_tja_parser.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_judge.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_scoring.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_song_clock.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_note_lane.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_gameplay_controller.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/ui/test_hud.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/app/test_main_scene.gd
 ```
 ````
 
-- [ ] **Step 3: Run verification commands**
+- [x] **Step 3: Run verification commands**
 
 Run:
 
 ```powershell
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_tokenizer.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parser.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_judge.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scoring.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/test_smoke.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_taiko_chart.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_tja_tokenizer.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_tja_parser.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_judge.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_scoring.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_song_clock.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_note_lane.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_gameplay_controller.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/ui/test_hud.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/app/test_main_scene.gd
 ```
 
 Expected: All exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
-git add README.md docs/PHASE_1_ACCEPTANCE.md
+git add DEVELOPMENT_PLAN.md README.md docs/PHASE_1_ACCEPTANCE.md tests/gameplay/test_gameplay_controller.gd
 git commit -m "docs: document phase one acceptance"
 ```
 

@@ -1423,8 +1423,9 @@ git commit -m "feat: add main scene entrypoint"
 **Files:**
 
 - Create: `E:\10_创作\GDTaiko\scripts\ui\hud.gd`
+- Create: `tests\ui\test_hud.gd`
 
-- [ ] **Step 1: Implement HUD script**
+- [x] **Step 1: Implement HUD script**
 
 Create `scripts/ui/hud.gd`:
 
@@ -1465,10 +1466,16 @@ func _label(text: String, position: Vector2, font_size: int) -> Label:
 	return label
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Add focused HUD test**
+
+Create `tests/ui/test_hud.gd`.
+
+Expected: HUD labels and text updates are deterministic in headless tests.
+
+- [x] **Step 3: Commit**
 
 ```powershell
-git add scripts/ui/hud.gd
+git add DEVELOPMENT_PLAN.md scripts/ui/hud.gd tests/ui/test_hud.gd
 git commit -m "feat: add gameplay hud"
 ```
 

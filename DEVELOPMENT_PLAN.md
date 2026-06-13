@@ -1485,8 +1485,9 @@ git commit -m "feat: add gameplay hud"
 
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\note_lane.gd`
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\note_model.gd`
+- Create: `E:\10_创作\GDTaiko\tests\gameplay\test_note_lane.gd`
 
-- [ ] **Step 1: Implement note model constants**
+- [x] **Step 1: Implement note model constants**
 
 Create `scripts/gameplay/note_model.gd`:
 
@@ -1501,7 +1502,7 @@ const HIT := "hit"
 const MISSED := "missed"
 ```
 
-- [ ] **Step 2: Implement note lane**
+- [x] **Step 2: Implement note lane**
 
 Create `scripts/gameplay/note_lane.gd`:
 
@@ -1548,10 +1549,20 @@ func update_notes(notes: Array[Dictionary], song_time_sec: float) -> void:
 		sprite.visible = String(note.get("state", "pending")) == "pending"
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Add focused note lane test**
+
+Run:
 
 ```powershell
-git add scripts/gameplay/note_model.gd scripts/gameplay/note_lane.gd
+godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_note_lane.gd
+```
+
+Expected: PASS.
+
+- [x] **Step 4: Commit**
+
+```powershell
+git add scripts/gameplay/note_model.gd scripts/gameplay/note_lane.gd tests/gameplay/test_note_lane.gd
 git commit -m "feat: add note lane rendering"
 ```
 

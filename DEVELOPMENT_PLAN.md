@@ -916,7 +916,7 @@ git commit -m "feat: tokenize tja chart text"
 - Create: `E:\10_创作\GDTaiko\tests\chart\test_tja_parser.gd`
 - Modify: `E:\10_创作\GDTaiko\scripts\chart\taiko_chart.gd`
 
-- [ ] **Step 1: Write parser test**
+- [x] **Step 1: Write parser test**
 
 Create `tests/chart/test_tja_parser.gd`:
 
@@ -953,11 +953,13 @@ LEVEL:5
 	assert(chart.notes[2]["lane"] == "don")
 	assert(is_equal_approx(chart.notes[0]["time_sec"], -0.5))
 	assert(is_equal_approx(chart.notes[1]["time_sec"], 1.0))
-	assert(is_equal_approx(chart.notes[2]["time_sec"], 2.5))
+	assert(is_equal_approx(chart.notes[2]["time_sec"], 2.0))
 	quit(0)
 ```
 
-- [ ] **Step 2: Run parser test to verify it fails**
+The third note is `2.0` seconds because the second measure starts at chart time `2.0`, slot index `1` adds `0.5`, and `OFFSET:-0.5` is applied to note time.
+
+- [x] **Step 2: Run parser test to verify it fails**
 
 Run:
 
@@ -967,7 +969,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parse
 
 Expected: FAIL because parser does not exist.
 
-- [ ] **Step 3: Implement parser**
+- [x] **Step 3: Implement parser**
 
 Create `scripts/chart/tja_parser.gd`:
 
@@ -1106,7 +1108,7 @@ static func _lane_for_note_char(value: String) -> String:
 	return ""
 ```
 
-- [ ] **Step 4: Run parser test to verify it passes**
+- [x] **Step 4: Run parser test to verify it passes**
 
 Run:
 
@@ -1116,7 +1118,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parse
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/chart/tja_parser.gd tests/chart/test_tja_parser.gd

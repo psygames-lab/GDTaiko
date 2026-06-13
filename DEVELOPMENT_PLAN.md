@@ -1218,7 +1218,7 @@ git commit -m "feat: add taiko timing judge"
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\scoring.gd`
 - Create: `E:\10_创作\GDTaiko\tests\gameplay\test_scoring.gd`
 
-- [ ] **Step 1: Write scoring test**
+- [x] **Step 1: Write scoring test**
 
 Create `tests/gameplay/test_scoring.gd`:
 
@@ -1243,7 +1243,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -1253,7 +1253,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scorin
 
 Expected: FAIL because `scoring.gd` does not exist.
 
-- [ ] **Step 3: Implement scoring**
+- [x] **Step 3: Implement scoring**
 
 Create `scripts/gameplay/scoring.gd`:
 
@@ -1298,7 +1298,7 @@ func apply_judgment(judgment: String) -> void:
 	max_combo = max(max_combo, combo)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 

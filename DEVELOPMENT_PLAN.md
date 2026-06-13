@@ -1907,7 +1907,7 @@ Outcome: A single loaded chart plays with the major Taiko note/rule systems: rol
 - Modify: `E:\10_创作\GDTaiko\scripts\chart\taiko_chart.gd`
 - Modify: `E:\10_创作\GDTaiko\tests\chart\test_taiko_chart.gd`
 
-- [ ] **Step 1: Add failing assertions for advanced note fields**
+- [x] **Step 1: Add failing assertions for advanced note fields**
 
 Extend `test_taiko_chart.gd` with:
 
@@ -1921,7 +1921,7 @@ assert(chart.notes[2]["required_hits"] == 8)
 
 Expected before implementation: FAIL because `add_note` does not accept metadata.
 
-- [ ] **Step 2: Update `add_note` signature**
+- [x] **Step 2: Update `add_note` signature**
 
 Change the method to:
 
@@ -1948,7 +1948,7 @@ func add_note(
 	notes.append(note)
 ```
 
-- [ ] **Step 3: Run model tests**
+- [x] **Step 3: Run model tests**
 
 Run:
 
@@ -1958,10 +1958,10 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_taiko_cha
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
-git add scripts/chart/taiko_chart.gd tests/chart/test_taiko_chart.gd
+git add DEVELOPMENT_PLAN.md scripts/chart/taiko_chart.gd tests/chart/test_taiko_chart.gd
 git commit -m "feat: extend chart model for advanced notes"
 ```
 

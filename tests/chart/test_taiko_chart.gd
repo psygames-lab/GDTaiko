@@ -55,6 +55,11 @@ func _test_add_note_and_auto_ids(chart: RefCounted) -> void:
 	chart.add_note(2.0, "ka", "ka", 0, 3)
 	var second_note: Dictionary = chart.notes[1]
 	_assert(second_note["id"] == "note_0002", "Second note should use note_0002")
+	chart.add_note(2.0, "roll", "roll_big_start", 1, 0, {"duration_sec": 1.5, "required_hits": 0})
+	chart.add_note(4.0, "balloon", "balloon_start", 2, 0, {"duration_sec": 2.0, "required_hits": 8})
+	_assert(chart.notes[2]["kind"] == "roll_big_start", "Advanced roll note kind should be roll_big_start")
+	_assert(is_equal_approx(chart.notes[2]["duration_sec"], 1.5), "Roll note should include duration_sec")
+	_assert(chart.notes[3]["required_hits"] == 8, "Balloon note should include required_hits")
 
 
 func _test_add_timing_event(chart: RefCounted) -> void:

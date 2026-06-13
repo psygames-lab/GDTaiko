@@ -15,10 +15,17 @@ var warnings: Array[String] = []
 var _next_note_index: int = 1
 
 
-func add_note(time_sec: float, lane: String, kind: String, measure_index: int, subdivision_index: int) -> void:
+func add_note(
+	time_sec: float,
+	lane: String,
+	kind: String,
+	measure_index: int,
+	subdivision_index: int,
+	extra: Dictionary = {}
+) -> void:
 	var note_id := "note_%04d" % _next_note_index
 	_next_note_index += 1
-	notes.append({
+	var note := {
 		"id": note_id,
 		"time_sec": time_sec,
 		"lane": lane,
@@ -26,7 +33,10 @@ func add_note(time_sec: float, lane: String, kind: String, measure_index: int, s
 		"measure_index": measure_index,
 		"subdivision_index": subdivision_index,
 		"state": "pending",
-	})
+	}
+	for key in extra:
+		note[key] = extra[key]
+	notes.append(note)
 
 
 func add_timing_event(time_sec: float, event_type: String, value: Variant) -> void:

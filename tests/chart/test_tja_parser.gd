@@ -17,6 +17,7 @@ func _init() -> void:
 	_test_invalid_measure_argument_ignored()
 	_test_trailing_text_measure_is_invalid()
 	_test_unsupported_note_character_warning()
+	_test_roll_and_balloon_notes()
 	_test_bpm_change_timing_event()
 
 	if failed_count == 0:
@@ -81,6 +82,26 @@ func _test_unsupported_note_character_warning() -> void:
 	_assert(chart.warnings.size() == 1, "Unsupported note char should add one warning")
 	_assert(chart.warnings[0].find("Unsupported note character") >= 0, "Warning should mention unsupported note character")
 	_assert(chart.warnings[0].find("3") >= 0, "Warning should identify unsupported char value")
+
+
+func _test_roll_and_balloon_notes() -> void:
+	var text := """TITLE:Roll Balloon
+BPM:120
+BALLOON:8
+#START
+5008,
+7008,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.notes.size() == 2, "Roll and balloon fixture should create two note starts")
+	if chart.notes.size() < 2:
+		return
+	_assert(chart.notes[0]["kind"] == "roll_start", "5 should create a small roll start")
+	_assert(is_equal_approx(chart.notes[0]["duration_sec"], 1.5), "8 should close roll with expected duration")
+	_assert(chart.notes[1]["kind"] == "balloon_start", "7 should create a balloon start")
+	_assert(chart.notes[1]["required_hits"] == 8, "Balloon note should use BALLOON metadata")
 
 
 func _test_end_terminates_parsing() -> void:

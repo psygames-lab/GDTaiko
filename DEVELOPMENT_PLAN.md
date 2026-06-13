@@ -1972,7 +1972,7 @@ git commit -m "feat: extend chart model for advanced notes"
 - Modify: `E:\10_创作\GDTaiko\scripts\chart\tja_parser.gd`
 - Modify: `E:\10_创作\GDTaiko\tests\chart\test_tja_parser.gd`
 
-- [ ] **Step 1: Add fixture test for roll and balloon**
+- [x] **Step 1: Add fixture test for roll and balloon**
 
 Add parser test case:
 
@@ -1996,7 +1996,7 @@ assert(chart.notes[1]["required_hits"] == 8)
 
 Expected before implementation: FAIL because note characters `5`, `7`, and `8` are unsupported.
 
-- [ ] **Step 2: Parse `BALLOON:` metadata**
+- [x] **Step 2: Parse `BALLOON:` metadata**
 
 Add to `TaikoChart`:
 
@@ -2014,7 +2014,7 @@ Add metadata handling:
 			chart.balloon_counts.append(int(part.strip_edges()))
 ```
 
-- [ ] **Step 3: Track active long note starts**
+- [x] **Step 3: Track active long note starts**
 
 Inside `tja_parser.gd`, maintain:
 
@@ -2030,7 +2030,7 @@ When parsing a measure:
 - `7`: start balloon, lane `balloon`, kind `balloon_start`, required hits from `BALLOON`.
 - `8`: close current roll/balloon and set `duration_sec`.
 
-- [ ] **Step 4: Run parser tests**
+- [x] **Step 4: Run parser tests**
 
 Run:
 

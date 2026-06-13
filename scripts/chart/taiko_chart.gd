@@ -8,6 +8,7 @@ var bpm: float = 120.0
 var offset_sec: float = 0.0
 var course: String = "Oni"
 var level: int = 1
+var balloon_counts: Array[int] = []
 var notes: Array[Dictionary] = []
 var timing_events: Array[Dictionary] = []
 var warnings: Array[String] = []

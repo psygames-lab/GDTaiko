@@ -4,7 +4,6 @@ Use this document to connect every OpenTaiko or TJAPlayer compatibility-sensitiv
 
 Do not copy copyrighted charts. Fixtures must be minimal, original `.tja` files that reproduce the behavior under test.
 
-No compatibility entries have been accepted yet.
-
 | Behavior | Reference Repo | Reference Commit/Tag | Reference Location Or Observation | GDTaiko Fixture | Expected Output/Test | Decision Notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| TJA roll and balloon note tokens: `5`, `6`, `7`, `8`; `BALLOON:` hit counts | https://github.com/0auBSQ/OpenTaiko | `0ccf107c67c6a79828f54be0d6800047eb85f692` | `OpenTaiko/src/Stages/07.Game/Taiko/NotesManager.cs` lines 33-42 maps `5` to small roll, `6` to big roll, `7` to balloon, and `8` to roll/balloon end. `OpenTaiko/src/Songs/CTja.cs` lines 3121-3128 routes `BALLOON` metadata to balloon parsing, lines 3296-3315 parse comma-separated balloon hit counts, and lines 2957-2975 assign balloon counts and link roll end chips to their start chips. | Original inline fixture in `tests/chart/test_tja_parser.gd::_test_roll_and_balloon_notes`: `TITLE:Roll Balloon`, `BPM:120`, `BALLOON:8`, `#START`, `5008,`, `7008,`, `#END`. | `tests/chart/test_tja_parser.gd` asserts exactly two start notes: first `kind == "roll_start"` with `duration_sec == 1.5`, second `kind == "balloon_start"` with `required_hits == 8`. | GDTaiko stores long notes as one start-note dictionary with `duration_sec` rather than preserving a separate end chip. Missing `BALLOON` counts default to `0` for now to avoid crashes; OpenTaiko defaults an empty balloon list to 5, so this deliberate difference needs a future fixture/decision before broader compatibility acceptance. |

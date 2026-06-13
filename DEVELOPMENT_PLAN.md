@@ -1378,7 +1378,7 @@ git commit -m "feat: add song clock"
 - Create: `E:\10_åˆ›ä½œ\GDTaiko\scenes\Main.tscn`
 - Create: `E:\10_åˆ›ä½œ\GDTaiko\scripts\app\main.gd`
 
-- [ ] **Step 1: Create `main.gd`**
+- [x] **Step 1: Create `main.gd`**
 
 Create `scripts/app/main.gd`:
 
@@ -1389,7 +1389,7 @@ func _ready() -> void:
 	get_tree().change_scene_to_file("res://scenes/Gameplay.tscn")
 ```
 
-- [ ] **Step 2: Create `Main.tscn`**
+- [x] **Step 2: Create `Main.tscn`**
 
 Create `scenes/Main.tscn`:
 
@@ -1402,15 +1402,15 @@ Create `scenes/Main.tscn`:
 script = ExtResource("1_main")
 ```
 
-- [ ] **Step 3: Run scene**
+- [x] **Step 3: Add and run headless scene verification**
 
 Run:
 
 ```powershell
-godot --path E:\10_åˆ›ä½œ\GDTaiko
+godot --headless --path E:\10_´´×÷\GDTaiko\.worktrees\phase1-task2-chart-model -s res://tests/app/test_main_scene.gd
 ```
 
-Expected: Godot opens and attempts to load `Gameplay.tscn`. It may fail until Task 11 creates the gameplay scene.
+Expected: The headless test asserts `Main` node and script without entering the scene tree.
 
 - [ ] **Step 4: Commit**
 
@@ -1418,7 +1418,6 @@ Expected: Godot opens and attempts to load `Gameplay.tscn`. It may fail until Ta
 git add scenes/Main.tscn scripts/app/main.gd
 git commit -m "feat: add main scene entrypoint"
 ```
-
 ### Task 9: Add HUD
 
 **Files:**

@@ -1,0 +1,8 @@
+.godot/
+.import/
+.worktrees/
+export.cfg
+export_presets.cfg
+builds/
+*.tmp
+*.log

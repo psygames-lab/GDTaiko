@@ -1132,7 +1132,7 @@ git commit -m "feat: parse phase one tja charts"
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\judge.gd`
 - Create: `E:\10_创作\GDTaiko\tests\gameplay\test_judge.gd`
 
-- [ ] **Step 1: Write judge test**
+- [x] **Step 1: Write judge test**
 
 Create `tests/gameplay/test_judge.gd`:
 
@@ -1152,7 +1152,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -1162,7 +1162,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_judge.
 
 Expected: FAIL because `judge.gd` does not exist.
 
-- [ ] **Step 3: Implement judge**
+- [x] **Step 3: Implement judge**
 
 Create `scripts/gameplay/judge.gd`:
 
@@ -1194,7 +1194,7 @@ func is_expired(scheduled_time_sec: float, song_time_sec: float) -> bool:
 	return song_time_sec > scheduled_time_sec + BAD_SEC
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -1204,7 +1204,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_judge.
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/gameplay/judge.gd tests/gameplay/test_judge.gd

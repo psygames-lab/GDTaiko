@@ -1320,8 +1320,9 @@ git commit -m "feat: add basic taiko scoring"
 **Files:**
 
 - Create: `E:\10_创作\GDTaiko\scripts\gameplay\song_clock.gd`
+- Create: `E:\10_创作\GDTaiko\tests\gameplay\test_song_clock.gd`
 
-- [ ] **Step 1: Implement clock**
+- [x] **Step 1: Implement clock**
 
 Create `scripts/gameplay/song_clock.gd`:
 
@@ -1353,14 +1354,20 @@ func time_sec() -> float:
 	return fallback_time_sec + chart_offset_sec
 ```
 
-- [ ] **Step 2: Add simple manual verification scene hook**
+- [x] **Step 2: Add focused headless SongClock test**
 
-Do not add gameplay logic yet. This file will be consumed by Task 10.
+Run:
+
+```powershell
+godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_song_clock.gd
+```
+
+Expected: PASS.
 
 - [ ] **Step 3: Commit**
 
 ```powershell
-git add scripts/gameplay/song_clock.gd
+git add scripts/gameplay/song_clock.gd tests/gameplay/test_song_clock.gd
 git commit -m "feat: add song clock"
 ```
 

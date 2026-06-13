@@ -688,7 +688,7 @@ Existing task snippets that use bare `assert()` should be wrapped in this exit-c
 - Create: `E:\10_创作\GDTaiko\scripts\chart\taiko_chart.gd`
 - Create: `E:\10_创作\GDTaiko\tests\chart\test_taiko_chart.gd`
 
-- [ ] **Step 1: Write the failing data model test**
+- [x] **Step 1: Write the failing data model test**
 
 Create `tests/chart/test_taiko_chart.gd`:
 
@@ -713,7 +713,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -723,7 +723,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_taiko_cha
 
 Expected: FAIL because `scripts/chart/taiko_chart.gd` does not exist.
 
-- [ ] **Step 3: Implement `TaikoChart`**
+- [x] **Step 3: Implement `TaikoChart`**
 
 Create `scripts/chart/taiko_chart.gd`:
 
@@ -753,7 +753,7 @@ func add_note(time_sec: float, lane: String, kind: String, measure_index: int, s
 		"state": "pending",
 	})
 
-func add_timing_event(time_sec: float, event_type: String, value) -> void:
+func add_timing_event(time_sec: float, event_type: String, value: Variant) -> void:
 	timing_events.append({
 		"time_sec": time_sec,
 		"type": event_type,
@@ -766,7 +766,7 @@ func sort_notes() -> void:
 	)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -776,7 +776,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_taiko_cha
 
 Expected: PASS with exit code 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/chart/taiko_chart.gd tests/chart/test_taiko_chart.gd

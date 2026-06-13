@@ -1795,7 +1795,7 @@ git commit -m "feat: add gameplay controller and scene"
 - Modify: `E:\10_创作\GDTaiko\README.md`
 - Create: `E:\10_创作\GDTaiko\docs\PHASE_1_ACCEPTANCE.md`
 
-- [ ] **Step 1: Create acceptance checklist**
+- [x] **Step 1: Create acceptance checklist**
 
 Create `docs/PHASE_1_ACCEPTANCE.md`:
 
@@ -1827,7 +1827,7 @@ Create `docs/PHASE_1_ACCEPTANCE.md`:
 - Skinning is not implemented.
 ```
 
-- [ ] **Step 2: Update README with run/test commands**
+- [x] **Step 2: Update README with run/test commands**
 
 Append to `README.md`:
 
@@ -1841,30 +1841,44 @@ godot --path E:\10_创作\GDTaiko
 ## Tests
 
 ```powershell
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_tokenizer.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parser.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_judge.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scoring.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/test_smoke.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_taiko_chart.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_tja_tokenizer.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_tja_parser.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_judge.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_scoring.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_song_clock.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_note_lane.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_gameplay_controller.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/ui/test_hud.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/app/test_main_scene.gd
 ```
 ````
 
-- [ ] **Step 3: Run verification commands**
+- [x] **Step 3: Run verification commands**
 
 Run:
 
 ```powershell
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_tokenizer.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parser.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_judge.gd
-godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scoring.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/test_smoke.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_taiko_chart.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_tja_tokenizer.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/chart/test_tja_parser.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_judge.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_scoring.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_song_clock.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_note_lane.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/gameplay/test_gameplay_controller.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/ui/test_hud.gd
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . -s res://tests/app/test_main_scene.gd
 ```
 
 Expected: All exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
-git add README.md docs/PHASE_1_ACCEPTANCE.md
+git add DEVELOPMENT_PLAN.md README.md docs/PHASE_1_ACCEPTANCE.md tests/gameplay/test_gameplay_controller.gd
 git commit -m "docs: document phase one acceptance"
 ```
 

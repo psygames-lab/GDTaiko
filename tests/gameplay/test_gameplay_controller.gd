@@ -18,6 +18,7 @@ func _run_tests() -> void:
 	_test_textures_and_spawned_notes()
 	_test_start_song_resets_state()
 	_test_input_actions_start_and_hit()
+	_test_ka_input_action_hits_ka()
 	_test_process_moves_notes()
 	_test_immediate_don_hit()
 	_test_process_misses_marks_pending_as_missed()
@@ -104,6 +105,23 @@ func _test_input_actions_start_and_hit() -> void:
 	controller._unhandled_input(don_event)
 	_assert(controller.chart.notes[0]["state"] == NoteModel.HIT, "taiko_don action should hit the first Don")
 	_assert(controller.scoring.combo == 1, "taiko_don action should update combo")
+	controller.free()
+
+
+func _test_ka_input_action_hits_ka() -> void:
+	var controller := _new_controller()
+	controller._start_song()
+	controller.audio_player.stop()
+	controller.clock.configure(null, 0.0)
+	controller.clock.advance(1.5)
+
+	var ka_event := InputEventAction.new()
+	ka_event.action = "taiko_ka"
+	ka_event.pressed = true
+	controller._unhandled_input(ka_event)
+
+	_assert(controller.chart.notes[1]["state"] == NoteModel.HIT, "taiko_ka action should hit the first Ka")
+	_assert(controller.scoring.combo == 1, "taiko_ka action should update combo")
 	controller.free()
 
 

@@ -21,6 +21,11 @@ func _init() -> void:
 	_test_bpm_change_timing_event()
 	_test_gogo_timing_events()
 	_test_scroll_timing_event()
+	_test_preserves_all_metadata()
+	_test_title_wins_over_titleen()
+	_test_titleen_fallback_when_title_missing()
+	_test_empty_title_still_wins_over_titleen()
+	_test_empty_subtitle_still_wins_over_subtitleen()
 
 	if failed_count == 0:
 		print("PASS: TjaParser")
@@ -306,6 +311,80 @@ func _test_scroll_timing_event() -> void:
 			_assert(is_equal_approx(float(event["time_sec"]), 2.0), "SCROLL event should use current chart time")
 			_assert(is_equal_approx(float(event["value"]), 2.5), "SCROLL event should preserve scroll value")
 	_assert(found_scroll, "Parser should add SCROLL timing event")
+
+
+func _test_preserves_all_metadata() -> void:
+	var text := """TITLE:Metadata Song
+TITLEEN:Metadata Song EN
+DEMOSTART:8.25
+GENRE:Original
+MAKER:GDTaiko
+LYRICFILE:lyrics.vtt
+SCOREINIT:300
+SCOREDIFF:80
+UNKNOWNMETA:kept
+#START
+1,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.metadata["TITLE"] == "Metadata Song", "Metadata dictionary should preserve TITLE")
+	_assert(chart.metadata["TITLEEN"] == "Metadata Song EN", "Metadata dictionary should preserve TITLEEN")
+	_assert(chart.metadata["DEMOSTART"] == "8.25", "Metadata dictionary should preserve DEMOSTART")
+	_assert(chart.metadata["GENRE"] == "Original", "Metadata dictionary should preserve GENRE")
+	_assert(chart.metadata["MAKER"] == "GDTaiko", "Metadata dictionary should preserve MAKER")
+	_assert(chart.metadata["LYRICFILE"] == "lyrics.vtt", "Metadata dictionary should preserve LYRICFILE")
+	_assert(chart.metadata["SCOREINIT"] == "300", "Metadata dictionary should preserve SCOREINIT")
+	_assert(chart.metadata["SCOREDIFF"] == "80", "Metadata dictionary should preserve SCOREDIFF")
+	_assert(chart.metadata["UNKNOWNMETA"] == "kept", "Metadata dictionary should preserve unknown metadata")
+
+
+func _test_title_wins_over_titleen() -> void:
+	var text := """TITLE:Primary Title
+TITLEEN:English Title
+#START
+1,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.title == "Primary Title", "TITLE should win over TITLEEN when both are present")
+
+
+func _test_titleen_fallback_when_title_missing() -> void:
+	var text := """TITLEEN:English Fallback
+#START
+1,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.title == "English Fallback", "TITLEEN should populate title when TITLE is missing")
+
+
+func _test_empty_title_still_wins_over_titleen() -> void:
+	var text := """TITLE:
+TITLEEN:English Title
+#START
+1,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.title == "", "Empty TITLE should still win over TITLEEN when TITLE is present")
+
+
+func _test_empty_subtitle_still_wins_over_subtitleen() -> void:
+	var text := """SUBTITLE:
+SUBTITLEEN:English Subtitle
+#START
+1,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.subtitle == "", "Empty SUBTITLE should still win over SUBTITLEEN when SUBTITLE is present")
 
 
 func _assert(condition: bool, message: String) -> void:

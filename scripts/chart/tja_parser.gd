@@ -94,11 +94,21 @@ static func parse_text(text: String) -> TaikoChart:
 static func _apply_metadata(chart: TaikoChart, token: Dictionary) -> void:
 	var key := String(token["key"])
 	var value := String(token["value"])
+	var has_title := chart.metadata.has("TITLE")
+	var has_subtitle := chart.metadata.has("SUBTITLE")
+	chart.metadata[key] = value
+
 	match key:
 		"TITLE":
 			chart.title = value
+		"TITLEEN":
+			if not has_title:
+				chart.title = value
 		"SUBTITLE":
 			chart.subtitle = value
+		"SUBTITLEEN":
+			if not has_subtitle:
+				chart.subtitle = value
 		"BPM":
 			var parsed_bpm := _to_positive_float(value)
 			if parsed_bpm > 0.0:

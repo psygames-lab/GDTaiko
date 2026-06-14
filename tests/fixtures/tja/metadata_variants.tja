@@ -1,10 +1,21 @@
 TITLE:Metadata Variants
+TITLEJA:Metadata Variants JA
+TITLEEN:Metadata Variants EN
 SUBTITLE:Fixture Subtitle
+SUBTITLEJA:Fixture Subtitle JA
+SUBTITLEEN:Fixture Subtitle EN
 BPM:150
 OFFSET:-0.25
 WAVE:fixture.ogg
 COURSE:Hard
 LEVEL:6
+DEMOSTART:12.5
+GENRE:Test Genre
+MAKER:GDTaiko
+LYRICFILE:fixture.vtt
+SCOREINIT:300
+SCOREDIFF:75
+CUSTOMFIELD:Preserved
 #START
 10,
 #END

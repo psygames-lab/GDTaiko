@@ -44,6 +44,8 @@ func _test_all_compatibility_fixtures_match_expected_sidecars() -> void:
 		_assert(chart.notes.size() == int(expected.get("note_count", -1)), "%s note count should match sidecar" % fixture_name)
 		_assert(chart.timing_events.size() == int(expected.get("timing_event_count", -1)), "%s timing event count should match sidecar" % fixture_name)
 		_assert(_string_array(chart.warnings) == _string_array(expected.get("warnings", [])), "%s warnings should match sidecar" % fixture_name)
+		if expected.has("metadata"):
+			_assert(chart.metadata == expected["metadata"], "%s metadata should match sidecar" % fixture_name)
 
 
 func _load_expected(path: String) -> Dictionary:

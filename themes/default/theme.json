@@ -1,0 +1,10 @@
+{
+  "name": "Default",
+  "note_don": "res://assets/notes/note_don.png",
+  "note_ka": "res://assets/notes/note_ka.png",
+  "sfx_don": "",
+  "sfx_ka": "",
+  "font_main": "",
+  "lane_color": "#1b1b1b",
+  "gogo_color": "#f5a623"
+}

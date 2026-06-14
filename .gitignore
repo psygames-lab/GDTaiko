@@ -6,3 +6,5 @@ export_presets.cfg
 builds/
 *.tmp
 *.log
+__pycache__/
+*.py[cod]

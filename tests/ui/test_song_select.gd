@@ -60,6 +60,51 @@ func _run_tests() -> void:
 	_assert(select.songs.size() >= 1, "Song select should scan bundled songs folder")
 	_assert(select.title_label.text == "GDTaiko Sample", "Song select should show sample song from res://songs")
 
+	var user_root := "user://song_select_import_test"
+	_remove_dir_recursive(user_root)
+	DirAccess.make_dir_recursive_absolute(user_root + "/local")
+	var user_chart := FileAccess.open(user_root + "/local/local.tja", FileAccess.WRITE)
+	user_chart.store_string("""TITLE:Local Import
+WAVE:local.ogg
+COURSE:Oni
+LEVEL:4
+BPM:120
+#START
+1000,
+#END
+""")
+	user_chart.close()
+	var user_audio := FileAccess.open(user_root + "/local/local.ogg", FileAccess.WRITE)
+	user_audio.store_buffer(PackedByteArray())
+	user_audio.close()
+
+	select.load_song_roots(["res://songs", user_root])
+	_assert(_has_song(select.songs, "GDTaiko Sample"), "Song select should include bundled songs")
+	_assert(_has_song(select.songs, "Local Import"), "Song select should include user-local songs")
+
+	var missing_root := "user://song_select_missing_audio_test"
+	_remove_dir_recursive(missing_root)
+	DirAccess.make_dir_recursive_absolute(missing_root + "/missing")
+	var missing_chart := FileAccess.open(missing_root + "/missing/missing.tja", FileAccess.WRITE)
+	missing_chart.store_string("""TITLE:Missing Audio
+WAVE:missing.ogg
+COURSE:Oni
+LEVEL:5
+BPM:120
+#START
+1000,
+#END
+""")
+	missing_chart.close()
+
+	select.load_songs(missing_root)
+	_assert(select.songs.size() == 1, "Song select should show charts even when audio is missing")
+	_assert(select.detail_label.text.contains("Missing audio"), "Song select should mark missing audio")
+	_assert(select.detail_label.text.contains("missing.ogg"), "Song select should show expected missing audio path")
+	_assert(not select.apply_selected_course_to_session(), "Song select should prevent launching missing audio")
+	_remove_dir_recursive(user_root)
+	_remove_dir_recursive(missing_root)
+
 	select.free()
 	if failed_count == 0:
 		print("PASS: SongSelect")
@@ -80,6 +125,32 @@ func _song(title: String, folder_path: String, course_name: String, level: int, 
 	course.wave = folder_path.path_join(wave_name)
 	song.courses.append(course)
 	return song
+
+
+func _has_song(song_list: Array[SongEntry], title: String) -> bool:
+	for song in song_list:
+		if song.title == title:
+			return true
+	return false
+
+
+func _remove_dir_recursive(path: String) -> void:
+	if not DirAccess.dir_exists_absolute(path):
+		return
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var name := dir.get_next()
+	while name != "":
+		var child := path + "/" + name
+		if dir.current_is_dir():
+			_remove_dir_recursive(child)
+		else:
+			DirAccess.remove_absolute(child)
+		name = dir.get_next()
+	dir.list_dir_end()
+	DirAccess.remove_absolute(path)
 
 
 func _assert(condition: bool, message: String) -> void:

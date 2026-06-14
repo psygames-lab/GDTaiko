@@ -2,6 +2,7 @@ extends SceneTree
 
 const NoteModelScript: GDScript = preload("res://scripts/gameplay/note_model.gd")
 const NoteLaneScript: GDScript = preload("res://scripts/gameplay/note_lane.gd")
+const TimingMap := preload("res://scripts/chart/timing_map.gd")
 
 var failed_count := 0
 
@@ -10,6 +11,7 @@ func _init() -> void:
 	_test_model_constants()
 	_test_spawn_notes()
 	_test_update_notes_position()
+	_test_update_notes_uses_scroll()
 	_test_update_notes_visibility()
 	_test_unknown_id_ignored()
 	_test_clear_notes()
@@ -109,6 +111,24 @@ func _test_update_notes_position() -> void:
 	_assert(
 		is_equal_approx((lane.note_nodes["don_a"] as Sprite2D).position.y, NoteLaneScript.NOTE_Y),
 		"note y should stay fixed"
+	)
+	lane.queue_free()
+
+
+func _test_update_notes_uses_scroll() -> void:
+	var lane: Node2D = _new_lane()
+	lane.spawn_notes(_new_notes())
+
+	var notes: Array[Dictionary] = _new_notes()
+	lane.update_notes(notes, 2.0)
+	var default_x := (lane.note_nodes["don_a"] as Sprite2D).position.x
+
+	var map := TimingMap.new()
+	map.add_event(0.0, "scroll", 2.0)
+	lane.update_notes(notes, 2.0, map)
+	_assert(
+		(lane.note_nodes["don_a"] as Sprite2D).position.x > default_x,
+		"scroll 2.0 should keep a not-yet-due note closer to spawn than default scroll"
 	)
 	lane.queue_free()
 

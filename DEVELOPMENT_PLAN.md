@@ -1907,7 +1907,7 @@ Outcome: A single loaded chart plays with the major Taiko note/rule systems: rol
 - Modify: `E:\10_创作\GDTaiko\scripts\chart\taiko_chart.gd`
 - Modify: `E:\10_创作\GDTaiko\tests\chart\test_taiko_chart.gd`
 
-- [ ] **Step 1: Add failing assertions for advanced note fields**
+- [x] **Step 1: Add failing assertions for advanced note fields**
 
 Extend `test_taiko_chart.gd` with:
 
@@ -1921,7 +1921,7 @@ assert(chart.notes[2]["required_hits"] == 8)
 
 Expected before implementation: FAIL because `add_note` does not accept metadata.
 
-- [ ] **Step 2: Update `add_note` signature**
+- [x] **Step 2: Update `add_note` signature**
 
 Change the method to:
 
@@ -1948,7 +1948,7 @@ func add_note(
 	notes.append(note)
 ```
 
-- [ ] **Step 3: Run model tests**
+- [x] **Step 3: Run model tests**
 
 Run:
 
@@ -1958,10 +1958,10 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_taiko_cha
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
-git add scripts/chart/taiko_chart.gd tests/chart/test_taiko_chart.gd
+git add DEVELOPMENT_PLAN.md scripts/chart/taiko_chart.gd tests/chart/test_taiko_chart.gd
 git commit -m "feat: extend chart model for advanced notes"
 ```
 
@@ -1972,7 +1972,7 @@ git commit -m "feat: extend chart model for advanced notes"
 - Modify: `E:\10_创作\GDTaiko\scripts\chart\tja_parser.gd`
 - Modify: `E:\10_创作\GDTaiko\tests\chart\test_tja_parser.gd`
 
-- [ ] **Step 1: Add fixture test for roll and balloon**
+- [x] **Step 1: Add fixture test for roll and balloon**
 
 Add parser test case:
 
@@ -1996,7 +1996,7 @@ assert(chart.notes[1]["required_hits"] == 8)
 
 Expected before implementation: FAIL because note characters `5`, `7`, and `8` are unsupported.
 
-- [ ] **Step 2: Parse `BALLOON:` metadata**
+- [x] **Step 2: Parse `BALLOON:` metadata**
 
 Add to `TaikoChart`:
 
@@ -2014,7 +2014,7 @@ Add metadata handling:
 			chart.balloon_counts.append(int(part.strip_edges()))
 ```
 
-- [ ] **Step 3: Track active long note starts**
+- [x] **Step 3: Track active long note starts**
 
 Inside `tja_parser.gd`, maintain:
 
@@ -2030,7 +2030,7 @@ When parsing a measure:
 - `7`: start balloon, lane `balloon`, kind `balloon_start`, required hits from `BALLOON`.
 - `8`: close current roll/balloon and set `duration_sec`.
 
-- [ ] **Step 4: Run parser tests**
+- [x] **Step 4: Run parser tests**
 
 Run:
 
@@ -2040,7 +2040,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parse
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/chart/taiko_chart.gd scripts/chart/tja_parser.gd tests/chart/test_tja_parser.gd
@@ -2055,7 +2055,7 @@ git commit -m "feat: parse roll and balloon notes"
 - Modify: `E:\10_创作\GDTaiko\scripts\gameplay\gameplay_controller.gd`
 - Create: `E:\10_创作\GDTaiko\tests\gameplay\test_roll_manager.gd`
 
-- [ ] **Step 1: Write roll manager test**
+- [x] **Step 1: Write roll manager test**
 
 Create:
 
@@ -2077,7 +2077,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Implement `roll_manager.gd`**
+- [x] **Step 2: Implement `roll_manager.gd`**
 
 ```gdscript
 extends RefCounted
@@ -2104,7 +2104,7 @@ func reset() -> void:
 	hits_by_note.clear()
 ```
 
-- [ ] **Step 3: Integrate rolls into input handling**
+- [x] **Step 3: Integrate rolls into input handling**
 
 In `gameplay_controller.gd`, before normal note hit lookup:
 
@@ -2117,7 +2117,7 @@ for note in chart.notes:
 		return
 ```
 
-- [ ] **Step 4: Add roll scoring**
+- [x] **Step 4: Add roll scoring**
 
 In `scoring.gd`:
 
@@ -2129,7 +2129,7 @@ func apply_roll_hit() -> void:
 	score += 100
 ```
 
-- [ ] **Step 5: Run roll and scoring tests**
+- [x] **Step 5: Run roll and scoring tests**
 
 Run:
 
@@ -2140,7 +2140,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scorin
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add scripts/gameplay/roll_manager.gd scripts/gameplay/gameplay_controller.gd scripts/gameplay/scoring.gd tests/gameplay/test_roll_manager.gd tests/gameplay/test_scoring.gd
@@ -2155,7 +2155,7 @@ git commit -m "feat: add roll note gameplay"
 - Modify: `E:\10_创作\GDTaiko\scripts\gameplay\gameplay_controller.gd`
 - Create: `E:\10_创作\GDTaiko\tests\gameplay\test_balloon_manager.gd`
 
-- [ ] **Step 1: Write balloon manager test**
+- [x] **Step 1: Write balloon manager test**
 
 Create:
 
@@ -2177,7 +2177,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Implement balloon manager**
+- [x] **Step 2: Implement balloon manager**
 
 ```gdscript
 extends RefCounted
@@ -2210,7 +2210,7 @@ func reset() -> void:
 	cleared.clear()
 ```
 
-- [ ] **Step 3: Integrate balloon handling**
+- [x] **Step 3: Integrate balloon handling**
 
 In gameplay input handling, check active balloon before normal notes. On completion:
 
@@ -2232,7 +2232,7 @@ func apply_balloon_clear() -> void:
 	score += 5000
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run:
 
@@ -2243,7 +2243,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scorin
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/gameplay/balloon_manager.gd scripts/gameplay/gameplay_controller.gd scripts/gameplay/scoring.gd tests/gameplay/test_balloon_manager.gd
@@ -2260,7 +2260,7 @@ git commit -m "feat: add balloon note gameplay"
 - Modify: `E:\10_创作\GDTaiko\tests\chart\test_tja_parser.gd`
 - Modify: `E:\10_创作\GDTaiko\tests\gameplay\test_scoring.gd`
 
-- [ ] **Step 1: Add parser assertion**
+- [x] **Step 1: Add parser assertion**
 
 Use fixture:
 
@@ -2280,7 +2280,7 @@ assert(chart.timing_events.any(func(e): return e["type"] == "gogo" and e["value"
 assert(chart.timing_events.any(func(e): return e["type"] == "gogo" and e["value"] == false))
 ```
 
-- [ ] **Step 2: Parse GOGO commands**
+- [x] **Step 2: Parse GOGO commands**
 
 In command handling:
 
@@ -2291,7 +2291,7 @@ elif in_chart and command == "GOGOEND":
 	chart.add_timing_event(current_time + chart.offset_sec, "gogo", false)
 ```
 
-- [ ] **Step 3: Add scoring multiplier**
+- [x] **Step 3: Add scoring multiplier**
 
 In `scoring.gd`:
 
@@ -2307,7 +2307,7 @@ func _apply_multiplier(points: int) -> int:
 
 Use `_apply_multiplier(1000)`, `_apply_multiplier(600)`, and `_apply_multiplier(100)` for normal note judgments.
 
-- [ ] **Step 4: Update gameplay controller**
+- [x] **Step 4: Update gameplay controller**
 
 Each frame, apply current timing event state:
 
@@ -2323,7 +2323,7 @@ func _update_timing_states(song_time: float) -> void:
 
 Add `set_gogo(active: bool)` to HUD and change lane color/text.
 
-- [ ] **Step 5: Run parser and scoring tests**
+- [x] **Step 5: Run parser and scoring tests**
 
 Run:
 
@@ -2334,7 +2334,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scorin
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add scripts/chart/tja_parser.gd scripts/gameplay/scoring.gd scripts/gameplay/gameplay_controller.gd scripts/ui/hud.gd tests/chart/test_tja_parser.gd tests/gameplay/test_scoring.gd
@@ -2350,7 +2350,7 @@ git commit -m "feat: add gogo time"
 - Modify: `E:\10_创作\GDTaiko\scripts\gameplay\note_lane.gd`
 - Create: `E:\10_创作\GDTaiko\tests\chart\test_timing_map.gd`
 
-- [ ] **Step 1: Write timing map test**
+- [x] **Step 1: Write timing map test**
 
 Create:
 
@@ -2372,7 +2372,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Implement timing map**
+- [x] **Step 2: Implement timing map**
 
 Create:
 
@@ -2402,7 +2402,7 @@ func scroll_at(song_time_sec: float) -> float:
 	return float(value_at("scroll", song_time_sec, 1.0))
 ```
 
-- [ ] **Step 3: Parse `#SCROLL`**
+- [x] **Step 3: Parse `#SCROLL`**
 
 In `tja_parser.gd` command handling:
 
@@ -2411,7 +2411,7 @@ elif in_chart and command == "SCROLL":
 	chart.add_timing_event(current_time + chart.offset_sec, "scroll", argument.to_float())
 ```
 
-- [ ] **Step 4: Use scroll in note lane**
+- [x] **Step 4: Use scroll in note lane**
 
 Change visual progress:
 
@@ -2422,7 +2422,7 @@ var progress := clamp(1.0 - ((scheduled - song_time_sec) / (APPROACH_TIME_SEC / 
 
 Pass `TimingMap` into `note_lane.update_notes`.
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run:
 
@@ -2433,7 +2433,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parse
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add scripts/chart/timing_map.gd scripts/chart/tja_parser.gd scripts/gameplay/note_lane.gd tests/chart/test_timing_map.gd tests/chart/test_tja_parser.gd
@@ -2449,7 +2449,7 @@ git commit -m "feat: add timing map for bpm measure and scroll"
 - Create: `E:\10_创作\GDTaiko\scenes\Result.tscn`
 - Create: `E:\10_创作\GDTaiko\scripts\ui\result_screen.gd`
 
-- [ ] **Step 1: Write gauge test**
+- [x] **Step 1: Write gauge test**
 
 Create:
 
@@ -2472,7 +2472,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Implement gauge**
+- [x] **Step 2: Implement gauge**
 
 ```gdscript
 extends RefCounted
@@ -2500,7 +2500,7 @@ func is_clear() -> bool:
 	return value >= clear_threshold
 ```
 
-- [ ] **Step 3: Add result payload**
+- [x] **Step 3: Add result payload**
 
 At song end, build:
 
@@ -2517,7 +2517,7 @@ At song end, build:
 }
 ```
 
-- [ ] **Step 4: Run tests and manual result check**
+- [x] **Step 4: Run tests and manual result check**
 
 Run:
 
@@ -2528,7 +2528,7 @@ godot --path E:\10_创作\GDTaiko
 
 Expected: Gauge test passes; after the sample chart ends, result screen appears.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/gameplay/soul_gauge.gd tests/gameplay/test_soul_gauge.gd scenes/Result.tscn scripts/ui/result_screen.gd scripts/gameplay/gameplay_controller.gd

@@ -18,6 +18,8 @@ static func parse_text(text: String) -> TaikoChart:
 	var measure_numerator := 4.0
 	var measure_denominator := 4.0
 	var pending_measure_text := ""
+	var active_long_note: Dictionary = {}
+	var balloon_index := 0
 
 	for token in TjaTokenizer.tokenize(text):
 		var kind := String(token["kind"])
@@ -37,6 +39,8 @@ static func parse_text(text: String) -> TaikoChart:
 					measure_denominator = 4.0
 					measure_index = 0
 					pending_measure_text = ""
+					active_long_note.clear()
+					balloon_index = 0
 					chart.add_timing_event(0.0, "bpm", current_bpm)
 				elif command == "END":
 					break
@@ -45,6 +49,12 @@ static func parse_text(text: String) -> TaikoChart:
 					if next_bpm > 0.0:
 						current_bpm = next_bpm
 						chart.add_timing_event(current_time + chart.offset_sec, "bpm", current_bpm)
+				elif in_chart and command == "GOGOSTART":
+					chart.add_timing_event(current_time + chart.offset_sec, "gogo", true)
+				elif in_chart and command == "GOGOEND":
+					chart.add_timing_event(current_time + chart.offset_sec, "gogo", false)
+				elif in_chart and command == "SCROLL":
+					chart.add_timing_event(current_time + chart.offset_sec, "scroll", argument.to_float())
 				elif in_chart and command == "MEASURE":
 					var parts := argument.split("/")
 					if parts.size() == 2:
@@ -68,11 +78,14 @@ static func parse_text(text: String) -> TaikoChart:
 						measure_numerator,
 						measure_denominator,
 						measure_index,
-						pending_measure_text
+						pending_measure_text,
+						active_long_note,
+						balloon_index
 					)
 					current_time = result["time_sec"]
 					measure_index = result["measure_index"]
 					pending_measure_text = result["pending_measure_text"]
+					balloon_index = result["balloon_index"]
 
 	chart.sort_notes()
 	return chart
@@ -100,6 +113,12 @@ static func _apply_metadata(chart: TaikoChart, token: Dictionary) -> void:
 			chart.course = value
 		"LEVEL":
 			chart.level = int(value)
+		"BALLOON":
+			chart.balloon_counts.clear()
+			for part in value.split(","):
+				var trimmed := part.strip_edges()
+				if trimmed != "":
+					chart.balloon_counts.append(int(trimmed))
 
 
 static func _parse_notes_line(
@@ -110,7 +129,9 @@ static func _parse_notes_line(
 	measure_numerator: float,
 	measure_denominator: float,
 	measure_index: int,
-	pending_measure_text: String
+	pending_measure_text: String,
+	active_long_note: Dictionary,
+	balloon_index: int
 ) -> Dictionary:
 	var current_time := start_time
 	var measure_text := pending_measure_text
@@ -118,16 +139,20 @@ static func _parse_notes_line(
 	for character in line:
 		var value := String(character)
 		if value == ",":
-			current_time = _parse_measure(
+			var result := _parse_measure(
 				chart,
 				measure_text,
 				current_time,
 				bpm,
 				measure_numerator,
 				measure_denominator,
-				measure_index
+				measure_index,
+				active_long_note,
+				balloon_index
 			)
+			current_time = result["time_sec"]
 			measure_index += 1
+			balloon_index = result["balloon_index"]
 			measure_text = ""
 		else:
 			measure_text += value
@@ -135,7 +160,8 @@ static func _parse_notes_line(
 	return {
 		"time_sec": current_time,
 		"measure_index": measure_index,
-		"pending_measure_text": measure_text
+		"pending_measure_text": measure_text,
+		"balloon_index": balloon_index
 	}
 
 
@@ -146,39 +172,66 @@ static func _parse_measure(
 	bpm: float,
 	measure_numerator: float,
 	measure_denominator: float,
-	measure_index: int
-) -> float:
+	measure_index: int,
+	active_long_note: Dictionary,
+	balloon_index: int
+) -> Dictionary:
 	var slots := measure_text.length()
 	if slots <= 0:
-		return start_time
+		return {
+			"time_sec": start_time,
+			"balloon_index": balloon_index
+		}
 
 	var beat_count := measure_numerator * (4.0 / measure_denominator)
 	var measure_duration := beat_count * 60.0 / bpm
 	var slot_duration := measure_duration / float(slots)
 
 	for slot in range(slots):
-		var lane := _lane_for_note_char(measure_text[slot])
-		if lane == "":
-			if measure_text[slot] != "0":
-				chart.warnings.append("Unsupported note character '%s' in measure %d" % [measure_text[slot], measure_index])
+		var note := measure_text[slot]
+		var note_time := start_time + (slot_duration * float(slot)) + chart.offset_sec
+
+		if note == "0":
 			continue
-		chart.add_note(
-			start_time + (slot_duration * float(slot)) + chart.offset_sec,
-			lane,
-			lane,
-			measure_index,
-			slot
-		)
+		elif note == "1":
+			chart.add_note(note_time, "don", "don", measure_index, slot)
+		elif note == "2":
+			chart.add_note(note_time, "ka", "ka", measure_index, slot)
+		elif note == "5":
+			var note_index := chart.notes.size()
+			active_long_note.clear()
+			chart.add_note(note_time, "roll", "roll_start", measure_index, slot, {"duration_sec": 0.0})
+			active_long_note["index"] = note_index
+		elif note == "6":
+			var note_index := chart.notes.size()
+			active_long_note.clear()
+			chart.add_note(note_time, "roll", "roll_big_start", measure_index, slot, {"duration_sec": 0.0})
+			active_long_note["index"] = note_index
+		elif note == "7":
+			var note_index := chart.notes.size()
+			var required_hits := 0
+			if balloon_index < chart.balloon_counts.size():
+				required_hits = chart.balloon_counts[balloon_index]
+			balloon_index += 1
+			active_long_note.clear()
+			chart.add_note(note_time, "balloon", "balloon_start", measure_index, slot, {
+				"duration_sec": 0.0,
+				"required_hits": required_hits
+			})
+			active_long_note["index"] = note_index
+		elif note == "8":
+			if active_long_note.has("index"):
+				var start_index := int(active_long_note["index"])
+				if start_index >= 0 and start_index < chart.notes.size():
+					chart.notes[start_index]["duration_sec"] = note_time - float(chart.notes[start_index]["time_sec"])
+				active_long_note.clear()
+		else:
+			chart.warnings.append("Unsupported note character '%s' in measure %d" % [note, measure_index])
 
-	return start_time + measure_duration
-
-
-static func _lane_for_note_char(value: String) -> String:
-	if value == "1":
-		return "don"
-	if value == "2":
-		return "ka"
-	return ""
+	return {
+		"time_sec": start_time + measure_duration,
+		"balloon_index": balloon_index
+	}
 
 
 static func _to_positive_float(value: String) -> float:

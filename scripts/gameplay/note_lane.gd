@@ -28,13 +28,16 @@ func clear_notes() -> void:
 		child.queue_free()
 	note_nodes.clear()
 
-func update_notes(notes: Array[Dictionary], song_time_sec: float) -> void:
+func update_notes(notes: Array[Dictionary], song_time_sec: float, timing_map: Variant = null) -> void:
 	for note in notes:
 		var id: String = String(note["id"])
 		if not note_nodes.has(id):
 			continue
 		var sprite: Sprite2D = note_nodes[id]
 		var scheduled: float = float(note.get("time_sec", 0.0))
-		var progress: float = clamp(1.0 - ((scheduled - song_time_sec) / APPROACH_TIME_SEC), 0.0, 1.25)
+		var scroll := 1.0
+		if timing_map != null:
+			scroll = float(timing_map.scroll_at(scheduled))
+		var progress: float = clamp(1.0 - ((scheduled - song_time_sec) / (APPROACH_TIME_SEC / max(0.1, scroll))), 0.0, 1.25)
 		sprite.position = Vector2(lerpf(SPAWN_X, HIT_X, progress), NOTE_Y)
 		sprite.visible = String(note.get("state", "pending")) == "pending"

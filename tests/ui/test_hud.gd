@@ -17,6 +17,8 @@ func _init() -> void:
 	_assert(hud.judgment_label.text == "F = Don    J = Ka    Space = Start", "Default judgment text should be controls")
 	_assert(hud.status_label != null, "Status label should be created")
 	_assert(hud.status_label.text == "Ready", "Default status text should be Ready")
+	_assert(hud.gogo_label != null, "GOGO label should be created")
+	_assert(hud.gogo_label.text == "", "GOGO label should default to empty")
 
 	hud.update_score(1234, 56)
 	_assert(hud.score_label.text == "Score: 1234", "Score text should update")
@@ -29,6 +31,10 @@ func _init() -> void:
 
 	hud.set_status("Playing")
 	_assert(hud.status_label.text == "Playing", "Status text should update")
+	hud.set_gogo(true)
+	_assert(hud.gogo_label.text == "GOGO", "GOGO label should show active state")
+	hud.set_gogo(false)
+	_assert(hud.gogo_label.text == "", "GOGO label should clear inactive state")
 
 	hud.free()
 

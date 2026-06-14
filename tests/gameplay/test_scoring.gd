@@ -9,6 +9,8 @@ func _init() -> void:
 	_test_judgment_progression()
 	_test_reset()
 	_test_unknown_judgment_noop()
+	_test_roll_hit()
+	_test_reset_clears_roll_hits()
 
 	if failed_count == 0:
 		print("PASS: Scoring")
@@ -73,6 +75,22 @@ func _test_unknown_judgment_noop() -> void:
 	scoring.apply_judgment("super")
 	_assert(scoring.combo == 3, "Unknown judgment should not overwrite externally modified combo")
 	_assert(scoring.max_combo == 1, "Unknown judgment should not update max_combo")
+
+
+func _test_roll_hit() -> void:
+	var scoring: RefCounted = ScoringScript.new()
+	scoring.apply_roll_hit()
+	_assert(scoring.roll_hits == 1, "apply_roll_hit() should increment roll_hits")
+	_assert(scoring.score == 100, "apply_roll_hit() should award 100 points")
+	_assert(scoring.combo == 0, "apply_roll_hit() should not change combo")
+
+
+func _test_reset_clears_roll_hits() -> void:
+	var scoring: RefCounted = ScoringScript.new()
+	scoring.apply_roll_hit()
+	scoring.apply_roll_hit()
+	scoring.reset()
+	_assert(scoring.roll_hits == 0, "reset() should clear roll_hits")
 
 
 func _assert(condition: bool, message: String) -> void:

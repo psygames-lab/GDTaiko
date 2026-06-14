@@ -2055,7 +2055,7 @@ git commit -m "feat: parse roll and balloon notes"
 - Modify: `E:\10_创作\GDTaiko\scripts\gameplay\gameplay_controller.gd`
 - Create: `E:\10_创作\GDTaiko\tests\gameplay\test_roll_manager.gd`
 
-- [ ] **Step 1: Write roll manager test**
+- [x] **Step 1: Write roll manager test**
 
 Create:
 
@@ -2077,7 +2077,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Implement `roll_manager.gd`**
+- [x] **Step 2: Implement `roll_manager.gd`**
 
 ```gdscript
 extends RefCounted
@@ -2104,7 +2104,7 @@ func reset() -> void:
 	hits_by_note.clear()
 ```
 
-- [ ] **Step 3: Integrate rolls into input handling**
+- [x] **Step 3: Integrate rolls into input handling**
 
 In `gameplay_controller.gd`, before normal note hit lookup:
 
@@ -2117,7 +2117,7 @@ for note in chart.notes:
 		return
 ```
 
-- [ ] **Step 4: Add roll scoring**
+- [x] **Step 4: Add roll scoring**
 
 In `scoring.gd`:
 
@@ -2129,7 +2129,7 @@ func apply_roll_hit() -> void:
 	score += 100
 ```
 
-- [ ] **Step 5: Run roll and scoring tests**
+- [x] **Step 5: Run roll and scoring tests**
 
 Run:
 

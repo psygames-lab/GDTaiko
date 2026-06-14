@@ -5,6 +5,7 @@ const TjaParser := preload("res://scripts/chart/tja_parser.gd")
 const Judge := preload("res://scripts/gameplay/judge.gd")
 const Scoring := preload("res://scripts/gameplay/scoring.gd")
 const SongClock := preload("res://scripts/gameplay/song_clock.gd")
+const RollManager := preload("res://scripts/gameplay/roll_manager.gd")
 const NoteLane := preload("res://scripts/gameplay/note_lane.gd")
 const TaikoHud := preload("res://scripts/ui/hud.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
@@ -15,6 +16,7 @@ const SAMPLE_ASSET_PATH := "res://assets/sample/"
 var chart
 var judge := Judge.new()
 var scoring := Scoring.new()
+var roll_manager := RollManager.new()
 var clock: SongClock
 var lane: NoteLane
 var hud: TaikoHud
@@ -91,6 +93,7 @@ func _start_song() -> void:
 		note["state"] = NoteModel.PENDING
 	lane.spawn_notes(chart.notes)
 	scoring.reset()
+	roll_manager.reset()
 	clock.reset()
 	if audio_player.stream != null:
 		audio_player.stop()
@@ -110,6 +113,8 @@ func _hit(lane_name: String) -> void:
 	for note in chart.notes:
 		if String(note.get("state", NoteModel.PENDING)) != NoteModel.PENDING:
 			continue
+		if roll_manager.is_roll(note):
+			continue
 		if String(note.get("lane", NoteModel.DON)) != lane_name:
 			continue
 		var error := absf(float(note["time_sec"]) - song_time)
@@ -118,11 +123,15 @@ func _hit(lane_name: String) -> void:
 			best_note = note
 
 	if best_note.is_empty():
+		if _apply_active_roll_hit(song_time):
+			return
 		_apply_empty_miss()
 		return
 
 	var result := judge.judge(float(best_note["time_sec"]), song_time)
 	if result["judgment"] == "miss":
+		if _apply_active_roll_hit(song_time):
+			return
 		_apply_empty_miss()
 		return
 
@@ -131,6 +140,19 @@ func _hit(lane_name: String) -> void:
 	hud.update_score(scoring.score, scoring.combo)
 	hud.show_judgment(result["judgment"], result["timing_error_ms"])
 	_process_song_finished()
+
+
+func _apply_active_roll_hit(song_time: float) -> bool:
+	for note in chart.notes:
+		if not roll_manager.is_roll(note):
+			continue
+		if not roll_manager.is_active(note, song_time):
+			continue
+		roll_manager.register_hit(note)
+		scoring.apply_roll_hit()
+		hud.update_score(scoring.score, scoring.combo)
+		return true
+	return false
 
 
 func _apply_empty_miss() -> void:
@@ -145,7 +167,15 @@ func _process_misses(song_time: float) -> void:
 	for note in chart.notes:
 		if String(note.get("state", NoteModel.PENDING)) != NoteModel.PENDING:
 			continue
-		if judge.is_expired(float(note["time_sec"]), song_time):
+		var expiry_time := float(note["time_sec"])
+		if roll_manager.is_roll(note):
+			expiry_time += float(note.get("duration_sec", 0.0))
+			if judge.is_expired(expiry_time, song_time):
+				note["state"] = NoteModel.HIT
+				lane.update_notes(chart.notes, song_time)
+				_process_song_finished()
+			continue
+		if judge.is_expired(expiry_time, song_time):
 			note["state"] = NoteModel.MISSED
 			scoring.apply_judgment("miss")
 			hud.update_score(scoring.score, scoring.combo)

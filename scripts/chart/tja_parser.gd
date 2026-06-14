@@ -53,6 +53,8 @@ static func parse_text(text: String) -> TaikoChart:
 					chart.add_timing_event(current_time + chart.offset_sec, "gogo", true)
 				elif in_chart and command == "GOGOEND":
 					chart.add_timing_event(current_time + chart.offset_sec, "gogo", false)
+				elif in_chart and command == "SCROLL":
+					chart.add_timing_event(current_time + chart.offset_sec, "scroll", argument.to_float())
 				elif in_chart and command == "MEASURE":
 					var parts := argument.split("/")
 					if parts.size() == 2:

@@ -2350,7 +2350,7 @@ git commit -m "feat: add gogo time"
 - Modify: `E:\10_创作\GDTaiko\scripts\gameplay\note_lane.gd`
 - Create: `E:\10_创作\GDTaiko\tests\chart\test_timing_map.gd`
 
-- [ ] **Step 1: Write timing map test**
+- [x] **Step 1: Write timing map test**
 
 Create:
 
@@ -2372,7 +2372,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Implement timing map**
+- [x] **Step 2: Implement timing map**
 
 Create:
 
@@ -2402,7 +2402,7 @@ func scroll_at(song_time_sec: float) -> float:
 	return float(value_at("scroll", song_time_sec, 1.0))
 ```
 
-- [ ] **Step 3: Parse `#SCROLL`**
+- [x] **Step 3: Parse `#SCROLL`**
 
 In `tja_parser.gd` command handling:
 
@@ -2411,7 +2411,7 @@ elif in_chart and command == "SCROLL":
 	chart.add_timing_event(current_time + chart.offset_sec, "scroll", argument.to_float())
 ```
 
-- [ ] **Step 4: Use scroll in note lane**
+- [x] **Step 4: Use scroll in note lane**
 
 Change visual progress:
 
@@ -2422,7 +2422,7 @@ var progress := clamp(1.0 - ((scheduled - song_time_sec) / (APPROACH_TIME_SEC / 
 
 Pass `TimingMap` into `note_lane.update_notes`.
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run:
 
@@ -2433,7 +2433,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parse
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add scripts/chart/timing_map.gd scripts/chart/tja_parser.gd scripts/gameplay/note_lane.gd tests/chart/test_timing_map.gd tests/chart/test_tja_parser.gd

@@ -20,6 +20,7 @@ func _init() -> void:
 	_test_roll_and_balloon_notes()
 	_test_bpm_change_timing_event()
 	_test_gogo_timing_events()
+	_test_scroll_timing_event()
 
 	if failed_count == 0:
 		print("PASS: TjaParser")
@@ -286,6 +287,25 @@ BPM:120
 			_assert(is_equal_approx(float(event["time_sec"]), 2.0), "GOGOEND should use current chart time")
 	_assert(found_start, "Parser should add GOGOSTART timing event")
 	_assert(found_end, "Parser should add GOGOEND timing event")
+
+
+func _test_scroll_timing_event() -> void:
+	var text := """BPM:120
+#START
+1000,
+#SCROLL 2.5
+1000,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	var found_scroll := false
+	for event in chart.timing_events:
+		if String(event["type"]) == "scroll":
+			found_scroll = true
+			_assert(is_equal_approx(float(event["time_sec"]), 2.0), "SCROLL event should use current chart time")
+			_assert(is_equal_approx(float(event["value"]), 2.5), "SCROLL event should preserve scroll value")
+	_assert(found_scroll, "Parser should add SCROLL timing event")
 
 
 func _assert(condition: bool, message: String) -> void:

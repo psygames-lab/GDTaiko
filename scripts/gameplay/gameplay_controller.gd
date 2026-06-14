@@ -2,6 +2,7 @@ extends Node2D
 class_name GameplayController
 
 const TjaParser := preload("res://scripts/chart/tja_parser.gd")
+const TimingMap := preload("res://scripts/chart/timing_map.gd")
 const Judge := preload("res://scripts/gameplay/judge.gd")
 const Scoring := preload("res://scripts/gameplay/scoring.gd")
 const SongClock := preload("res://scripts/gameplay/song_clock.gd")
@@ -15,6 +16,7 @@ const SAMPLE_CHART_PATH := "res://assets/sample/sample.tja"
 const SAMPLE_ASSET_PATH := "res://assets/sample/"
 
 var chart
+var timing_map := TimingMap.new()
 var judge := Judge.new()
 var scoring := Scoring.new()
 var roll_manager := RollManager.new()
@@ -39,7 +41,7 @@ func _process(delta: float) -> void:
 	clock.advance(delta)
 	var song_time := clock.time_sec()
 	_update_timing_states(song_time)
-	lane.update_notes(chart.notes, song_time)
+	lane.update_notes(chart.notes, song_time, timing_map)
 	_process_misses(song_time)
 
 
@@ -84,6 +86,7 @@ func _load_sample_chart() -> void:
 	var loaded_stream := _load_optional_audio(audio_path)
 	audio_player.stream = loaded_stream
 	clock.configure(audio_player, chart.offset_sec)
+	_build_timing_map()
 	lane.spawn_notes(chart.notes)
 	hud.update_score(scoring.score, scoring.combo)
 	hud.set_status("Loaded %s - press Space" % chart.title)
@@ -195,6 +198,12 @@ func _apply_empty_miss() -> void:
 	hud.show_judgment("miss", 0.0)
 
 
+func _build_timing_map() -> void:
+	timing_map = TimingMap.new()
+	for event in chart.timing_events:
+		timing_map.add_event(float(event["time_sec"]), String(event["type"]), event["value"])
+
+
 func _update_timing_states(song_time: float) -> void:
 	var gogo := false
 	for event in chart.timing_events:
@@ -215,14 +224,14 @@ func _process_misses(song_time: float) -> void:
 			expiry_time += float(note.get("duration_sec", 0.0))
 			if judge.is_expired(expiry_time, song_time):
 				note["state"] = NoteModel.HIT
-				lane.update_notes(chart.notes, song_time)
+				lane.update_notes(chart.notes, song_time, timing_map)
 				_process_song_finished()
 			continue
 		if roll_manager.is_roll(note):
 			expiry_time += float(note.get("duration_sec", 0.0))
 			if judge.is_expired(expiry_time, song_time):
 				note["state"] = NoteModel.HIT
-				lane.update_notes(chart.notes, song_time)
+				lane.update_notes(chart.notes, song_time, timing_map)
 				_process_song_finished()
 			continue
 		if judge.is_expired(expiry_time, song_time):
@@ -230,7 +239,7 @@ func _process_misses(song_time: float) -> void:
 			scoring.apply_judgment("miss")
 			hud.update_score(scoring.score, scoring.combo)
 			hud.show_judgment("miss", 0.0)
-			lane.update_notes(chart.notes, song_time)
+			lane.update_notes(chart.notes, song_time, timing_map)
 			_process_song_finished()
 
 

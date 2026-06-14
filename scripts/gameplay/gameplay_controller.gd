@@ -34,6 +34,7 @@ var don_texture: Texture2D
 var ka_texture: Texture2D
 var playing := false
 var last_result: Dictionary = {}
+var current_chart_path := SAMPLE_CHART_PATH
 
 
 func _ready() -> void:
@@ -94,6 +95,7 @@ func _load_sample_chart() -> void:
 	if session != null and String(session.get("selected_tja_path")) != "":
 		chart_path = String(session.get("selected_tja_path"))
 		audio_path = String(session.get("selected_audio_path"))
+	current_chart_path = chart_path
 	chart = TjaParser.parse_file(chart_path)
 	if chart == null:
 		push_error("Failed to load chart from %s" % chart_path)
@@ -281,6 +283,8 @@ func _process_song_finished() -> void:
 func _build_result_payload() -> Dictionary:
 	return {
 		"score": scoring.score,
+		"song_key": current_chart_path,
+		"course": chart.course,
 		"max_combo": scoring.max_combo,
 		"perfects": scoring.perfects,
 		"goods": scoring.goods,

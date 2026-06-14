@@ -421,6 +421,12 @@ func _test_song_finish_shows_result_payload() -> void:
 	_assert(last_result is Dictionary, "Controller should expose a result payload")
 	if last_result is Dictionary:
 		_assert(last_result["score"] == 1000, "Result payload should include final score")
+		_assert(last_result.has("song_key"), "Result payload should include song key for score storage")
+		_assert(last_result.has("course"), "Result payload should include course for score storage")
+		if last_result.has("song_key"):
+			_assert(last_result["song_key"] != "", "Result payload song key should not be empty")
+		if last_result.has("course"):
+			_assert(last_result["course"] == "Oni", "Result payload should include course for score storage")
 		_assert(last_result["max_combo"] == 1, "Result payload should include max combo")
 		_assert(last_result["perfects"] == 1, "Result payload should include perfect count")
 		_assert(is_equal_approx(float(last_result["gauge"]), 2.0), "Result payload should include soul gauge value")

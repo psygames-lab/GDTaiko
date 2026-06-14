@@ -1,6 +1,8 @@
 extends Control
 class_name ResultScreen
 
+const ScoreStore := preload("res://scripts/storage/score_store.gd")
+
 var title_label: Label
 var score_label: Label
 var combo_label: Label
@@ -8,6 +10,7 @@ var counts_label: Label
 var gauge_label: Label
 var clear_label: Label
 var last_result: Dictionary = {}
+var score_store := ScoreStore.new()
 
 
 func build() -> void:
@@ -25,6 +28,7 @@ func build() -> void:
 func show_result(result: Dictionary) -> void:
 	build()
 	last_result = result.duplicate()
+	_save_best_result(result)
 	score_label.text = "Score: %d" % int(result.get("score", 0))
 	combo_label.text = "Max Combo: %d" % int(result.get("max_combo", 0))
 	counts_label.text = "Perfect %d  Good %d  Bad %d  Miss %d" % [
@@ -36,6 +40,14 @@ func show_result(result: Dictionary) -> void:
 	gauge_label.text = "Gauge: %.1f%%" % float(result.get("gauge", 0.0))
 	clear_label.text = "Clear" if bool(result.get("clear", false)) else "Failed"
 	visible = true
+
+
+func _save_best_result(result: Dictionary) -> void:
+	var song_key := String(result.get("song_key", ""))
+	var course := String(result.get("course", ""))
+	if song_key == "" or course == "":
+		return
+	score_store.save_result(song_key, course, result)
 
 
 func hide_result() -> void:

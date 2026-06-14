@@ -14,6 +14,7 @@ func _init() -> void:
 func _run_tests() -> void:
 	_test_instantiates_gameplay_scene()
 	_test_ready_builds_scene_and_loads_sample()
+	_test_ready_loads_session_selected_chart()
 	_test_loads_sample_chart()
 	_test_textures_and_spawned_notes()
 	_test_start_song_resets_state()
@@ -62,6 +63,33 @@ func _test_ready_builds_scene_and_loads_sample() -> void:
 	_assert(controller.lane != null, "NoteLane should be built")
 	_assert(controller.hud != null, "TaikoHud should be built")
 	controller.free()
+
+
+func _test_ready_loads_session_selected_chart() -> void:
+	var state = get_root().get_node_or_null("SessionState")
+	_assert(state != null, "SessionState autoload should exist")
+	if state == null:
+		return
+	var chart_path := "user://selected_song.tja"
+	var chart := FileAccess.open(chart_path, FileAccess.WRITE)
+	chart.store_string("""TITLE:Selected Song
+COURSE:Oni
+LEVEL:4
+BPM:120
+#START
+1000,
+#END
+""")
+	chart.close()
+	state.selected_tja_path = chart_path
+	state.selected_audio_path = ""
+
+	var controller := _new_controller()
+	_assert(controller.chart.title == "Selected Song", "Gameplay should load SessionState selected chart")
+	_assert(controller.chart.level == 4, "Gameplay should load selected chart metadata")
+	controller.free()
+	state.clear_selection()
+	DirAccess.remove_absolute(chart_path)
 
 
 func _test_loads_sample_chart() -> void:
@@ -393,6 +421,12 @@ func _test_song_finish_shows_result_payload() -> void:
 	_assert(last_result is Dictionary, "Controller should expose a result payload")
 	if last_result is Dictionary:
 		_assert(last_result["score"] == 1000, "Result payload should include final score")
+		_assert(last_result.has("song_key"), "Result payload should include song key for score storage")
+		_assert(last_result.has("course"), "Result payload should include course for score storage")
+		if last_result.has("song_key"):
+			_assert(last_result["song_key"] != "", "Result payload song key should not be empty")
+		if last_result.has("course"):
+			_assert(last_result["course"] == "Oni", "Result payload should include course for score storage")
 		_assert(last_result["max_combo"] == 1, "Result payload should include max combo")
 		_assert(last_result["perfects"] == 1, "Result payload should include perfect count")
 		_assert(is_equal_approx(float(last_result["gauge"]), 2.0), "Result payload should include soul gauge value")

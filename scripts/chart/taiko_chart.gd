@@ -9,8 +9,11 @@ var offset_sec: float = 0.0
 var course: String = "Oni"
 var level: int = 1
 var balloon_counts: Array[int] = []
+var metadata: Dictionary = {}
 var notes: Array[Dictionary] = []
+var branch_events: Array[Dictionary] = []
 var timing_events: Array[Dictionary] = []
+var diagnostics: Array = []
 var warnings: Array[String] = []
 
 var _next_note_index: int = 1

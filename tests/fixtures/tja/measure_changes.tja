@@ -1,0 +1,7 @@
+TITLE:Measure Changes
+BPM:120
+#START
+1000,
+#MEASURE 3/4
+1000,
+#END

@@ -79,6 +79,10 @@ func _test_apply_to_project_updates_audio_and_input_map() -> void:
 	_assert(_action_has_key("taiko_don", KEY_D), "Config should apply Don key")
 	_assert(_action_has_key("taiko_ka", KEY_K), "Config should apply Ka key")
 	_assert(is_equal_approx(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Master")), linear_to_db(0.5)), "Config should apply master volume")
+	_assert(AudioServer.get_bus_index("Music") != -1, "Config should ensure Music bus exists")
+	_assert(AudioServer.get_bus_index("SFX") != -1, "Config should ensure SFX bus exists")
+	_assert(is_equal_approx(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Music")), linear_to_db(0.25)), "Config should apply music volume")
+	_assert(is_equal_approx(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("SFX")), linear_to_db(0.75)), "Config should apply SFX volume")
 
 
 func _action_has_key(action: String, keycode: Key) -> bool:

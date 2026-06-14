@@ -12,6 +12,7 @@ func _init() -> void:
 
 
 func _run_tests() -> void:
+	DirAccess.remove_absolute("user://config.json")
 	_test_instantiates_gameplay_scene()
 	_test_ready_builds_scene_and_loads_sample()
 	_test_ready_loads_session_selected_chart()
@@ -33,6 +34,8 @@ func _run_tests() -> void:
 	_test_balloon_expires_without_miss_when_not_cleared()
 	_test_cleared_balloon_does_not_score_again()
 	_test_gogo_event_updates_scoring_before_hit()
+	_test_gogo_event_updates_lane_overlay()
+	_test_config_offsets_apply_to_clock_and_input()
 	_test_song_finish_shows_result_payload()
 	_test_free_instantiated_scene()
 
@@ -415,6 +418,32 @@ func _test_gogo_event_updates_scoring_before_hit() -> void:
 	controller.clock.configure(null, 0.0)
 	controller._hit(NoteModel.DON)
 	_assert(controller.scoring.score == 1200, "GOGO event at current time should multiply normal hit score")
+	controller.free()
+
+
+func _test_gogo_event_updates_lane_overlay() -> void:
+	var controller := _new_controller()
+	controller.chart.timing_events.append({
+		"time_sec": 0.0,
+		"type": "gogo",
+		"value": true,
+	})
+	controller._start_song()
+	controller._update_timing_states(0.0)
+	var overlay := controller.lane.get_node("GogoOverlay") as CanvasItem
+	_assert(overlay.visible, "GOGO timing event should show lane overlay")
+	controller.free()
+
+
+func _test_config_offsets_apply_to_clock_and_input() -> void:
+	var controller := _new_controller()
+	controller.game_config.chart_offset_ms = 250
+	controller.game_config.input_offset_ms = 100
+	controller._load_sample_chart()
+	_assert(is_equal_approx(controller.clock.chart_offset_sec, controller.chart.offset_sec + 0.25), "Config chart offset should apply to song clock")
+	controller._start_song()
+	controller._hit(NoteModel.DON)
+	_assert(is_equal_approx(float(controller.replay_recorder.inputs[0]["time_sec"]), controller.chart.offset_sec + 0.35), "Config input offset should apply to recorded hit time")
 	controller.free()
 
 

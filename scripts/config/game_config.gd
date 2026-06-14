@@ -37,6 +37,8 @@ func save_config() -> bool:
 
 func apply_to_project() -> void:
 	_set_bus_volume("Master", master_volume)
+	_set_bus_volume("Music", music_volume)
+	_set_bus_volume("SFX", sfx_volume)
 	_ensure_action_keys("taiko_don", don_keys)
 	_ensure_action_keys("taiko_ka", ka_keys)
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
@@ -86,7 +88,19 @@ func _ensure_action_keys(action: String, keys: Array) -> void:
 
 
 func _set_bus_volume(bus_name: String, value: float) -> void:
-	var bus_index := AudioServer.get_bus_index(bus_name)
+	var bus_index := _ensure_audio_bus(bus_name)
 	if bus_index == -1:
 		return
 	AudioServer.set_bus_volume_db(bus_index, linear_to_db(clampf(value, 0.0, 1.0)))
+
+
+func _ensure_audio_bus(bus_name: String) -> int:
+	var bus_index := AudioServer.get_bus_index(bus_name)
+	if bus_index != -1:
+		return bus_index
+	if bus_name == "Master":
+		return -1
+	AudioServer.add_bus()
+	bus_index = AudioServer.get_bus_count() - 1
+	AudioServer.set_bus_name(bus_index, bus_name)
+	return bus_index

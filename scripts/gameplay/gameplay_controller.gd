@@ -15,6 +15,7 @@ const TaikoHud := preload("res://scripts/ui/hud.gd")
 const ResultScreen := preload("res://scripts/ui/result_screen.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
 const ReplayRecorder := preload("res://scripts/replay/replay_recorder.gd")
+const GameConfig := preload("res://scripts/config/game_config.gd")
 const ResultScene := preload("res://scenes/Result.tscn")
 
 const SAMPLE_CHART_PATH := "res://assets/sample/sample.tja"
@@ -34,6 +35,7 @@ var hud: TaikoHud
 var result_screen: ResultScreen
 var replay_recorder: ReplayRecorder
 var audio_player: AudioStreamPlayer
+var game_config: GameConfig
 var don_texture: Texture2D
 var ka_texture: Texture2D
 var playing := false
@@ -66,6 +68,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _build_scene() -> void:
+	game_config = GameConfig.new()
+	game_config.load_config()
+	game_config.apply_to_project()
+
 	audio_player = AudioStreamPlayer.new()
 	audio_player.name = "Audio"
 	add_child(audio_player)
@@ -114,7 +120,7 @@ func _load_sample_chart() -> void:
 		audio_path = SAMPLE_ASSET_PATH + String(chart.wave)
 	var loaded_stream := _load_optional_audio(audio_path)
 	audio_player.stream = loaded_stream
-	clock.configure(audio_player, chart.offset_sec)
+	clock.configure(audio_player, chart.offset_sec + (float(game_config.chart_offset_ms) / 1000.0))
 	_build_timing_map()
 	lane.spawn_notes(chart.notes)
 	hud.update_score(scoring.score, scoring.combo)
@@ -136,7 +142,7 @@ func _start_song() -> void:
 	result_screen.hide_result()
 	last_result = {}
 	replay_recorder = ReplayRecorder.new()
-	replay_recorder.start(current_chart_path, chart.course, int(round(chart.offset_sec * 1000.0)))
+	replay_recorder.start(_chart_replay_hash(current_chart_path), chart.course, int(round((chart.offset_sec + (float(game_config.chart_offset_ms) / 1000.0)) * 1000.0)))
 	clock.reset()
 	if audio_player.stream != null:
 		audio_player.stop()
@@ -146,11 +152,11 @@ func _start_song() -> void:
 	hud.set_status("Playing")
 
 
-func _hit(lane_name: String) -> void:
+func _hit(lane_name: String, record_replay_input: bool = true) -> void:
 	if not playing or chart == null:
 		return
-	var song_time := clock.time_sec()
-	if replay_recorder != null:
+	var song_time := clock.time_sec() + (float(game_config.input_offset_ms) / 1000.0)
+	if replay_recorder != null and record_replay_input:
 		replay_recorder.record_input(song_time, lane_name)
 	_update_timing_states(song_time)
 	var best_note: Dictionary = {}
@@ -190,6 +196,10 @@ func _hit(lane_name: String) -> void:
 	hud.update_score(scoring.score, scoring.combo)
 	hud.show_judgment(result["judgment"], result["timing_error_ms"])
 	_process_song_finished()
+
+
+func apply_replay_input(lane_name: String) -> void:
+	_hit(lane_name, false)
 
 
 func _apply_active_long_note_hit(song_time: float) -> bool:
@@ -251,6 +261,7 @@ func _update_timing_states(song_time: float) -> void:
 			gogo = bool(event["value"])
 	scoring.set_gogo(gogo)
 	hud.set_gogo(gogo)
+	lane.set_gogo(gogo)
 
 
 func _process_misses(song_time: float) -> void:
@@ -339,3 +350,9 @@ func _load_note_texture(path: String, fallback_color: Color) -> Texture2D:
 			if center.distance_to(point) <= radius:
 				image.set_pixel(x, y, fallback_color)
 	return ImageTexture.create_from_image(image)
+
+
+func _chart_replay_hash(path: String) -> String:
+	if FileAccess.file_exists(path):
+		return FileAccess.get_file_as_string(path).sha256_text()
+	return path.sha256_text()

@@ -14,8 +14,10 @@ func _init() -> void:
 
 func _run_tests() -> void:
 	_test_recorder_save_load_roundtrip()
+	_test_player_rejects_mismatched_context()
 	_test_player_injects_inputs_by_time()
 	_test_gameplay_controller_records_hits()
+	_test_replay_input_does_not_record_again()
 
 	if failed_count == 0:
 		print("PASS: ReplayRoundtrip")
@@ -58,13 +60,25 @@ func _test_player_injects_inputs_by_time() -> void:
 
 	var fake_controller := FakeController.new()
 	var player := ReplayPlayer.new()
-	player.load_replay(recorder.to_dictionary())
+	_assert(player.load_replay(recorder.to_dictionary(), "chart-a", "Oni", 0), "Replay should load for matching context")
 	player.update(fake_controller, 0.5)
 	_assert(fake_controller.hits.is_empty(), "Replay should not inject future inputs")
 	player.update(fake_controller, 1.0)
 	_assert(fake_controller.hits == [NoteModel.DON], "Replay should inject due Don input")
 	player.update(fake_controller, 2.5)
 	_assert(fake_controller.hits == [NoteModel.DON, NoteModel.KA], "Replay should inject remaining inputs")
+
+
+func _test_player_rejects_mismatched_context() -> void:
+	var recorder := ReplayRecorder.new()
+	recorder.start("chart-a", "Oni", 12)
+	recorder.record_input(1.0, NoteModel.DON)
+
+	var player := ReplayPlayer.new()
+	_assert(not player.load_replay(recorder.to_dictionary(), "chart-b", "Oni", 12), "Replay should reject changed chart")
+	_assert(player.last_error == "replay chart mismatch", "Replay should expose chart mismatch error")
+	_assert(not player.load_replay(recorder.to_dictionary(), "chart-a", "Hard", 12), "Replay should reject wrong course")
+	_assert(not player.load_replay(recorder.to_dictionary(), "chart-a", "Oni", 0), "Replay should reject wrong offset")
 
 
 func _test_gameplay_controller_records_hits() -> void:
@@ -75,6 +89,15 @@ func _test_gameplay_controller_records_hits() -> void:
 	_assert(controller.replay_recorder != null, "Gameplay should create a replay recorder on start")
 	_assert(controller.replay_recorder.inputs.size() == 1, "Gameplay should record player hit input")
 	_assert(controller.replay_recorder.inputs[0]["lane"] == NoteModel.DON, "Gameplay should record hit lane")
+	controller.free()
+
+
+func _test_replay_input_does_not_record_again() -> void:
+	var controller = GameplayScene.instantiate()
+	get_root().add_child(controller)
+	controller._start_song()
+	controller.apply_replay_input(NoteModel.DON)
+	_assert(controller.replay_recorder.inputs.is_empty(), "Replay-injected input should not be recorded again")
 	controller.free()
 
 

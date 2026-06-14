@@ -3,6 +3,8 @@ class_name OptionsMenu
 
 signal options_changed
 
+const GameConfig := preload("res://scripts/config/game_config.gd")
+
 const DEFAULT_CHART_OFFSET_MS := 0
 const DEFAULT_INPUT_OFFSET_MS := 0
 const DEFAULT_MASTER_VOLUME := 1.0
@@ -40,6 +42,13 @@ var ka_button: Button
 
 func _ready() -> void:
 	build()
+	if config == null:
+		var loaded_config := GameConfig.new()
+		loaded_config.load_config()
+		set_config(loaded_config)
+		loaded_config.apply_to_project()
+	else:
+		set_config(config)
 
 
 func set_config(new_config: Object) -> void:
@@ -331,6 +340,10 @@ func _write_config(key: String, value: Variant) -> void:
 	for property in config.get_property_list():
 		if String(property["name"]) == key:
 			config.set(key, value)
+			if config.has_method("save_config"):
+				config.save_config()
+			if config.has_method("apply_to_project"):
+				config.apply_to_project()
 			return
 
 

@@ -19,6 +19,7 @@ var failed_count := 0
 
 func _init() -> void:
 	_test_defaults()
+	_test_ready_creates_backing_config()
 	_test_config_loading_and_updates()
 	_test_real_game_config_updates()
 	_test_key_rebind_updates_config()
@@ -45,6 +46,19 @@ func _test_defaults() -> void:
 	_assert(menu.ka_button.text == "Ka: J", "Default Ka bind should show J")
 
 	menu.free()
+
+
+func _test_ready_creates_backing_config() -> void:
+	DirAccess.remove_absolute("user://config.json")
+	var scene := preload("res://scenes/Options.tscn").instantiate()
+	scene._ready()
+	scene.chart_offset_spin.value = 31
+	scene._on_chart_offset_changed(31)
+	_assert(scene.config != null, "Options scene should create a backing GameConfig")
+	_assert(scene.config.chart_offset_ms == 31, "Options scene should write changes to backing config")
+	_assert(FileAccess.file_exists("user://config.json"), "Options scene should save backing config")
+	scene.free()
+	DirAccess.remove_absolute("user://config.json")
 
 
 func _test_config_loading_and_updates() -> void:

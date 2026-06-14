@@ -12,6 +12,7 @@ var input_offset_ms := 0
 var don_keys: Array = [KEY_F]
 var ka_keys: Array = [KEY_J]
 var fullscreen := false
+var show_debug_monitor := true
 
 
 func load_config() -> bool:
@@ -54,6 +55,7 @@ func _to_dictionary() -> Dictionary:
 		"don_keys": don_keys,
 		"ka_keys": ka_keys,
 		"fullscreen": fullscreen,
+		"show_debug_monitor": show_debug_monitor,
 	}
 
 
@@ -66,6 +68,7 @@ func _apply_dictionary(data: Dictionary) -> void:
 	don_keys = _parse_keys(data.get("don_keys", don_keys), don_keys)
 	ka_keys = _parse_keys(data.get("ka_keys", ka_keys), ka_keys)
 	fullscreen = bool(data.get("fullscreen", fullscreen))
+	show_debug_monitor = bool(data.get("show_debug_monitor", show_debug_monitor))
 
 
 func _parse_keys(value: Variant, fallback: Array) -> Array:

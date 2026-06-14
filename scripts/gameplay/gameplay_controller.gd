@@ -94,6 +94,8 @@ func _build_scene() -> void:
 
 	frame_monitor = FrameMonitor.new()
 	frame_monitor.name = "FrameMonitor"
+	frame_monitor.position = Vector2(1032.0, 16.0)
+	frame_monitor.visible = game_config.show_debug_monitor
 	frame_monitor.build()
 	add_child(frame_monitor)
 

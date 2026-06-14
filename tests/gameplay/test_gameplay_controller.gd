@@ -15,6 +15,7 @@ func _run_tests() -> void:
 	DirAccess.remove_absolute("user://config.json")
 	_test_instantiates_gameplay_scene()
 	_test_ready_builds_scene_and_loads_sample()
+	_test_config_can_hide_debug_monitor()
 	_test_ready_loads_session_selected_chart()
 	_test_loads_sample_chart()
 	_test_textures_and_spawned_notes()
@@ -68,7 +69,23 @@ func _test_ready_builds_scene_and_loads_sample() -> void:
 	_assert(controller.lane != null, "NoteLane should be built")
 	_assert(controller.hud != null, "TaikoHud should be built")
 	_assert(controller.frame_monitor != null, "FrameMonitor should be built")
+	_assert(controller.frame_monitor.visible, "FrameMonitor should be visible by default")
+	_assert(controller.frame_monitor.position.x >= 1000.0, "FrameMonitor should be positioned away from the left HUD")
 	controller.free()
+
+
+func _test_config_can_hide_debug_monitor() -> void:
+	var config_path := "user://config.json"
+	DirAccess.remove_absolute(config_path)
+	var config := preload("res://scripts/config/game_config.gd").new()
+	config.show_debug_monitor = false
+	config.save_config()
+
+	var controller := _new_controller()
+	_assert(controller.frame_monitor != null, "FrameMonitor should still be built when hidden")
+	_assert(not controller.frame_monitor.visible, "Config should hide FrameMonitor")
+	controller.free()
+	DirAccess.remove_absolute(config_path)
 
 
 func _test_ready_loads_session_selected_chart() -> void:

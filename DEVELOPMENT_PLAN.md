@@ -2449,7 +2449,7 @@ git commit -m "feat: add timing map for bpm measure and scroll"
 - Create: `E:\10_创作\GDTaiko\scenes\Result.tscn`
 - Create: `E:\10_创作\GDTaiko\scripts\ui\result_screen.gd`
 
-- [ ] **Step 1: Write gauge test**
+- [x] **Step 1: Write gauge test**
 
 Create:
 
@@ -2472,7 +2472,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Implement gauge**
+- [x] **Step 2: Implement gauge**
 
 ```gdscript
 extends RefCounted
@@ -2500,7 +2500,7 @@ func is_clear() -> bool:
 	return value >= clear_threshold
 ```
 
-- [ ] **Step 3: Add result payload**
+- [x] **Step 3: Add result payload**
 
 At song end, build:
 
@@ -2517,7 +2517,7 @@ At song end, build:
 }
 ```
 
-- [ ] **Step 4: Run tests and manual result check**
+- [x] **Step 4: Run tests and manual result check**
 
 Run:
 
@@ -2528,7 +2528,7 @@ godot --path E:\10_创作\GDTaiko
 
 Expected: Gauge test passes; after the sample chart ends, result screen appears.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/gameplay/soul_gauge.gd tests/gameplay/test_soul_gauge.gd scenes/Result.tscn scripts/ui/result_screen.gd scripts/gameplay/gameplay_controller.gd

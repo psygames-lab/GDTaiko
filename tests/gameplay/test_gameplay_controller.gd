@@ -30,6 +30,7 @@ func _run_tests() -> void:
 	_test_balloon_expires_without_miss_when_not_cleared()
 	_test_cleared_balloon_does_not_score_again()
 	_test_gogo_event_updates_scoring_before_hit()
+	_test_song_finish_shows_result_payload()
 	_test_free_instantiated_scene()
 
 	if failed_count == 0:
@@ -368,6 +369,34 @@ func _test_gogo_event_updates_scoring_before_hit() -> void:
 	controller.clock.configure(null, 0.0)
 	controller._hit(NoteModel.DON)
 	_assert(controller.scoring.score == 1200, "GOGO event at current time should multiply normal hit score")
+	controller.free()
+
+
+func _test_song_finish_shows_result_payload() -> void:
+	var controller := _new_controller()
+	controller.chart.notes.clear()
+	controller.chart.notes.append({
+		"id": "don_1",
+		"time_sec": 0.0,
+		"lane": NoteModel.DON,
+		"kind": NoteModel.DON,
+		"state": NoteModel.PENDING,
+	})
+	controller._start_song()
+	controller._hit(NoteModel.DON)
+
+	var result_screen = controller.get("result_screen")
+	var last_result = controller.get("last_result")
+	_assert(controller.playing == false, "Single-note chart should stop when final note is resolved")
+	_assert(result_screen != null, "Controller should expose a result screen")
+	_assert(result_screen != null and result_screen.visible, "Result screen should be visible after song finish")
+	_assert(last_result is Dictionary, "Controller should expose a result payload")
+	if last_result is Dictionary:
+		_assert(last_result["score"] == 1000, "Result payload should include final score")
+		_assert(last_result["max_combo"] == 1, "Result payload should include max combo")
+		_assert(last_result["perfects"] == 1, "Result payload should include perfect count")
+		_assert(is_equal_approx(float(last_result["gauge"]), 2.0), "Result payload should include soul gauge value")
+		_assert(last_result["clear"] == false, "Low gauge should not clear")
 	controller.free()
 
 

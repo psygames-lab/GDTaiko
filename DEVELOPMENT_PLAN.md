@@ -2040,7 +2040,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/chart/test_tja_parse
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/chart/taiko_chart.gd scripts/chart/tja_parser.gd tests/chart/test_tja_parser.gd
@@ -2140,7 +2140,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scorin
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add scripts/gameplay/roll_manager.gd scripts/gameplay/gameplay_controller.gd scripts/gameplay/scoring.gd tests/gameplay/test_roll_manager.gd tests/gameplay/test_scoring.gd
@@ -2243,7 +2243,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scorin
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add scripts/gameplay/balloon_manager.gd scripts/gameplay/gameplay_controller.gd scripts/gameplay/scoring.gd tests/gameplay/test_balloon_manager.gd
@@ -2334,7 +2334,7 @@ godot --headless --path E:\10_创作\GDTaiko -s res://tests/gameplay/test_scorin
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add scripts/chart/tja_parser.gd scripts/gameplay/scoring.gd scripts/gameplay/gameplay_controller.gd scripts/ui/hud.gd tests/chart/test_tja_parser.gd tests/gameplay/test_scoring.gd

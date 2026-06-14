@@ -2,6 +2,12 @@
 
 No third-party assets have been imported yet.
 
+Release gate status as of 2026-06-14: only rows explicitly marked
+`release_allowed` with `Include In Release` set to `yes` may be bundled in
+exports. OpenTaiko-related skins, fonts, SFX, voices, songs, jackets, BGA, and
+soundtrack assets remain excluded unless a later asset-level audit changes the
+specific row.
+
 Rows marked `planned original` describe placeholder assets that may be created by GDTaiko contributors. Replace provisional license fields with final source and license evidence before release inclusion.
 
 | Asset ID | Path | Type | Source | Author | License | Redistribution | Commercial Use | Status | Include In Repo | Include In Release | Notes |

@@ -17,6 +17,8 @@ func _init() -> void:
 	_assert(monitor.metrics_label != null, "metrics_label should be created")
 	_assert(monitor.metrics_label.text.find("FPS: 120.0") != -1, "metrics label should include FPS")
 	_assert(monitor.metrics_label.text.find("Missed Frames: 0") != -1, "metrics label should include missed frame count")
+	monitor.build()
+	_assert(monitor.get_child_count() == 1, "build should be idempotent")
 
 	monitor.update_metrics(0.020, 7)
 	_assert(monitor.missed_frames == 1, "update_metrics should count frames over 16.67 ms")

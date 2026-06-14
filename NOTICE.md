@@ -7,6 +7,11 @@ asset audit.
 GDTaiko placeholder assets and sample content are tracked in
 `docs/ASSET_AUDIT.md`.
 
+OpenTaiko (`https://github.com/0auBSQ/OpenTaiko`) is used as a behavioral
+compatibility reference and MIT-licensed source inspiration. GDTaiko is a
+Godot-native recreation and does not bundle OpenTaiko code, skins, sounds,
+fonts, songs, jackets, BGA, or soundtrack assets.
+
 Future third-party assets must be added to `docs/ASSET_AUDIT.md` before import.
 Release-included assets must also add required attribution and license notices
 here.

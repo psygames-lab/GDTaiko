@@ -12,6 +12,8 @@ var missed_frames := 0
 
 
 func build() -> void:
+	if metrics_label != null:
+		return
 	metrics_label = Label.new()
 	metrics_label.position = Vector2(8.0, 8.0)
 	metrics_label.add_theme_font_size_override("font_size", 16)

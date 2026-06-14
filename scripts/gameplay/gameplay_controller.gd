@@ -11,6 +11,7 @@ const RollManager := preload("res://scripts/gameplay/roll_manager.gd")
 const BalloonManager := preload("res://scripts/gameplay/balloon_manager.gd")
 const NoteLane := preload("res://scripts/gameplay/note_lane.gd")
 const HitEffects := preload("res://scripts/gameplay/hit_effects.gd")
+const FrameMonitor := preload("res://scripts/debug/frame_monitor.gd")
 const TaikoHud := preload("res://scripts/ui/hud.gd")
 const ResultScreen := preload("res://scripts/ui/result_screen.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
@@ -31,6 +32,7 @@ var balloon_manager := BalloonManager.new()
 var clock: SongClock
 var lane: NoteLane
 var hit_effects: HitEffects
+var frame_monitor: FrameMonitor
 var hud: TaikoHud
 var result_screen: ResultScreen
 var replay_recorder: ReplayRecorder
@@ -49,6 +51,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_update_frame_monitor(delta)
 	if not playing:
 		return
 	clock.advance(delta)
@@ -89,6 +92,11 @@ func _build_scene() -> void:
 	hit_effects.name = "HitEffects"
 	add_child(hit_effects)
 
+	frame_monitor = FrameMonitor.new()
+	frame_monitor.name = "FrameMonitor"
+	frame_monitor.build()
+	add_child(frame_monitor)
+
 	hud = TaikoHud.new()
 	hud.name = "Hud"
 	hud.build()
@@ -102,6 +110,15 @@ func _build_scene() -> void:
 	don_texture = _load_note_texture("res://assets/notes/note_don.png", Color.RED)
 	ka_texture = _load_note_texture("res://assets/notes/note_ka.png", Color.CORNFLOWER_BLUE)
 	lane.configure(don_texture, ka_texture)
+
+
+func _update_frame_monitor(delta: float) -> void:
+	if frame_monitor == null:
+		return
+	var active_note_count := 0
+	if lane != null:
+		active_note_count = lane.active_sprites.size()
+	frame_monitor.update_metrics(delta, active_note_count)
 
 
 func _load_sample_chart() -> void:

@@ -10,6 +10,7 @@ var bads := 0
 var misses := 0
 var roll_hits := 0
 var balloons_cleared := 0
+var gogo_active := false
 
 
 func reset() -> void:
@@ -22,6 +23,7 @@ func reset() -> void:
 	misses = 0
 	roll_hits = 0
 	balloons_cleared = 0
+	gogo_active = false
 
 
 func apply_judgment(judgment: String) -> void:
@@ -29,15 +31,15 @@ func apply_judgment(judgment: String) -> void:
 		"perfect":
 			perfects += 1
 			combo += 1
-			score += 1000
+			score += _apply_multiplier(1000)
 		"good":
 			goods += 1
 			combo += 1
-			score += 600
+			score += _apply_multiplier(600)
 		"bad":
 			bads += 1
 			combo = 0
-			score += 100
+			score += _apply_multiplier(100)
 		"miss":
 			misses += 1
 			combo = 0
@@ -54,3 +56,13 @@ func apply_roll_hit() -> void:
 func apply_balloon_clear() -> void:
 	balloons_cleared += 1
 	score += 5000
+
+
+func set_gogo(active: bool) -> void:
+	gogo_active = active
+
+
+func _apply_multiplier(points: int) -> int:
+	if gogo_active:
+		return int(round(float(points) * 1.2))
+	return points

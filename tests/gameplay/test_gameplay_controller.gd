@@ -29,6 +29,7 @@ func _run_tests() -> void:
 	_test_balloon_hits_clear_note()
 	_test_balloon_expires_without_miss_when_not_cleared()
 	_test_cleared_balloon_does_not_score_again()
+	_test_gogo_event_updates_scoring_before_hit()
 	_test_free_instantiated_scene()
 
 	if failed_count == 0:
@@ -352,6 +353,21 @@ func _test_cleared_balloon_does_not_score_again() -> void:
 	_assert(controller.scoring.balloons_cleared == 1, "Cleared balloon should not clear again while chart continues")
 	_assert(controller.scoring.score == 5000, "Second hit after clear should not add duplicate balloon score")
 	_assert(controller.chart.notes[1]["state"] == NoteModel.PENDING, "Future note should keep chart playing for regression")
+	controller.free()
+
+
+func _test_gogo_event_updates_scoring_before_hit() -> void:
+	var controller := _new_controller()
+	controller.chart.timing_events.append({
+		"time_sec": 0.0,
+		"type": "gogo",
+		"value": true,
+	})
+	controller._start_song()
+	controller.audio_player.stop()
+	controller.clock.configure(null, 0.0)
+	controller._hit(NoteModel.DON)
+	_assert(controller.scoring.score == 1200, "GOGO event at current time should multiply normal hit score")
 	controller.free()
 
 

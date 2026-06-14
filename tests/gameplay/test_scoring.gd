@@ -13,6 +13,8 @@ func _init() -> void:
 	_test_reset_clears_roll_hits()
 	_test_balloon_clear()
 	_test_reset_clears_balloon_count()
+	_test_gogo_multiplier_for_normal_judgments()
+	_test_reset_clears_gogo()
 
 	if failed_count == 0:
 		print("PASS: Scoring")
@@ -113,6 +115,29 @@ func _test_reset_clears_balloon_count() -> void:
 	scoring.apply_balloon_clear()
 	scoring.reset()
 	_assert(scoring.balloons_cleared == 0, "reset() should clear balloons_cleared")
+
+
+func _test_gogo_multiplier_for_normal_judgments() -> void:
+	var scoring: RefCounted = ScoringScript.new()
+	if not scoring.has_method("set_gogo"):
+		_assert(false, "Scoring should expose set_gogo()")
+		return
+	scoring.set_gogo(true)
+	scoring.apply_judgment("perfect")
+	scoring.apply_judgment("good")
+	scoring.apply_judgment("bad")
+	_assert(scoring.score == 2040, "GOGO should apply 1.2x multiplier to normal judgment points")
+
+
+func _test_reset_clears_gogo() -> void:
+	var scoring: RefCounted = ScoringScript.new()
+	if not scoring.has_method("set_gogo"):
+		_assert(false, "Scoring should expose set_gogo() before reset test")
+		return
+	scoring.set_gogo(true)
+	scoring.reset()
+	scoring.apply_judgment("perfect")
+	_assert(scoring.score == 1000, "reset() should disable GOGO multiplier")
 
 
 func _assert(condition: bool, message: String) -> void:

@@ -19,6 +19,7 @@ func _init() -> void:
 	_test_unsupported_note_character_warning()
 	_test_roll_and_balloon_notes()
 	_test_bpm_change_timing_event()
+	_test_gogo_timing_events()
 
 	if failed_count == 0:
 		print("PASS: TjaParser")
@@ -260,6 +261,31 @@ OFFSET:-0.5
 	_assert(is_equal_approx(chart.timing_events[1]["time_sec"], 1.5), "BPMCHANGE event should include OFFSET in timing")
 	_assert(chart.timing_events[1]["type"] == "bpm", "BPMCHANGE event should be bpm type")
 	_assert(is_equal_approx(chart.timing_events[1]["value"], 60.0), "BPMCHANGE value should be applied")
+
+
+func _test_gogo_timing_events() -> void:
+	var text := """TITLE:Gogo
+BPM:120
+#START
+#GOGOSTART
+1000,
+#GOGOEND
+1000,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	var found_start := false
+	var found_end := false
+	for event in chart.timing_events:
+		if String(event["type"]) == "gogo" and bool(event["value"]) == true:
+			found_start = true
+			_assert(is_equal_approx(float(event["time_sec"]), 0.0), "GOGOSTART should use current chart time")
+		if String(event["type"]) == "gogo" and bool(event["value"]) == false:
+			found_end = true
+			_assert(is_equal_approx(float(event["time_sec"]), 2.0), "GOGOEND should use current chart time")
+	_assert(found_start, "Parser should add GOGOSTART timing event")
+	_assert(found_end, "Parser should add GOGOEND timing event")
 
 
 func _assert(condition: bool, message: String) -> void:

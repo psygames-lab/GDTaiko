@@ -49,6 +49,10 @@ static func parse_text(text: String) -> TaikoChart:
 					if next_bpm > 0.0:
 						current_bpm = next_bpm
 						chart.add_timing_event(current_time + chart.offset_sec, "bpm", current_bpm)
+				elif in_chart and command == "GOGOSTART":
+					chart.add_timing_event(current_time + chart.offset_sec, "gogo", true)
+				elif in_chart and command == "GOGOEND":
+					chart.add_timing_event(current_time + chart.offset_sec, "gogo", false)
 				elif in_chart and command == "MEASURE":
 					var parts := argument.split("/")
 					if parts.size() == 2:

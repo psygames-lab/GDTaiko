@@ -2260,7 +2260,7 @@ git commit -m "feat: add balloon note gameplay"
 - Modify: `E:\10_创作\GDTaiko\tests\chart\test_tja_parser.gd`
 - Modify: `E:\10_创作\GDTaiko\tests\gameplay\test_scoring.gd`
 
-- [ ] **Step 1: Add parser assertion**
+- [x] **Step 1: Add parser assertion**
 
 Use fixture:
 
@@ -2280,7 +2280,7 @@ assert(chart.timing_events.any(func(e): return e["type"] == "gogo" and e["value"
 assert(chart.timing_events.any(func(e): return e["type"] == "gogo" and e["value"] == false))
 ```
 
-- [ ] **Step 2: Parse GOGO commands**
+- [x] **Step 2: Parse GOGO commands**
 
 In command handling:
 
@@ -2291,7 +2291,7 @@ elif in_chart and command == "GOGOEND":
 	chart.add_timing_event(current_time + chart.offset_sec, "gogo", false)
 ```
 
-- [ ] **Step 3: Add scoring multiplier**
+- [x] **Step 3: Add scoring multiplier**
 
 In `scoring.gd`:
 
@@ -2307,7 +2307,7 @@ func _apply_multiplier(points: int) -> int:
 
 Use `_apply_multiplier(1000)`, `_apply_multiplier(600)`, and `_apply_multiplier(100)` for normal note judgments.
 
-- [ ] **Step 4: Update gameplay controller**
+- [x] **Step 4: Update gameplay controller**
 
 Each frame, apply current timing event state:
 
@@ -2323,7 +2323,7 @@ func _update_timing_states(song_time: float) -> void:
 
 Add `set_gogo(active: bool)` to HUD and change lane color/text.
 
-- [ ] **Step 5: Run parser and scoring tests**
+- [x] **Step 5: Run parser and scoring tests**
 
 Run:
 

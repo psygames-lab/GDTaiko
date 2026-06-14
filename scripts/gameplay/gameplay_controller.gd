@@ -38,6 +38,7 @@ func _process(delta: float) -> void:
 		return
 	clock.advance(delta)
 	var song_time := clock.time_sec()
+	_update_timing_states(song_time)
 	lane.update_notes(chart.notes, song_time)
 	_process_misses(song_time)
 
@@ -97,6 +98,8 @@ func _start_song() -> void:
 	scoring.reset()
 	roll_manager.reset()
 	balloon_manager.reset()
+	scoring.set_gogo(false)
+	hud.set_gogo(false)
 	clock.reset()
 	if audio_player.stream != null:
 		audio_player.stop()
@@ -110,6 +113,7 @@ func _hit(lane_name: String) -> void:
 	if not playing or chart == null:
 		return
 	var song_time := clock.time_sec()
+	_update_timing_states(song_time)
 	var best_note: Dictionary = {}
 	var best_error := INF
 
@@ -189,6 +193,15 @@ func _apply_empty_miss() -> void:
 	scoring.apply_judgment("miss")
 	hud.update_score(scoring.score, scoring.combo)
 	hud.show_judgment("miss", 0.0)
+
+
+func _update_timing_states(song_time: float) -> void:
+	var gogo := false
+	for event in chart.timing_events:
+		if String(event["type"]) == "gogo" and float(event["time_sec"]) <= song_time:
+			gogo = bool(event["value"])
+	scoring.set_gogo(gogo)
+	hud.set_gogo(gogo)
 
 
 func _process_misses(song_time: float) -> void:

@@ -16,6 +16,10 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[autoload]
+
+SessionState="*res://scripts/app/session_state.gd"
+
 [input]
 
 taiko_don={

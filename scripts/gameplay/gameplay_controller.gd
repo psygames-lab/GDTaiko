@@ -144,6 +144,7 @@ func _load_sample_chart() -> void:
 	_build_timing_map()
 	lane.spawn_notes(chart.notes)
 	hud.update_score(scoring.score, scoring.combo)
+	hud.update_gauge(soul_gauge.value)
 	hud.set_status("Loaded %s - press Space" % chart.title)
 
 
@@ -169,6 +170,7 @@ func _start_song() -> void:
 		audio_player.play()
 	playing = true
 	hud.update_score(scoring.score, scoring.combo)
+	hud.update_gauge(soul_gauge.value)
 	hud.set_status("Playing")
 
 
@@ -227,6 +229,7 @@ func _apply_hit_at(lane_name: String, song_time: float, record_replay_input: boo
 	soul_gauge.apply_judgment(result["judgment"])
 	hit_effects.spawn_hit(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y), result["judgment"])
 	hud.update_score(scoring.score, scoring.combo)
+	hud.update_gauge(soul_gauge.value)
 	hud.show_judgment(result["judgment"], result["timing_error_ms"])
 	_process_song_finished()
 
@@ -274,6 +277,7 @@ func _apply_empty_miss() -> void:
 	soul_gauge.apply_judgment("miss")
 	hit_effects.spawn_miss(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y))
 	hud.update_score(scoring.score, scoring.combo)
+	hud.update_gauge(soul_gauge.value)
 	hud.show_judgment("miss", 0.0)
 
 
@@ -320,6 +324,7 @@ func _process_misses(song_time: float) -> void:
 			soul_gauge.apply_judgment("miss")
 			hit_effects.spawn_miss(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y))
 			hud.update_score(scoring.score, scoring.combo)
+			hud.update_gauge(soul_gauge.value)
 			hud.show_judgment("miss", 0.0)
 			lane.update_notes(chart.notes, song_time, timing_map)
 			_process_song_finished()

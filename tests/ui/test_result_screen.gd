@@ -10,6 +10,12 @@ func _init() -> void:
 	var screen := ResultScreen.new()
 	screen.build()
 	_assert(not screen.visible, "Result screen should start hidden")
+	var overlay = screen.get("overlay")
+	var panel = screen.get("panel")
+	_assert(overlay != null, "Result screen should include a full-screen overlay")
+	_assert(panel != null, "Result screen should include a centered panel")
+	_assert(panel != null and panel.position.x >= 300.0, "Result panel should be centered, not attached to lane")
+	_assert(panel != null and panel.size.x >= 560.0, "Result panel should have stable width")
 
 	screen.show_result({
 		"score": 1234,

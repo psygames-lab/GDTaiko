@@ -26,6 +26,11 @@ func _init() -> void:
 	_test_titleen_fallback_when_title_missing()
 	_test_empty_title_still_wins_over_titleen()
 	_test_empty_subtitle_still_wins_over_subtitleen()
+	_test_branch_sections_are_separated()
+	_test_unsupported_branch_condition_warns_and_defaults_to_normal()
+	_test_branch_resume_uses_normal_timing()
+	_test_branch_resume_uses_normal_balloon_index()
+	_test_branch_internal_timing_command_does_not_mutate_global_state()
 
 	if failed_count == 0:
 		print("PASS: TjaParser")
@@ -385,6 +390,137 @@ SUBTITLEEN:English Subtitle
 
 	var chart: RefCounted = TjaParserScript.parse_text(text)
 	_assert(chart.subtitle == "", "Empty SUBTITLE should still win over SUBTITLEEN when SUBTITLE is present")
+
+
+func _test_branch_sections_are_separated() -> void:
+	var text := """TITLE:Branch Parser
+BPM:120
+#START
+#BRANCHSTART p,50,90
+#N
+1000,
+#E
+2000,
+#M
+1200,
+#BRANCHEND
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.branch_events.size() == 1, "Parser should add one branch event")
+	_assert(chart.notes.size() == 1, "Parser should use normal branch notes as default playable notes")
+	if chart.branch_events.is_empty():
+		return
+	var branch: Dictionary = chart.branch_events[0]
+	_assert(branch["type"] == "branch_start", "Branch event type should be branch_start")
+	_assert(branch["condition"] == "accuracy", "p branch condition should map to accuracy")
+	_assert(is_equal_approx(float(branch["expert_threshold"]), 50.0), "Branch expert threshold should parse")
+	_assert(is_equal_approx(float(branch["master_threshold"]), 90.0), "Branch master threshold should parse")
+	_assert(branch["normal_notes"].size() == 1, "Normal branch should keep its notes separately")
+	_assert(branch["expert_notes"].size() == 1, "Expert branch should keep its notes separately")
+	_assert(branch["master_notes"].size() == 2, "Master branch should keep its notes separately")
+	_assert(branch["normal_notes"][0]["lane"] == "don", "Normal branch note should parse")
+	_assert(branch["expert_notes"][0]["lane"] == "ka", "Expert branch note should parse")
+	_assert(branch["master_notes"][0]["lane"] == "don", "Master branch first note should parse")
+	_assert(branch["master_notes"][1]["lane"] == "ka", "Master branch second note should parse")
+
+
+func _test_unsupported_branch_condition_warns_and_defaults_to_normal() -> void:
+	var text := """TITLE:Unsupported Branch
+BPM:120
+#START
+#BRANCHSTART x,50,90
+#N
+1000,
+#BRANCHEND
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.branch_events.size() == 1, "Unsupported branch condition should still create a branch event")
+	if not chart.branch_events.is_empty():
+		_assert(chart.branch_events[0]["condition"] == "normal", "Unsupported branch condition should default to normal")
+	_assert(chart.warnings.size() == 1, "Unsupported branch condition should add one warning")
+	if not chart.warnings.is_empty():
+		_assert(chart.warnings[0].find("Unsupported BRANCHSTART condition") >= 0, "Warning should identify unsupported branch condition")
+
+
+func _test_branch_resume_uses_normal_timing() -> void:
+	var text := """TITLE:Branch Resume Timing
+BPM:120
+#START
+#BRANCHSTART p,50,90
+#N
+1000,
+#E
+1000,
+1000,
+#M
+1000,
+#BRANCHEND
+1000,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.notes.size() == 2, "Normal branch default notes plus post-branch note should be playable")
+	if chart.notes.size() < 2:
+		return
+	_assert(is_equal_approx(float(chart.notes[0]["time_sec"]), 0.0), "Normal branch note should start at branch time")
+	_assert(is_equal_approx(float(chart.notes[1]["time_sec"]), 2.0), "Post-branch notes should resume after normal branch timing")
+
+
+func _test_branch_resume_uses_normal_balloon_index() -> void:
+	var text := """TITLE:Branch Resume Balloon
+BPM:120
+BALLOON:3,7
+#START
+#BRANCHSTART p,50,90
+#N
+1000,
+#E
+7008,
+#M
+1000,
+#BRANCHEND
+7008,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.notes.size() == 2, "Normal branch note and post-branch balloon should be playable")
+	if chart.notes.size() < 2:
+		return
+	_assert(chart.notes[1]["kind"] == "balloon_start", "Post-branch note should be a balloon")
+	_assert(chart.notes[1]["required_hits"] == 3, "Post-branch balloon should use normal branch balloon index")
+
+
+func _test_branch_internal_timing_command_does_not_mutate_global_state() -> void:
+	var text := """TITLE:Branch Internal Command
+BPM:120
+#START
+#BRANCHSTART p,50,90
+#N
+1000,
+#E
+#BPMCHANGE 60
+1000,
+#M
+1000,
+#BRANCHEND
+1000,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.timing_events.size() == 1, "Branch-internal BPMCHANGE should not add global timing events")
+	_assert(chart.warnings.size() == 1, "Branch-internal unsupported timing command should warn once")
+	if not chart.warnings.is_empty():
+		_assert(chart.warnings[0].find("Ignoring branch-internal command") >= 0, "Warning should mention ignored branch command")
+	_assert(chart.notes.size() == 2, "Normal branch note and post-branch note should be playable")
+	if chart.notes.size() >= 2:
+		_assert(is_equal_approx(float(chart.notes[1]["time_sec"]), 2.0), "Ignored branch BPMCHANGE should not affect post-branch timing")
 
 
 func _assert(condition: bool, message: String) -> void:

@@ -11,6 +11,7 @@ var level: int = 1
 var balloon_counts: Array[int] = []
 var metadata: Dictionary = {}
 var notes: Array[Dictionary] = []
+var branch_events: Array[Dictionary] = []
 var timing_events: Array[Dictionary] = []
 var warnings: Array[String] = []
 

@@ -20,6 +20,8 @@ static func parse_text(text: String) -> TaikoChart:
 	var pending_measure_text := ""
 	var active_long_note: Dictionary = {}
 	var balloon_index := 0
+	var active_branch: Dictionary = {}
+	var active_branch_lane := ""
 
 	for token in TjaTokenizer.tokenize(text):
 		var kind := String(token["kind"])
@@ -41,9 +43,35 @@ static func parse_text(text: String) -> TaikoChart:
 					pending_measure_text = ""
 					active_long_note.clear()
 					balloon_index = 0
+					active_branch.clear()
+					active_branch_lane = ""
 					chart.add_timing_event(0.0, "bpm", current_bpm)
 				elif command == "END":
 					break
+				elif in_chart and not active_branch.is_empty() and not _is_branch_control_command(command):
+					chart.warnings.append("Ignoring branch-internal command '#%s'; branch-local timing commands are not supported yet" % command)
+				elif in_chart and command == "BRANCHSTART":
+					active_branch = _new_branch_event(chart, argument, current_time, measure_index, balloon_index)
+					active_branch_lane = "normal"
+				elif in_chart and command == "N":
+					if not active_branch.is_empty():
+						active_branch_lane = "normal"
+				elif in_chart and command == "E":
+					if not active_branch.is_empty():
+						active_branch_lane = "expert"
+				elif in_chart and command == "M":
+					if not active_branch.is_empty():
+						active_branch_lane = "master"
+				elif in_chart and command == "BRANCHEND":
+					if not active_branch.is_empty():
+						var result := _finish_branch(chart, active_branch)
+						current_time = result["time_sec"]
+						measure_index = result["measure_index"]
+						balloon_index = result["balloon_index"]
+						pending_measure_text = ""
+						active_long_note.clear()
+						active_branch.clear()
+						active_branch_lane = ""
 				elif in_chart and command == "BPMCHANGE":
 					var next_bpm := _to_positive_float(argument)
 					if next_bpm > 0.0:
@@ -70,22 +98,32 @@ static func parse_text(text: String) -> TaikoChart:
 						chart.warnings.append("Invalid MEASURE value '%s'; ignoring" % argument)
 			"notes":
 				if in_chart:
-					var result := _parse_notes_line(
-						chart,
-						String(token["text"]),
-						current_time,
-						current_bpm,
-						measure_numerator,
-						measure_denominator,
-						measure_index,
-						pending_measure_text,
-						active_long_note,
-						balloon_index
-					)
-					current_time = result["time_sec"]
-					measure_index = result["measure_index"]
-					pending_measure_text = result["pending_measure_text"]
-					balloon_index = result["balloon_index"]
+					if active_branch.is_empty():
+						var result := _parse_notes_line(
+							chart,
+							String(token["text"]),
+							current_time,
+							current_bpm,
+							measure_numerator,
+							measure_denominator,
+							measure_index,
+							pending_measure_text,
+							active_long_note,
+							balloon_index
+						)
+						current_time = result["time_sec"]
+						measure_index = result["measure_index"]
+						pending_measure_text = result["pending_measure_text"]
+						balloon_index = result["balloon_index"]
+					else:
+						_parse_branch_notes_line(
+							active_branch,
+							active_branch_lane,
+							String(token["text"]),
+							current_bpm,
+							measure_numerator,
+							measure_denominator
+						)
 
 	chart.sort_notes()
 	return chart
@@ -248,3 +286,155 @@ static func _to_positive_float(value: String) -> float:
 	if not value.is_valid_float():
 		return 0.0
 	return value.to_float()
+
+
+static func _new_branch_event(
+	chart: TaikoChart,
+	argument: String,
+	current_time: float,
+	measure_index: int,
+	balloon_index: int
+) -> Dictionary:
+	var condition := "normal"
+	var expert_threshold := 0.0
+	var master_threshold := 0.0
+	var parts := argument.split(",", false)
+	if parts.size() >= 1:
+		condition = _branch_condition(String(parts[0]).strip_edges())
+	if parts.size() >= 2:
+		expert_threshold = String(parts[1]).strip_edges().to_float()
+	if parts.size() >= 3:
+		master_threshold = String(parts[2]).strip_edges().to_float()
+	if condition == "":
+		chart.warnings.append("Unsupported BRANCHSTART condition '%s'; using normal" % argument)
+		condition = "normal"
+
+	return {
+		"time_sec": current_time + chart.offset_sec,
+		"type": "branch_start",
+		"condition": condition,
+		"expert_threshold": expert_threshold,
+		"master_threshold": master_threshold,
+		"normal_notes": [],
+		"expert_notes": [],
+		"master_notes": [],
+		"lane_states": {
+			"normal": _new_branch_lane_state(chart, current_time, measure_index, balloon_index),
+			"expert": _new_branch_lane_state(chart, current_time, measure_index, balloon_index),
+			"master": _new_branch_lane_state(chart, current_time, measure_index, balloon_index),
+		},
+	}
+
+
+static func _branch_condition(raw_condition: String) -> String:
+	match raw_condition.to_lower():
+		"p", "accuracy":
+			return "accuracy"
+		"s", "score":
+			return "score"
+		"r", "roll":
+			return "roll"
+		"", "n", "normal":
+			return "normal"
+	return ""
+
+
+static func _new_branch_lane_state(
+	chart: TaikoChart,
+	current_time: float,
+	measure_index: int,
+	balloon_index: int
+) -> Dictionary:
+	var branch_chart := TaikoChart.new()
+	branch_chart.offset_sec = chart.offset_sec
+	branch_chart.balloon_counts.assign(chart.balloon_counts)
+	return {
+		"chart": branch_chart,
+		"time_sec": current_time,
+		"measure_index": measure_index,
+		"pending_measure_text": "",
+		"active_long_note": {},
+		"balloon_index": balloon_index,
+	}
+
+
+static func _parse_branch_notes_line(
+	active_branch: Dictionary,
+	lane_name: String,
+	line: String,
+	current_bpm: float,
+	measure_numerator: float,
+	measure_denominator: float
+) -> void:
+	var lane_states: Dictionary = active_branch["lane_states"]
+	var state: Dictionary = lane_states.get(lane_name, lane_states["normal"])
+	var result := _parse_notes_line(
+		state["chart"],
+		line,
+		float(state["time_sec"]),
+		current_bpm,
+		measure_numerator,
+		measure_denominator,
+		int(state["measure_index"]),
+		String(state["pending_measure_text"]),
+		state["active_long_note"],
+		int(state["balloon_index"])
+	)
+	state["time_sec"] = result["time_sec"]
+	state["measure_index"] = result["measure_index"]
+	state["pending_measure_text"] = result["pending_measure_text"]
+	state["balloon_index"] = result["balloon_index"]
+
+
+static func _finish_branch(chart: TaikoChart, active_branch: Dictionary) -> Dictionary:
+	var lane_states: Dictionary = active_branch["lane_states"]
+	var normal_state: Dictionary = lane_states["normal"]
+	var expert_state: Dictionary = lane_states["expert"]
+	var master_state: Dictionary = lane_states["master"]
+	var normal_chart: TaikoChart = normal_state["chart"]
+	var expert_chart: TaikoChart = expert_state["chart"]
+	var master_chart: TaikoChart = master_state["chart"]
+
+	active_branch["normal_notes"] = _duplicate_notes(normal_chart.notes)
+	active_branch["expert_notes"] = _duplicate_notes(expert_chart.notes)
+	active_branch["master_notes"] = _duplicate_notes(master_chart.notes)
+	active_branch.erase("lane_states")
+	chart.branch_events.append(active_branch.duplicate(true))
+	_append_notes_to_chart(chart, normal_chart.notes)
+
+	return {
+		"time_sec": normal_state["time_sec"],
+		"measure_index": normal_state["measure_index"],
+		"balloon_index": normal_state["balloon_index"],
+	}
+
+
+static func _duplicate_notes(notes: Array[Dictionary]) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for note in notes:
+		result.append(note.duplicate(true))
+	return result
+
+
+static func _append_notes_to_chart(chart: TaikoChart, notes: Array[Dictionary]) -> void:
+	for note in notes:
+		var extra := note.duplicate(true)
+		extra.erase("id")
+		extra.erase("time_sec")
+		extra.erase("lane")
+		extra.erase("kind")
+		extra.erase("measure_index")
+		extra.erase("subdivision_index")
+		extra.erase("state")
+		chart.add_note(
+			float(note["time_sec"]),
+			String(note["lane"]),
+			String(note["kind"]),
+			int(note["measure_index"]),
+			int(note["subdivision_index"]),
+			extra
+		)
+
+
+static func _is_branch_control_command(command: String) -> bool:
+	return command == "N" or command == "E" or command == "M" or command == "BRANCHEND"

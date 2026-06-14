@@ -67,6 +67,7 @@ func _test_ready_builds_scene_and_loads_sample() -> void:
 	_assert(controller.clock != null, "SongClock should be built")
 	_assert(controller.lane != null, "NoteLane should be built")
 	_assert(controller.hud != null, "TaikoHud should be built")
+	_assert(controller.frame_monitor != null, "FrameMonitor should be built")
 	controller.free()
 
 
@@ -175,6 +176,8 @@ func _test_process_moves_notes() -> void:
 	var start_x := sprite.position.x
 	controller._process(0.25)
 	_assert(sprite.position.x < start_x, "process should move spawned notes toward the hit target")
+	_assert(controller.frame_monitor.active_notes == controller.lane.active_sprites.size(), "process should update frame monitor active note count")
+	_assert(controller.frame_monitor.missed_frames == 1, "process should update frame monitor missed frame count")
 	controller.free()
 
 

@@ -10,7 +10,7 @@ Commercial Taiko assets are not allowed.
 
 OpenTaiko code is MIT-licensed and may be referenced for compatibility behavior with attribution in `NOTICE.md`. OpenTaiko is not a source tree to mechanically translate, and OpenTaiko-related assets do not inherit the code license.
 
-OpenTaiko-related skins, fonts, and SFX can be imported only after `docs/ASSET_AUDIT.md` marks the exact asset `release_allowed`.
+OpenTaiko-related skins, fonts, SFX, voices, songs, jackets, BGA, and soundtrack assets can be imported only after `docs/ASSET_AUDIT.md` marks the exact asset `release_allowed`.
 
 ## Skin, Font, And SFX Assets
 

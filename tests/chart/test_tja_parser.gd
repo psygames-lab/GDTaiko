@@ -31,6 +31,14 @@ func _init() -> void:
 	_test_branch_resume_uses_normal_timing()
 	_test_branch_resume_uses_normal_balloon_index()
 	_test_branch_internal_timing_command_does_not_mutate_global_state()
+	_test_diagnostic_codes_and_line_numbers()
+	_test_unsupported_command_diagnostic()
+	_test_unterminated_long_note_diagnostic()
+	_test_missing_audio_diagnostic()
+	_test_branch_lane_diagnostics_are_preserved()
+	_test_metadata_has_only_tja_keys()
+	_test_absolute_wave_path_is_not_joined_to_source_folder()
+	_test_branch_lane_unterminated_long_note_diagnostic()
 
 	if failed_count == 0:
 		print("PASS: TjaParser")
@@ -444,6 +452,10 @@ BPM:120
 	_assert(chart.warnings.size() == 1, "Unsupported branch condition should add one warning")
 	if not chart.warnings.is_empty():
 		_assert(chart.warnings[0].find("Unsupported BRANCHSTART condition") >= 0, "Warning should identify unsupported branch condition")
+	_assert(chart.diagnostics.size() == 1, "Unsupported branch condition should add one diagnostic")
+	if not chart.diagnostics.is_empty():
+		_assert(chart.diagnostics[0].code == "branch_fallback", "Unsupported branch condition should use branch_fallback code")
+		_assert(chart.diagnostics[0].line_number == 4, "Unsupported branch diagnostic should preserve line number")
 
 
 func _test_branch_resume_uses_normal_timing() -> void:
@@ -521,6 +533,142 @@ BPM:120
 	_assert(chart.notes.size() == 2, "Normal branch note and post-branch note should be playable")
 	if chart.notes.size() >= 2:
 		_assert(is_equal_approx(float(chart.notes[1]["time_sec"]), 2.0), "Ignored branch BPMCHANGE should not affect post-branch timing")
+
+
+func _test_diagnostic_codes_and_line_numbers() -> void:
+	var text := """BPM:abc
+#START
+13,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.diagnostics.size() == 2, "Invalid BPM and unsupported note should add diagnostics")
+	if chart.diagnostics.size() < 2:
+		return
+	_assert(chart.diagnostics[0].code == "invalid_metadata", "Invalid BPM should use invalid_metadata code")
+	_assert(chart.diagnostics[0].line_number == 1, "Invalid BPM diagnostic should preserve line number")
+	_assert(chart.diagnostics[1].code == "unsupported_note", "Unsupported note should use unsupported_note code")
+	_assert(chart.diagnostics[1].line_number == 3, "Unsupported note diagnostic should preserve note line number")
+
+
+func _test_unsupported_command_diagnostic() -> void:
+	var text := """TITLE:Unsupported Command
+#START
+#DELAY 1.0
+1000,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.diagnostics.size() == 1, "Unsupported command should add one diagnostic")
+	if chart.diagnostics.is_empty():
+		return
+	_assert(chart.diagnostics[0].code == "unsupported_command", "Unsupported command should use unsupported_command code")
+	_assert(chart.diagnostics[0].line_number == 3, "Unsupported command diagnostic should preserve line number")
+
+
+func _test_unterminated_long_note_diagnostic() -> void:
+	var text := """TITLE:Unterminated Roll
+#START
+5000,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.diagnostics.size() == 1, "Unterminated roll should add one diagnostic")
+	if chart.diagnostics.is_empty():
+		return
+	_assert(chart.diagnostics[0].code == "unterminated_long_note", "Unterminated roll should use unterminated_long_note code")
+	_assert(chart.diagnostics[0].line_number == 3, "Unterminated roll diagnostic should preserve start line number")
+
+
+func _test_missing_audio_diagnostic() -> void:
+	var text := """TITLE:Missing Audio
+WAVE:missing_audio.ogg
+#START
+1,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text, "res://tests/fixtures/tja/missing_audio_probe.tja")
+	_assert(chart.diagnostics.size() == 1, "Missing WAVE file should add one diagnostic when source path is known")
+	if chart.diagnostics.is_empty():
+		return
+	_assert(chart.diagnostics[0].code == "missing_audio", "Missing WAVE file should use missing_audio code")
+	_assert(chart.diagnostics[0].line_number == 2, "Missing WAVE diagnostic should preserve WAVE line number")
+
+
+func _test_branch_lane_diagnostics_are_preserved() -> void:
+	var text := """TITLE:Branch Unsupported Note
+BPM:120
+#START
+#BRANCHSTART p,50,90
+#N
+1000,
+#E
+3000,
+#M
+1000,
+#BRANCHEND
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	var codes: Array[String] = []
+	for diagnostic in chart.diagnostics:
+		codes.append(String(diagnostic.code))
+	_assert(codes.has("unsupported_note"), "Unsupported note inside branch lanes should be preserved on parent chart")
+
+
+func _test_metadata_has_only_tja_keys() -> void:
+	var text := """TITLE:Public Metadata
+WAVE:missing_audio.ogg
+#START
+1,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text, "res://tests/fixtures/tja/public_metadata_probe.tja")
+	for key in chart.metadata:
+		_assert(not String(key).begins_with("__line_"), "Public metadata should not expose parser-internal line keys")
+
+
+func _test_absolute_wave_path_is_not_joined_to_source_folder() -> void:
+	var text := """TITLE:Absolute Wave
+WAVE:res://tests/fixtures/tja/basic_notes.tja
+#START
+1,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text, "res://tests/fixtures/tja/absolute_wave_probe.tja")
+	var codes: Array[String] = []
+	for diagnostic in chart.diagnostics:
+		codes.append(String(diagnostic.code))
+	_assert(not codes.has("missing_audio"), "Existing absolute WAVE path should not be joined to source folder")
+
+
+func _test_branch_lane_unterminated_long_note_diagnostic() -> void:
+	var text := """TITLE:Branch Unterminated Roll
+BPM:120
+#START
+#BRANCHSTART p,50,90
+#N
+1000,
+#E
+5000,
+#M
+1000,
+#BRANCHEND
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	var codes: Array[String] = []
+	for diagnostic in chart.diagnostics:
+		codes.append(String(diagnostic.code))
+	_assert(codes.has("unterminated_long_note"), "Unterminated long note inside branch lanes should be preserved on parent chart")
 
 
 func _assert(condition: bool, message: String) -> void:

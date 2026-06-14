@@ -6,13 +6,15 @@ static func tokenize(text: String) -> Array[Dictionary]:
 	var tokens: Array[Dictionary] = []
 	var lines := text.split("\n")
 
-	for raw_line in lines:
+	for line_index in range(lines.size()):
+		var raw_line := String(lines[line_index])
+		var line_number := line_index + 1
 		var line := raw_line.strip_edges()
 
 		if line == "":
 			continue
 
-		var comment_index := line.find("//")
+		var comment_index := _comment_index(line)
 		if comment_index == 0:
 			continue
 		if comment_index > 0:
@@ -32,12 +34,14 @@ static func tokenize(text: String) -> Array[Dictionary]:
 					"kind": "command",
 					"command": command_line.strip_edges().to_upper(),
 					"argument": "",
+					"line_number": line_number,
 				})
 			else:
 				tokens.append({
 					"kind": "command",
 					"command": command_line.substr(0, separator_index).strip_edges().to_upper(),
 					"argument": command_line.substr(separator_index + 1).strip_edges(),
+					"line_number": line_number,
 				})
 			continue
 
@@ -49,10 +53,11 @@ static func tokenize(text: String) -> Array[Dictionary]:
 				"kind": "metadata",
 				"key": key,
 				"value": value,
+				"line_number": line_number,
 			})
 			continue
 
-		tokens.append({"kind": "notes", "text": line})
+		tokens.append({"kind": "notes", "text": line, "line_number": line_number})
 
 	return tokens
 
@@ -71,3 +76,12 @@ static func _looks_like_note_line(line: String) -> bool:
 			has_comma = true
 
 	return has_comma
+
+
+static func _comment_index(line: String) -> int:
+	var index := line.find("//")
+	while index >= 0:
+		if index == 0 or line[index - 1] == " " or line[index - 1] == "\t":
+			return index
+		index = line.find("//", index + 2)
+	return -1

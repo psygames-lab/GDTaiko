@@ -2,7 +2,12 @@
   "title": "Metadata Variants",
   "note_count": 1,
   "timing_event_count": 1,
-  "warnings": [],
+  "warnings": [
+    "Missing audio file 'res://tests/fixtures/tja/fixture.ogg'"
+  ],
+  "diagnostic_codes": [
+    "missing_audio"
+  ],
   "metadata": {
     "TITLE": "Metadata Variants",
     "TITLEJA": "Metadata Variants JA",

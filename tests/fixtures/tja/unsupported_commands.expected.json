@@ -2,5 +2,12 @@
   "title": "Unsupported Commands",
   "note_count": 2,
   "timing_event_count": 1,
-  "warnings": []
+  "warnings": [
+    "Unsupported command '#DELAY' at line 4; ignoring",
+    "Unsupported command '#FOO' at line 6; ignoring"
+  ],
+  "diagnostic_codes": [
+    "unsupported_command",
+    "unsupported_command"
+  ]
 }

@@ -8,7 +8,13 @@ const APPROACH_TIME_SEC := 2.0
 const LANE_HEIGHT := 96.0
 const TARGET_SIZE := 96
 
-var note_nodes: Dictionary = {}
+var active_sprites: Dictionary = {}
+var pooled_sprites: Array[Sprite2D] = []
+var note_nodes: Dictionary = {}:
+	get():
+		return active_sprites
+	set(value):
+		active_sprites = value
 var don_texture: Texture2D
 var ka_texture: Texture2D
 var gogo_overlay: CanvasItem
@@ -63,24 +69,27 @@ func configure(don: Texture2D, ka: Texture2D) -> void:
 func spawn_notes(notes: Array[Dictionary]) -> void:
 	clear_notes()
 	for note in notes:
-		var sprite: Sprite2D = Sprite2D.new()
+		var sprite: Sprite2D = _acquire_sprite()
 		sprite.texture = don_texture if String(note.get("lane", "don")) == "don" else ka_texture
 		sprite.position = Vector2(SPAWN_X, NOTE_Y)
-		add_child(sprite)
-		note_nodes[String(note["id"])] = sprite
+		sprite.visible = true
+		if sprite.get_parent() != self:
+			add_child(sprite)
+		active_sprites[String(note["id"])] = sprite
 
 func clear_notes() -> void:
-	for sprite in note_nodes.values():
+	for sprite in active_sprites.values():
 		if is_instance_valid(sprite):
-			(sprite as Node).queue_free()
-	note_nodes.clear()
+			(sprite as Sprite2D).visible = false
+			pooled_sprites.append(sprite)
+	active_sprites.clear()
 
 func update_notes(notes: Array[Dictionary], song_time_sec: float, timing_map: Variant = null) -> void:
 	for note in notes:
 		var id: String = String(note["id"])
-		if not note_nodes.has(id):
+		if not active_sprites.has(id):
 			continue
-		var sprite: Sprite2D = note_nodes[id]
+		var sprite: Sprite2D = active_sprites[id]
 		var scheduled: float = float(note.get("time_sec", 0.0))
 		var scroll := 1.0
 		if timing_map != null:
@@ -89,6 +98,14 @@ func update_notes(notes: Array[Dictionary], song_time_sec: float, timing_map: Va
 		sprite.position = Vector2(lerpf(SPAWN_X, HIT_X, progress), NOTE_Y)
 		sprite.visible = String(note.get("state", "pending")) == "pending"
 
+
+func _acquire_sprite() -> Sprite2D:
+	if pooled_sprites.is_empty():
+		return Sprite2D.new()
+	var sprite: Sprite2D = pooled_sprites.pop_back()
+	if is_instance_valid(sprite):
+		return sprite
+	return Sprite2D.new()
 
 func _make_target_texture() -> Texture2D:
 	var image := Image.create(TARGET_SIZE, TARGET_SIZE, false, Image.FORMAT_RGBA8)

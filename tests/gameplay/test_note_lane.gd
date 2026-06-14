@@ -183,7 +183,8 @@ func _test_clear_notes() -> void:
 	lane.clear_notes()
 	_assert(lane.note_nodes.size() == 0, "note_nodes should be empty after clear_notes")
 	for child in lane.get_children():
-		_assert(child.is_queued_for_deletion(), "existing sprites should be marked for deletion after clear_notes")
+		if child is Sprite2D:
+			_assert(not child.visible, "existing note sprites should be hidden after clear_notes")
 	lane.queue_free()
 
 

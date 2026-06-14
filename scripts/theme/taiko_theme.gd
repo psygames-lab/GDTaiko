@@ -117,6 +117,12 @@ func _load_texture(path: String) -> Texture2D:
 		var resource := load(path)
 		if resource is Texture2D:
 			return resource
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		var error := image.load(path)
+		if error == OK:
+			return ImageTexture.create_from_image(image)
+		errors.append("invalid texture %s" % path)
 	return _fallback_texture_for(path)
 
 

@@ -1,4 +1,4 @@
-extends Control
+extends CanvasLayer
 class_name ResultScreen
 
 const ScoreStore := preload("res://scripts/storage/score_store.gd")
@@ -14,15 +14,17 @@ var panel: ColorRect
 var last_result: Dictionary = {}
 var score_store := ScoreStore.new()
 
+const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
+
 
 func build() -> void:
 	if title_label != null:
 		return
-	size = Vector2(1280.0, 720.0)
+	layer = 20
 	overlay = ColorRect.new()
 	overlay.name = "ResultOverlay"
 	overlay.position = Vector2.ZERO
-	overlay.size = size
+	overlay.size = VIEWPORT_SIZE
 	overlay.color = Color(0.0, 0.0, 0.0, 0.62)
 	add_child(overlay)
 

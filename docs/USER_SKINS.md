@@ -30,19 +30,22 @@ Example:
 }
 ```
 
-Supported keys:
+Applied keys:
 
 - `name`
 - `note_don`
 - `note_ka`
-- `sfx_don`
-- `sfx_ka`
-- `font_main`
 - `lane_color`
 - `gogo_color`
 - `hud_top_band_color`
 - `gauge_fill_color`
 - `result_panel_color`
+
+Parsed but not applied yet:
+
+- `sfx_don`
+- `sfx_ka`
+- `font_main`
 
 Skin assets placed under `user://skins/` are user-local and are not bundled in
 GDTaiko releases.

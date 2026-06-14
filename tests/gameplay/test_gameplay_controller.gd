@@ -16,6 +16,7 @@ func _run_tests() -> void:
 	_test_instantiates_gameplay_scene()
 	_test_ready_builds_scene_and_loads_sample()
 	_test_config_can_hide_debug_monitor()
+	_test_result_layer_draws_above_hud()
 	_test_user_skin_colors_apply_to_gameplay()
 	_test_ready_loads_session_selected_chart()
 	_test_loads_sample_chart()
@@ -87,6 +88,13 @@ func _test_config_can_hide_debug_monitor() -> void:
 	_assert(not controller.frame_monitor.visible, "Config should hide FrameMonitor")
 	controller.free()
 	DirAccess.remove_absolute(config_path)
+
+
+func _test_result_layer_draws_above_hud() -> void:
+	var controller := _new_controller()
+	_assert(controller.result_screen is CanvasLayer, "Result screen should render through a CanvasLayer")
+	_assert(controller.result_screen.layer > controller.hud.layer, "Result screen layer should be above gameplay HUD")
+	controller.free()
 
 
 func _test_user_skin_colors_apply_to_gameplay() -> void:

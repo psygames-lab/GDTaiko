@@ -12,6 +12,7 @@ func _init() -> void:
 
 
 func _run_tests() -> void:
+	DirAccess.remove_absolute("user://config.json")
 	_test_instantiates_gameplay_scene()
 	_test_ready_builds_scene_and_loads_sample()
 	_test_ready_loads_session_selected_chart()
@@ -22,7 +23,9 @@ func _run_tests() -> void:
 	_test_ka_input_action_hits_ka()
 	_test_process_moves_notes()
 	_test_immediate_don_hit()
+	_test_immediate_don_hit_spawns_effect()
 	_test_process_misses_marks_pending_as_missed()
+	_test_empty_miss_spawns_effect()
 	_test_roll_hit_without_normal_note()
 	_test_active_roll_is_not_missed_at_start_expiry()
 	_test_roll_finishes_without_miss_after_duration()
@@ -31,6 +34,8 @@ func _run_tests() -> void:
 	_test_balloon_expires_without_miss_when_not_cleared()
 	_test_cleared_balloon_does_not_score_again()
 	_test_gogo_event_updates_scoring_before_hit()
+	_test_gogo_event_updates_lane_overlay()
+	_test_config_offsets_apply_to_clock_and_input()
 	_test_song_finish_shows_result_payload()
 	_test_free_instantiated_scene()
 
@@ -105,8 +110,8 @@ func _test_loads_sample_chart() -> void:
 
 func _test_textures_and_spawned_notes() -> void:
 	var controller := _new_controller()
-	var lane_child_count: int = controller.lane.get_child_count()
-	_assert(lane_child_count == controller.chart.notes.size(), "lane should spawn one sprite per note")
+	_assert(controller.lane.get_node_or_null("LaneBackground") != null, "Gameplay lane should build skin background")
+	_assert(controller.lane.note_nodes.size() == controller.chart.notes.size(), "lane should track one sprite per note")
 	var first_note: String = controller.chart.notes[0]["id"]
 	var second_note: String = controller.chart.notes[1]["id"]
 	_assert(controller.lane.note_nodes.has(first_note), "spawned note should be tracked by id")
@@ -183,6 +188,14 @@ func _test_immediate_don_hit() -> void:
 	controller.free()
 
 
+func _test_immediate_don_hit_spawns_effect() -> void:
+	var controller := _new_controller()
+	controller._start_song()
+	controller._hit("don")
+	_assert(_has_effect(controller.hit_effects, "hit", "perfect"), "Perfect hit should spawn a hit effect")
+	controller.free()
+
+
 func _test_process_misses_marks_pending_as_missed() -> void:
 	var controller := _new_controller()
 	controller._start_song()
@@ -194,6 +207,14 @@ func _test_process_misses_marks_pending_as_missed() -> void:
 	_assert(miss_count == controller.chart.notes.size(), "All pending notes should be marked missed at late time")
 	_assert(controller.scoring.misses == controller.chart.notes.size(), "Miss count should match number of missed notes")
 	_assert(controller.scoring.combo == 0, "Combo should be zero after miss processing")
+	controller.free()
+
+
+func _test_empty_miss_spawns_effect() -> void:
+	var controller := _new_controller()
+	controller._start_song()
+	controller._apply_empty_miss()
+	_assert(_has_effect(controller.hit_effects, "miss", "miss"), "Empty miss should spawn a miss effect")
 	controller.free()
 
 
@@ -400,6 +421,34 @@ func _test_gogo_event_updates_scoring_before_hit() -> void:
 	controller.free()
 
 
+func _test_gogo_event_updates_lane_overlay() -> void:
+	var controller := _new_controller()
+	controller.chart.timing_events.append({
+		"time_sec": 0.0,
+		"type": "gogo",
+		"value": true,
+	})
+	controller._start_song()
+	controller._update_timing_states(0.0)
+	var overlay := controller.lane.get_node("GogoOverlay") as CanvasItem
+	_assert(overlay.visible, "GOGO timing event should show lane overlay")
+	controller.free()
+
+
+func _test_config_offsets_apply_to_clock_and_input() -> void:
+	var controller := _new_controller()
+	controller.game_config.chart_offset_ms = 250
+	controller.game_config.input_offset_ms = 100
+	controller._load_sample_chart()
+	_assert(controller.audio_player.bus == "Music", "Gameplay music should use the Music audio bus")
+	_assert(is_equal_approx(controller.clock.chart_offset_sec, controller.chart.offset_sec + 0.25), "Config chart offset should apply to song clock")
+	controller._start_song()
+	controller._hit(NoteModel.DON)
+	_assert(is_equal_approx(float(controller.replay_recorder.inputs[0]["time_sec"]), controller.chart.offset_sec + 0.35), "Config input offset should apply to recorded hit time")
+	_assert(controller.replay_recorder.input_offset_ms == 100, "Replay metadata should preserve input offset")
+	controller.free()
+
+
 func _test_song_finish_shows_result_payload() -> void:
 	var controller := _new_controller()
 	controller.chart.notes.clear()
@@ -444,3 +493,10 @@ func _assert(condition: bool, message: String) -> void:
 	if not condition:
 		failed_count += 1
 		push_error("ASSERTION FAILED: " + message)
+
+
+func _has_effect(hit_effects: Node, kind: String, judgment: String) -> bool:
+	for effect in hit_effects.effects:
+		if effect.get_meta("effect_type", "") == kind and effect.get_meta("judgment", "") == judgment:
+			return true
+	return false

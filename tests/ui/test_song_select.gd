@@ -25,12 +25,22 @@ func _run_tests() -> void:
 		_song("Alpha", "res://songs/alpha", "Oni", 7, "alpha_oni.tja", "alpha.ogg"),
 		_song("Beta", "res://songs/beta", "Normal", 3, "beta_normal.tja", "beta.ogg"),
 	]
+	select.songs[0].subtitle = "First"
+	select.songs[0].genre = "Variety"
+	select.songs[0].maker = "Mapper"
+	select.songs[0].preview_start_sec = 2.25
 	select._update_selection()
 
 	_assert(select.title_label.text == "Alpha", "Song select should show selected title")
+	_assert(select.subtitle_label.text == "First", "Song select should show selected subtitle")
 	_assert(select.detail_label.text.contains("Oni"), "Song select should show selected course")
+	_assert(select.metadata_label.text.contains("Variety"), "Song select should show genre metadata")
+	_assert(select.metadata_label.text.contains("Mapper"), "Song select should show maker metadata")
+	_assert(select.metadata_label.text.contains("Oni 7"), "Song select should show course list")
 	select.select_next_song()
 	_assert(select.title_label.text == "Beta", "Down navigation should select next song")
+	_assert(select.preview_player != null, "Song select should create a preview player")
+	_assert(select.preview_player.bus == "Music", "Song preview should use the Music audio bus")
 	select.select_previous_song()
 	_assert(select.title_label.text == "Alpha", "Up navigation should select previous song")
 	var course := SongCourse.new()

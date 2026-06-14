@@ -5,8 +5,11 @@ const SongCourse := preload("res://scripts/song/song_course.gd")
 
 var title: String = ""
 var subtitle: String = ""
+var genre: String = ""
+var maker: String = ""
 var folder_path: String = ""
 var preview_audio_path: String = ""
+var preview_start_sec: float = 0.0
 var courses: Array[SongCourse] = []
 
 

@@ -50,8 +50,11 @@ static func _scan_song_folder(folder_path: String) -> SongEntry:
 			if entry.title == "":
 				entry.title = chart.title
 				entry.subtitle = chart.subtitle
+				entry.genre = String(chart.metadata.get("GENRE", ""))
+				entry.maker = String(chart.metadata.get("MAKER", ""))
+				entry.preview_start_sec = String(chart.metadata.get("DEMOSTART", "0")).to_float()
 				if chart.wave != "":
-					entry.preview_audio_path = folder_path.path_join(chart.wave)
+					entry.preview_audio_path = _resolve_wave_path(folder_path, chart.wave)
 			var course := SongCourse.new()
 			course.course = chart.course
 			course.level = chart.level

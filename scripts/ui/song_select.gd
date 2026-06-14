@@ -16,7 +16,7 @@ var list_label: Label
 
 func _ready() -> void:
 	build()
-	load_songs("res://songs")
+	load_song_roots(["res://songs", "user://songs"])
 
 
 func build() -> void:
@@ -30,6 +30,16 @@ func build() -> void:
 
 func load_songs(root_path: String) -> void:
 	songs = SongFolderScanner.scan(root_path)
+	selected_song_index = 0
+	selected_course_index = 0
+	_update_selection()
+
+
+func load_song_roots(root_paths: Array) -> void:
+	songs = []
+	for root_path in root_paths:
+		songs.append_array(SongFolderScanner.scan(String(root_path)))
+	songs.sort_custom(func(a: SongEntry, b: SongEntry) -> bool: return a.title.naturalnocasecmp_to(b.title) < 0)
 	selected_song_index = 0
 	selected_course_index = 0
 	_update_selection()
@@ -90,6 +100,8 @@ func apply_selected_course_to_session() -> bool:
 	var course := selected_course()
 	if course == null:
 		return false
+	if not course.can_launch():
+		return false
 	var state := get_tree().root.get_node_or_null("SessionState")
 	if state != null:
 		state.selected_tja_path = course.tja_path
@@ -122,7 +134,8 @@ func _update_selection() -> void:
 	var lines: Array[String] = []
 	for i in range(songs.size()):
 		var prefix := "> " if i == selected_song_index else "  "
-		lines.append(prefix + songs[i].title)
+		var marker := " [Missing audio]" if _song_has_missing_audio(songs[i]) else ""
+		lines.append(prefix + songs[i].title + marker)
 	list_label.text = "\n".join(lines)
 
 	var song := selected_song()
@@ -131,6 +144,8 @@ func _update_selection() -> void:
 	subtitle_label.text = song.subtitle
 	if course == null:
 		detail_label.text = "No courses"
+	elif course.audio_missing:
+		detail_label.text = "%s  Level %d  Missing audio: %s" % [course.course, course.level, course.expected_audio_path]
 	else:
 		detail_label.text = "%s  Level %d" % [course.course, course.level]
 
@@ -142,3 +157,10 @@ func _label(text: String, label_position: Vector2, font_size: int) -> Label:
 	label.add_theme_font_size_override("font_size", font_size)
 	add_child(label)
 	return label
+
+
+func _song_has_missing_audio(song: SongEntry) -> bool:
+	for course in song.courses:
+		if course.audio_missing:
+			return true
+	return false

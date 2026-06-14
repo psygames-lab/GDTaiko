@@ -58,6 +58,9 @@ BPM:120
 		_assert(songs[1].courses[1].course == "Hard", "Scanner should parse multiple courses deterministically")
 		_assert(songs[1].courses[0].wave.ends_with("/sample/sample.ogg"), "Scanner should resolve WAVE relative to folder")
 		_assert(songs[1].courses[1].wave.ends_with("/sample/hard.ogg"), "Scanner should resolve each course WAVE relative to folder")
+		_assert(not songs[1].courses[0].audio_missing, "Scanner should mark existing audio as available")
+		_assert(songs[1].courses[1].audio_missing, "Scanner should mark missing audio")
+		_assert(songs[1].courses[1].expected_audio_path.ends_with("/sample/hard.ogg"), "Scanner should record expected missing audio path")
 		_assert(songs[1].preview_audio_path.ends_with("/sample/sample.ogg"), "Scanner should use WAVE for preview audio")
 
 	_remove_dir_recursive(root)

@@ -57,9 +57,17 @@ static func _scan_song_folder(folder_path: String) -> SongEntry:
 			course.level = chart.level
 			course.tja_path = tja_path
 			if chart.wave != "":
-				course.wave = folder_path.path_join(chart.wave)
+				course.wave = _resolve_wave_path(folder_path, chart.wave)
+				course.expected_audio_path = course.wave
+				course.audio_missing = not FileAccess.file_exists(course.wave)
 			entry.courses.append(course)
 
 	if entry.courses.is_empty():
 		return null
 	return entry
+
+
+static func _resolve_wave_path(folder_path: String, wave_path: String) -> String:
+	if wave_path.begins_with("res://") or wave_path.begins_with("user://"):
+		return wave_path
+	return folder_path.path_join(wave_path)

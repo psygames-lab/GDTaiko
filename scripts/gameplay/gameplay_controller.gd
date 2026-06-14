@@ -10,6 +10,7 @@ const SongClock := preload("res://scripts/gameplay/song_clock.gd")
 const RollManager := preload("res://scripts/gameplay/roll_manager.gd")
 const BalloonManager := preload("res://scripts/gameplay/balloon_manager.gd")
 const NoteLane := preload("res://scripts/gameplay/note_lane.gd")
+const HitEffects := preload("res://scripts/gameplay/hit_effects.gd")
 const TaikoHud := preload("res://scripts/ui/hud.gd")
 const ResultScreen := preload("res://scripts/ui/result_screen.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
@@ -27,6 +28,7 @@ var roll_manager := RollManager.new()
 var balloon_manager := BalloonManager.new()
 var clock: SongClock
 var lane: NoteLane
+var hit_effects: HitEffects
 var hud: TaikoHud
 var result_screen: ResultScreen
 var audio_player: AudioStreamPlayer
@@ -72,6 +74,11 @@ func _build_scene() -> void:
 	lane = NoteLane.new()
 	lane.name = "Lane"
 	add_child(lane)
+	lane.build_skin()
+
+	hit_effects = HitEffects.new()
+	hit_effects.name = "HitEffects"
+	add_child(hit_effects)
 
 	hud = TaikoHud.new()
 	hud.name = "Hud"
@@ -173,6 +180,7 @@ func _hit(lane_name: String) -> void:
 	best_note["state"] = NoteModel.HIT
 	scoring.apply_judgment(result["judgment"])
 	soul_gauge.apply_judgment(result["judgment"])
+	hit_effects.spawn_hit(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y), result["judgment"])
 	hud.update_score(scoring.score, scoring.combo)
 	hud.show_judgment(result["judgment"], result["timing_error_ms"])
 	_process_song_finished()
@@ -219,6 +227,7 @@ func _apply_active_roll_hit(song_time: float) -> bool:
 func _apply_empty_miss() -> void:
 	scoring.apply_judgment("miss")
 	soul_gauge.apply_judgment("miss")
+	hit_effects.spawn_miss(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y))
 	hud.update_score(scoring.score, scoring.combo)
 	hud.show_judgment("miss", 0.0)
 
@@ -263,6 +272,7 @@ func _process_misses(song_time: float) -> void:
 			note["state"] = NoteModel.MISSED
 			scoring.apply_judgment("miss")
 			soul_gauge.apply_judgment("miss")
+			hit_effects.spawn_miss(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y))
 			hud.update_score(scoring.score, scoring.combo)
 			hud.show_judgment("miss", 0.0)
 			lane.update_notes(chart.notes, song_time, timing_map)

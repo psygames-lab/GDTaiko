@@ -15,6 +15,8 @@ func _init() -> void:
 	_test_update_notes_visibility()
 	_test_unknown_id_ignored()
 	_test_clear_notes()
+	_test_build_skin_elements()
+	_test_gogo_overlay_visibility()
 
 	if failed_count == 0:
 		print("PASS: NoteLane")
@@ -182,6 +184,31 @@ func _test_clear_notes() -> void:
 	_assert(lane.note_nodes.size() == 0, "note_nodes should be empty after clear_notes")
 	for child in lane.get_children():
 		_assert(child.is_queued_for_deletion(), "existing sprites should be marked for deletion after clear_notes")
+	lane.queue_free()
+
+
+func _test_build_skin_elements() -> void:
+	var lane: Node2D = _new_lane()
+	lane.build_skin()
+
+	_assert(lane.get_node_or_null("LaneBackground") != null, "Lane skin should include a background band")
+	_assert(lane.get_node_or_null("HitTarget") != null, "Lane skin should include a hit target")
+	_assert(lane.get_node_or_null("TimingLine") != null, "Lane skin should include a timing line")
+	_assert(lane.get_node_or_null("GogoOverlay") != null, "Lane skin should include a GOGO overlay")
+	_assert(lane.get_child_count() == 4, "Building skin before notes should add only skin nodes")
+	lane.queue_free()
+
+
+func _test_gogo_overlay_visibility() -> void:
+	var lane: Node2D = _new_lane()
+	lane.build_skin()
+	var overlay := lane.get_node("GogoOverlay") as CanvasItem
+
+	_assert(not overlay.visible, "GOGO overlay should start hidden")
+	lane.set_gogo(true)
+	_assert(overlay.visible, "GOGO overlay should show when enabled")
+	lane.set_gogo(false)
+	_assert(not overlay.visible, "GOGO overlay should hide when disabled")
 	lane.queue_free()
 
 

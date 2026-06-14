@@ -22,7 +22,9 @@ func _run_tests() -> void:
 	_test_ka_input_action_hits_ka()
 	_test_process_moves_notes()
 	_test_immediate_don_hit()
+	_test_immediate_don_hit_spawns_effect()
 	_test_process_misses_marks_pending_as_missed()
+	_test_empty_miss_spawns_effect()
 	_test_roll_hit_without_normal_note()
 	_test_active_roll_is_not_missed_at_start_expiry()
 	_test_roll_finishes_without_miss_after_duration()
@@ -105,8 +107,8 @@ func _test_loads_sample_chart() -> void:
 
 func _test_textures_and_spawned_notes() -> void:
 	var controller := _new_controller()
-	var lane_child_count: int = controller.lane.get_child_count()
-	_assert(lane_child_count == controller.chart.notes.size(), "lane should spawn one sprite per note")
+	_assert(controller.lane.get_node_or_null("LaneBackground") != null, "Gameplay lane should build skin background")
+	_assert(controller.lane.note_nodes.size() == controller.chart.notes.size(), "lane should track one sprite per note")
 	var first_note: String = controller.chart.notes[0]["id"]
 	var second_note: String = controller.chart.notes[1]["id"]
 	_assert(controller.lane.note_nodes.has(first_note), "spawned note should be tracked by id")
@@ -183,6 +185,14 @@ func _test_immediate_don_hit() -> void:
 	controller.free()
 
 
+func _test_immediate_don_hit_spawns_effect() -> void:
+	var controller := _new_controller()
+	controller._start_song()
+	controller._hit("don")
+	_assert(_has_effect(controller.hit_effects, "hit", "perfect"), "Perfect hit should spawn a hit effect")
+	controller.free()
+
+
 func _test_process_misses_marks_pending_as_missed() -> void:
 	var controller := _new_controller()
 	controller._start_song()
@@ -194,6 +204,14 @@ func _test_process_misses_marks_pending_as_missed() -> void:
 	_assert(miss_count == controller.chart.notes.size(), "All pending notes should be marked missed at late time")
 	_assert(controller.scoring.misses == controller.chart.notes.size(), "Miss count should match number of missed notes")
 	_assert(controller.scoring.combo == 0, "Combo should be zero after miss processing")
+	controller.free()
+
+
+func _test_empty_miss_spawns_effect() -> void:
+	var controller := _new_controller()
+	controller._start_song()
+	controller._apply_empty_miss()
+	_assert(_has_effect(controller.hit_effects, "miss", "miss"), "Empty miss should spawn a miss effect")
 	controller.free()
 
 
@@ -444,3 +462,10 @@ func _assert(condition: bool, message: String) -> void:
 	if not condition:
 		failed_count += 1
 		push_error("ASSERTION FAILED: " + message)
+
+
+func _has_effect(hit_effects: Node, kind: String, judgment: String) -> bool:
+	for effect in hit_effects.effects:
+		if effect.get_meta("effect_type", "") == kind and effect.get_meta("judgment", "") == judgment:
+			return true
+	return false

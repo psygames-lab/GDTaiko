@@ -26,6 +26,9 @@ func _run_tests() -> void:
 	_test_active_roll_is_not_missed_at_start_expiry()
 	_test_roll_finishes_without_miss_after_duration()
 	_test_normal_note_inside_roll_window_takes_priority()
+	_test_balloon_hits_clear_note()
+	_test_balloon_expires_without_miss_when_not_cleared()
+	_test_cleared_balloon_does_not_score_again()
 	_test_free_instantiated_scene()
 
 	if failed_count == 0:
@@ -259,6 +262,96 @@ func _test_normal_note_inside_roll_window_takes_priority() -> void:
 	_assert(controller.chart.notes[1]["state"] == NoteModel.HIT, "Normal Don note should be hittable during active roll")
 	_assert(controller.scoring.combo == 1, "Normal Don hit should update combo during active roll")
 	_assert(controller.scoring.roll_hits == 0, "Normal Don priority should not also score a roll hit")
+	controller.free()
+
+
+func _test_balloon_hits_clear_note() -> void:
+	var controller := _new_controller()
+	controller.chart.notes.clear()
+	controller.chart.notes.append({
+		"id": "balloon_1",
+		"time_sec": 1.0,
+		"duration_sec": 2.0,
+		"lane": "balloon",
+		"kind": "balloon_start",
+		"required_hits": 2,
+		"state": NoteModel.PENDING,
+	})
+	controller._start_song()
+	controller.audio_player.stop()
+	controller.clock.configure(null, 0.0)
+	controller.clock.advance(1.0)
+
+	var don_event := InputEventAction.new()
+	don_event.action = "taiko_don"
+	don_event.pressed = true
+	controller._unhandled_input(don_event)
+	_assert(controller.scoring.roll_hits == 1, "First balloon hit should count as roll hit")
+	_assert(controller.scoring.score == 100, "First balloon hit should award roll score")
+	_assert(controller.chart.notes[0]["state"] == NoteModel.PENDING, "Balloon should remain pending before required hits")
+
+	controller._unhandled_input(don_event)
+	_assert(controller.scoring.balloons_cleared == 1, "Required balloon hit should clear balloon")
+	_assert(controller.scoring.score == 5100, "Balloon clear should add clear score after prior roll hit")
+	_assert(controller.chart.notes[0]["state"] == NoteModel.HIT, "Cleared balloon should become hit")
+	_assert(controller.playing == false, "Single-balloon chart should finish when balloon clears")
+	controller.free()
+
+
+func _test_balloon_expires_without_miss_when_not_cleared() -> void:
+	var controller := _new_controller()
+	controller.chart.notes.clear()
+	controller.chart.notes.append({
+		"id": "balloon_1",
+		"time_sec": 1.0,
+		"duration_sec": 2.0,
+		"lane": "balloon",
+		"kind": "balloon_start",
+		"required_hits": 3,
+		"state": NoteModel.PENDING,
+	})
+	controller._start_song()
+	controller._process_misses(3.2)
+	_assert(controller.chart.notes[0]["state"] == NoteModel.HIT, "Expired balloon should be consumed without normal miss")
+	_assert(controller.scoring.misses == 0, "Expired balloon should not increment misses")
+	_assert(controller.scoring.balloons_cleared == 0, "Uncleared expired balloon should not count as cleared")
+	_assert(controller.playing == false, "Single-balloon chart should finish after duration")
+	controller.free()
+
+
+func _test_cleared_balloon_does_not_score_again() -> void:
+	var controller := _new_controller()
+	controller.chart.notes.clear()
+	controller.chart.notes.append({
+		"id": "balloon_1",
+		"time_sec": 1.0,
+		"duration_sec": 2.0,
+		"lane": "balloon",
+		"kind": "balloon_start",
+		"required_hits": 1,
+		"state": NoteModel.PENDING,
+	})
+	controller.chart.notes.append({
+		"id": "don_future",
+		"time_sec": 4.0,
+		"lane": NoteModel.DON,
+		"kind": NoteModel.DON,
+		"state": NoteModel.PENDING,
+	})
+	controller._start_song()
+	controller.audio_player.stop()
+	controller.clock.configure(null, 0.0)
+	controller.clock.advance(1.0)
+
+	var don_event := InputEventAction.new()
+	don_event.action = "taiko_don"
+	don_event.pressed = true
+	controller._unhandled_input(don_event)
+	controller._unhandled_input(don_event)
+
+	_assert(controller.scoring.balloons_cleared == 1, "Cleared balloon should not clear again while chart continues")
+	_assert(controller.scoring.score == 5000, "Second hit after clear should not add duplicate balloon score")
+	_assert(controller.chart.notes[1]["state"] == NoteModel.PENDING, "Future note should keep chart playing for regression")
 	controller.free()
 
 

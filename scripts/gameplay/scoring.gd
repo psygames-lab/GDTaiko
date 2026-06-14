@@ -9,6 +9,7 @@ var goods := 0
 var bads := 0
 var misses := 0
 var roll_hits := 0
+var balloons_cleared := 0
 
 
 func reset() -> void:
@@ -20,6 +21,7 @@ func reset() -> void:
 	bads = 0
 	misses = 0
 	roll_hits = 0
+	balloons_cleared = 0
 
 
 func apply_judgment(judgment: String) -> void:
@@ -47,3 +49,8 @@ func apply_judgment(judgment: String) -> void:
 func apply_roll_hit() -> void:
 	roll_hits += 1
 	score += 100
+
+
+func apply_balloon_clear() -> void:
+	balloons_cleared += 1
+	score += 5000

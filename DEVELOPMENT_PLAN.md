@@ -2155,7 +2155,7 @@ git commit -m "feat: add roll note gameplay"
 - Modify: `E:\10_创作\GDTaiko\scripts\gameplay\gameplay_controller.gd`
 - Create: `E:\10_创作\GDTaiko\tests\gameplay\test_balloon_manager.gd`
 
-- [ ] **Step 1: Write balloon manager test**
+- [x] **Step 1: Write balloon manager test**
 
 Create:
 
@@ -2177,7 +2177,7 @@ func _init() -> void:
 	quit(0)
 ```
 
-- [ ] **Step 2: Implement balloon manager**
+- [x] **Step 2: Implement balloon manager**
 
 ```gdscript
 extends RefCounted
@@ -2210,7 +2210,7 @@ func reset() -> void:
 	cleared.clear()
 ```
 
-- [ ] **Step 3: Integrate balloon handling**
+- [x] **Step 3: Integrate balloon handling**
 
 In gameplay input handling, check active balloon before normal notes. On completion:
 
@@ -2232,7 +2232,7 @@ func apply_balloon_clear() -> void:
 	score += 5000
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run:
 

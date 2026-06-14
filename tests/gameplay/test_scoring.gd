@@ -11,6 +11,8 @@ func _init() -> void:
 	_test_unknown_judgment_noop()
 	_test_roll_hit()
 	_test_reset_clears_roll_hits()
+	_test_balloon_clear()
+	_test_reset_clears_balloon_count()
 
 	if failed_count == 0:
 		print("PASS: Scoring")
@@ -91,6 +93,26 @@ func _test_reset_clears_roll_hits() -> void:
 	scoring.apply_roll_hit()
 	scoring.reset()
 	_assert(scoring.roll_hits == 0, "reset() should clear roll_hits")
+
+
+func _test_balloon_clear() -> void:
+	var scoring: RefCounted = ScoringScript.new()
+	if not scoring.has_method("apply_balloon_clear"):
+		_assert(false, "Scoring should expose apply_balloon_clear()")
+		return
+	scoring.apply_balloon_clear()
+	_assert(scoring.balloons_cleared == 1, "apply_balloon_clear() should increment balloons_cleared")
+	_assert(scoring.score == 5000, "apply_balloon_clear() should award 5000 points")
+
+
+func _test_reset_clears_balloon_count() -> void:
+	var scoring: RefCounted = ScoringScript.new()
+	if not scoring.has_method("apply_balloon_clear"):
+		_assert(false, "Scoring should expose apply_balloon_clear() before reset test")
+		return
+	scoring.apply_balloon_clear()
+	scoring.reset()
+	_assert(scoring.balloons_cleared == 0, "reset() should clear balloons_cleared")
 
 
 func _assert(condition: bool, message: String) -> void:

@@ -6,6 +6,7 @@ const Judge := preload("res://scripts/gameplay/judge.gd")
 const Scoring := preload("res://scripts/gameplay/scoring.gd")
 const SongClock := preload("res://scripts/gameplay/song_clock.gd")
 const RollManager := preload("res://scripts/gameplay/roll_manager.gd")
+const BalloonManager := preload("res://scripts/gameplay/balloon_manager.gd")
 const NoteLane := preload("res://scripts/gameplay/note_lane.gd")
 const TaikoHud := preload("res://scripts/ui/hud.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
@@ -17,6 +18,7 @@ var chart
 var judge := Judge.new()
 var scoring := Scoring.new()
 var roll_manager := RollManager.new()
+var balloon_manager := BalloonManager.new()
 var clock: SongClock
 var lane: NoteLane
 var hud: TaikoHud
@@ -94,6 +96,7 @@ func _start_song() -> void:
 	lane.spawn_notes(chart.notes)
 	scoring.reset()
 	roll_manager.reset()
+	balloon_manager.reset()
 	clock.reset()
 	if audio_player.stream != null:
 		audio_player.stop()
@@ -113,6 +116,8 @@ func _hit(lane_name: String) -> void:
 	for note in chart.notes:
 		if String(note.get("state", NoteModel.PENDING)) != NoteModel.PENDING:
 			continue
+		if balloon_manager.is_balloon(note):
+			continue
 		if roll_manager.is_roll(note):
 			continue
 		if String(note.get("lane", NoteModel.DON)) != lane_name:
@@ -123,14 +128,14 @@ func _hit(lane_name: String) -> void:
 			best_note = note
 
 	if best_note.is_empty():
-		if _apply_active_roll_hit(song_time):
+		if _apply_active_long_note_hit(song_time):
 			return
 		_apply_empty_miss()
 		return
 
 	var result := judge.judge(float(best_note["time_sec"]), song_time)
 	if result["judgment"] == "miss":
-		if _apply_active_roll_hit(song_time):
+		if _apply_active_long_note_hit(song_time):
 			return
 		_apply_empty_miss()
 		return
@@ -140,6 +145,31 @@ func _hit(lane_name: String) -> void:
 	hud.update_score(scoring.score, scoring.combo)
 	hud.show_judgment(result["judgment"], result["timing_error_ms"])
 	_process_song_finished()
+
+
+func _apply_active_long_note_hit(song_time: float) -> bool:
+	if _apply_active_balloon_hit(song_time):
+		return true
+	return _apply_active_roll_hit(song_time)
+
+
+func _apply_active_balloon_hit(song_time: float) -> bool:
+	for note in chart.notes:
+		if String(note.get("state", NoteModel.PENDING)) != NoteModel.PENDING:
+			continue
+		if not balloon_manager.is_balloon(note):
+			continue
+		if not roll_manager.is_active(note, song_time):
+			continue
+		if balloon_manager.register_hit(note):
+			note["state"] = NoteModel.HIT
+			scoring.apply_balloon_clear()
+			_process_song_finished()
+		else:
+			scoring.apply_roll_hit()
+		hud.update_score(scoring.score, scoring.combo)
+		return true
+	return false
 
 
 func _apply_active_roll_hit(song_time: float) -> bool:
@@ -168,6 +198,13 @@ func _process_misses(song_time: float) -> void:
 		if String(note.get("state", NoteModel.PENDING)) != NoteModel.PENDING:
 			continue
 		var expiry_time := float(note["time_sec"])
+		if balloon_manager.is_balloon(note):
+			expiry_time += float(note.get("duration_sec", 0.0))
+			if judge.is_expired(expiry_time, song_time):
+				note["state"] = NoteModel.HIT
+				lane.update_notes(chart.notes, song_time)
+				_process_song_finished()
+			continue
 		if roll_manager.is_roll(note):
 			expiry_time += float(note.get("duration_sec", 0.0))
 			if judge.is_expired(expiry_time, song_time):

@@ -16,6 +16,7 @@ func _run_tests() -> void:
 	_test_instantiates_gameplay_scene()
 	_test_ready_builds_scene_and_loads_sample()
 	_test_config_can_hide_debug_monitor()
+	_test_user_skin_colors_apply_to_gameplay()
 	_test_ready_loads_session_selected_chart()
 	_test_loads_sample_chart()
 	_test_textures_and_spawned_notes()
@@ -86,6 +87,26 @@ func _test_config_can_hide_debug_monitor() -> void:
 	_assert(not controller.frame_monitor.visible, "Config should hide FrameMonitor")
 	controller.free()
 	DirAccess.remove_absolute(config_path)
+
+
+func _test_user_skin_colors_apply_to_gameplay() -> void:
+	var skin_dir := "user://skins/default"
+	DirAccess.make_dir_recursive_absolute(skin_dir)
+	var skin_path := skin_dir + "/skin.json"
+	var file := FileAccess.open(skin_path, FileAccess.WRITE)
+	file.store_string('{"name":"Gameplay Skin","lane_color":"#123456","gogo_color":"#abcdef","hud_top_band_color":"#222222","gauge_fill_color":"#ffee00","result_panel_color":"#111111"}')
+	file.close()
+
+	var controller := _new_controller()
+	var lane_background := controller.lane.get_node("LaneBackground") as ColorRect
+	var gogo_overlay := controller.lane.get_node("GogoOverlay") as ColorRect
+	_assert(lane_background.color == Color.html("#123456"), "User skin lane color should apply to lane background")
+	_assert(gogo_overlay.color == Color(Color.html("#abcdef"), 0.22), "User skin GOGO color should apply to lane overlay")
+	_assert(controller.hud.top_band.color == Color.html("#222222"), "User skin HUD color should apply")
+	_assert(controller.hud.soul_gauge_fill.color == Color.html("#ffee00"), "User skin gauge color should apply")
+	_assert(controller.result_screen.panel.color == Color.html("#111111"), "User skin result panel color should apply")
+	controller.free()
+	DirAccess.remove_absolute(skin_path)
 
 
 func _test_ready_loads_session_selected_chart() -> void:

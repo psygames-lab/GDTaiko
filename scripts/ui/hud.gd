@@ -51,6 +51,12 @@ func update_gauge(value: float) -> void:
 	var normalized := clampf(value / 100.0, 0.0, 1.0)
 	soul_gauge_fill.size = Vector2(GAUGE_MAX_WIDTH * normalized, soul_gauge_background.size.y)
 
+func apply_theme(theme: Variant) -> void:
+	if top_band != null:
+		top_band.color = theme.hud_top_band_color
+	if soul_gauge_fill != null:
+		soul_gauge_fill.color = theme.gauge_fill_color
+
 func show_judgment(judgment: String, timing_error_ms: float = 0.0) -> void:
 	if judgment == "":
 		judgment_label.text = "F = Don    J = Ka    Space = Start"

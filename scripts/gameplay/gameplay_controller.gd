@@ -12,6 +12,7 @@ const BalloonManager := preload("res://scripts/gameplay/balloon_manager.gd")
 const NoteLane := preload("res://scripts/gameplay/note_lane.gd")
 const HitEffects := preload("res://scripts/gameplay/hit_effects.gd")
 const FrameMonitor := preload("res://scripts/debug/frame_monitor.gd")
+const TaikoTheme := preload("res://scripts/theme/taiko_theme.gd")
 const TaikoHud := preload("res://scripts/ui/hud.gd")
 const ResultScreen := preload("res://scripts/ui/result_screen.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
@@ -38,6 +39,7 @@ var result_screen: ResultScreen
 var replay_recorder: ReplayRecorder
 var audio_player: AudioStreamPlayer
 var game_config: GameConfig
+var theme: TaikoTheme
 var don_texture: Texture2D
 var ka_texture: Texture2D
 var playing := false
@@ -74,6 +76,7 @@ func _build_scene() -> void:
 	game_config = GameConfig.new()
 	game_config.load_config()
 	game_config.apply_to_project()
+	theme = TaikoTheme.load_active()
 
 	audio_player = AudioStreamPlayer.new()
 	audio_player.name = "Audio"
@@ -87,6 +90,7 @@ func _build_scene() -> void:
 	lane.name = "Lane"
 	add_child(lane)
 	lane.build_skin()
+	lane.apply_theme(theme)
 
 	hit_effects = HitEffects.new()
 	hit_effects.name = "HitEffects"
@@ -102,15 +106,21 @@ func _build_scene() -> void:
 	hud = TaikoHud.new()
 	hud.name = "Hud"
 	hud.build()
+	hud.apply_theme(theme)
 	add_child(hud)
 
 	result_screen = ResultScene.instantiate() as ResultScreen
 	result_screen.name = "Result"
 	add_child(result_screen)
 	result_screen.build()
+	result_screen.apply_theme(theme)
 
-	don_texture = _load_note_texture("res://assets/notes/note_don.png", Color.RED)
-	ka_texture = _load_note_texture("res://assets/notes/note_ka.png", Color.CORNFLOWER_BLUE)
+	don_texture = theme.get_note_don_texture()
+	if don_texture == null:
+		don_texture = _load_note_texture("res://assets/notes/note_don.png", Color.RED)
+	ka_texture = theme.get_note_ka_texture()
+	if ka_texture == null:
+		ka_texture = _load_note_texture("res://assets/notes/note_ka.png", Color.CORNFLOWER_BLUE)
 	lane.configure(don_texture, ka_texture)
 
 

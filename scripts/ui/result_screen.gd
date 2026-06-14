@@ -59,6 +59,11 @@ func show_result(result: Dictionary) -> void:
 	visible = true
 
 
+func apply_theme(theme: Variant) -> void:
+	if panel != null:
+		panel.color = theme.result_panel_color
+
+
 func _save_best_result(result: Dictionary) -> void:
 	var song_key := String(result.get("song_key", ""))
 	var course := String(result.get("course", ""))

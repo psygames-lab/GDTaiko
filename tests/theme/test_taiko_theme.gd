@@ -11,6 +11,7 @@ func _init() -> void:
 
 func _run_tests() -> void:
 	_test_default_theme_loads_release_allowed_assets()
+	_test_user_skin_overrides_default_theme()
 	_test_missing_required_key_fails()
 
 	if failed_count == 0:
@@ -31,8 +32,31 @@ func _test_default_theme_loads_release_allowed_assets() -> void:
 	_assert(theme.get_note_ka_texture() != null, "Ka texture should load")
 	_assert(theme.lane_color == Color.html("#1b1b1b"), "Lane color should parse")
 	_assert(theme.gogo_color == Color.html("#f5a623"), "GOGO color should parse")
+	_assert(theme.hud_top_band_color == Color.html("#141417"), "HUD top band color should parse")
+	_assert(theme.gauge_fill_color == Color.html("#ff9f1c"), "Gauge fill color should parse")
+	_assert(theme.result_panel_color == Color.html("#141417"), "Result panel color should parse")
 	_assert(theme.sfx_don_path == "", "No SFX should be configured before approved SFX exists")
 	_assert(theme.font_main_path == "", "No font should be configured before approved font import")
+
+
+func _test_user_skin_overrides_default_theme() -> void:
+	var skin_dir := "user://skins/default"
+	DirAccess.make_dir_recursive_absolute(skin_dir)
+	var skin_path := skin_dir + "/skin.json"
+	var file := FileAccess.open(skin_path, FileAccess.WRITE)
+	file.store_string('{"name":"Local Dev Skin","lane_color":"#123456","gogo_color":"#abcdef","hud_top_band_color":"#222222","gauge_fill_color":"#ffee00","result_panel_color":"#111111"}')
+	file.close()
+
+	var theme = TaikoTheme.load_active("res://themes/default/theme.json", skin_path)
+	_assert(theme.is_valid(), "active theme should stay valid with partial user override: %s" % ", ".join(theme.errors))
+	_assert(theme.name == "Local Dev Skin", "User skin should override name")
+	_assert(theme.note_don_path == "res://assets/notes/note_don.png", "User skin should inherit missing Don texture")
+	_assert(theme.lane_color == Color.html("#123456"), "User skin should override lane color")
+	_assert(theme.gogo_color == Color.html("#abcdef"), "User skin should override GOGO color")
+	_assert(theme.hud_top_band_color == Color.html("#222222"), "User skin should override HUD color")
+	_assert(theme.gauge_fill_color == Color.html("#ffee00"), "User skin should override gauge color")
+	_assert(theme.result_panel_color == Color.html("#111111"), "User skin should override result panel color")
+	DirAccess.remove_absolute(skin_path)
 
 
 func _test_missing_required_key_fails() -> void:

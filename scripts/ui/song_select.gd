@@ -11,7 +11,10 @@ var selected_course_index := 0
 var title_label: Label
 var subtitle_label: Label
 var detail_label: Label
+var metadata_label: Label
 var list_label: Label
+var preview_player: AudioStreamPlayer
+var preview_fade_tween: Tween
 
 
 func _ready() -> void:
@@ -26,6 +29,10 @@ func build() -> void:
 	title_label = _label("No songs", Vector2(520, 160), 42)
 	subtitle_label = _label("", Vector2(520, 216), 24)
 	detail_label = _label("", Vector2(520, 270), 28)
+	metadata_label = _label("", Vector2(520, 318), 22)
+	preview_player = AudioStreamPlayer.new()
+	preview_player.name = "PreviewPlayer"
+	add_child(preview_player)
 
 
 func load_songs(root_path: String) -> void:
@@ -129,6 +136,8 @@ func _update_selection() -> void:
 		title_label.text = "No songs"
 		subtitle_label.text = ""
 		detail_label.text = ""
+		metadata_label.text = ""
+		_stop_preview()
 		return
 
 	var lines: Array[String] = []
@@ -142,12 +151,16 @@ func _update_selection() -> void:
 	var course := selected_course()
 	title_label.text = song.title
 	subtitle_label.text = song.subtitle
+	metadata_label.text = _metadata_text(song)
 	if course == null:
 		detail_label.text = "No courses"
+		_stop_preview()
 	elif course.audio_missing:
 		detail_label.text = "%s  Level %d  Missing audio: %s" % [course.course, course.level, course.expected_audio_path]
+		_stop_preview()
 	else:
 		detail_label.text = "%s  Level %d" % [course.course, course.level]
+		_update_preview(song)
 
 
 func _label(text: String, label_position: Vector2, font_size: int) -> Label:
@@ -164,3 +177,44 @@ func _song_has_missing_audio(song: SongEntry) -> bool:
 		if course.audio_missing:
 			return true
 	return false
+
+
+func _metadata_text(song: SongEntry) -> String:
+	var parts: Array[String] = []
+	if song.genre != "":
+		parts.append("Genre: %s" % song.genre)
+	if song.maker != "":
+		parts.append("Maker: %s" % song.maker)
+	var course_parts: Array[String] = []
+	for course in song.courses:
+		course_parts.append("%s %d" % [course.course, course.level])
+	if not course_parts.is_empty():
+		parts.append("Courses: %s" % ", ".join(course_parts))
+	return "  |  ".join(parts)
+
+
+func _update_preview(song: SongEntry) -> void:
+	if preview_player == null:
+		return
+	_stop_preview()
+	if song.preview_audio_path == "" or not FileAccess.file_exists(song.preview_audio_path):
+		return
+	if not ResourceLoader.exists(song.preview_audio_path):
+		return
+	var stream = load(song.preview_audio_path)
+	if not stream is AudioStream:
+		return
+	preview_player.stream = stream
+	preview_player.volume_db = linear_to_db(0.01)
+	preview_player.play(song.preview_start_sec)
+	preview_fade_tween = create_tween()
+	preview_fade_tween.tween_property(preview_player, "volume_db", linear_to_db(1.0), 0.25)
+
+
+func _stop_preview() -> void:
+	if preview_fade_tween != null:
+		preview_fade_tween.kill()
+		preview_fade_tween = null
+	if preview_player != null:
+		preview_player.stop()
+		preview_player.stream = null

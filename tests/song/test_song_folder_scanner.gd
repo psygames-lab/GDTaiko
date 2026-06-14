@@ -6,7 +6,7 @@ var failed_count := 0
 
 
 func _init() -> void:
-	var root := "user://scan_test"
+	var root := "user://scan_test_phase31"
 	_remove_dir_recursive(root)
 	DirAccess.make_dir_recursive_absolute(root + "/sample")
 	DirAccess.make_dir_recursive_absolute(root + "/alpha")
@@ -14,6 +14,9 @@ func _init() -> void:
 	chart.store_string("""TITLE:Scanner Song
 SUBTITLE:Fixture
 WAVE:sample.ogg
+DEMOSTART:1.5
+GENRE:Pop
+MAKER:Fixture Maker
 COURSE:Oni
 LEVEL:7
 BPM:120
@@ -53,6 +56,9 @@ BPM:120
 	if songs.size() == 2:
 		_assert(songs[0].title == "Alpha Song", "Scanner should sort songs by title")
 		_assert(songs[1].title == "Scanner Song", "Scanner should read TITLE metadata")
+		_assert(songs[1].genre == "Pop", "Scanner should read GENRE metadata")
+		_assert(songs[1].maker == "Fixture Maker", "Scanner should read MAKER metadata")
+		_assert(is_equal_approx(songs[1].preview_start_sec, 1.5), "Scanner should read DEMOSTART metadata")
 		_assert(songs[1].courses.size() == 2, "Scanner should add one course per TJA")
 		_assert(songs[1].courses[0].course == "Oni", "Scanner should preserve COURSE metadata")
 		_assert(songs[1].courses[1].course == "Hard", "Scanner should parse multiple courses deterministically")

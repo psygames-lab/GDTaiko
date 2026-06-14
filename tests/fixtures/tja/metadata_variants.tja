@@ -1,0 +1,10 @@
+TITLE:Metadata Variants
+SUBTITLE:Fixture Subtitle
+BPM:150
+OFFSET:-0.25
+WAVE:fixture.ogg
+COURSE:Hard
+LEVEL:6
+#START
+10,
+#END

@@ -10,6 +10,7 @@ class FakeConfig:
 	var music_volume := 0.4
 	var sfx_volume := 0.9
 	var fullscreen := true
+	var show_debug_monitor := false
 	var don_keys := [KEY_D]
 	var ka_keys := [KEY_K]
 
@@ -72,6 +73,7 @@ func _test_config_loading_and_updates() -> void:
 	_assert(is_equal_approx(menu.music_volume_slider.value, 0.4), "Menu should apply config music volume")
 	_assert(is_equal_approx(menu.sfx_volume_slider.value, 0.9), "Menu should apply config SFX volume")
 	_assert(menu.fullscreen_checkbox.button_pressed, "Menu should apply config fullscreen state")
+	_assert(not menu.debug_monitor_checkbox.button_pressed, "Menu should apply debug monitor state")
 	_assert(menu.don_button.text == "Don: D", "Menu should apply Don key")
 	_assert(menu.ka_button.text == "Ka: K", "Menu should apply Ka key")
 
@@ -87,6 +89,8 @@ func _test_config_loading_and_updates() -> void:
 	menu._on_sfx_volume_changed(0.5)
 	menu.fullscreen_checkbox.button_pressed = false
 	menu._on_fullscreen_toggled(false)
+	menu.debug_monitor_checkbox.button_pressed = true
+	menu._on_debug_monitor_toggled(true)
 
 	_assert(menu.chart_offset_spin.value == 25, "Chart offset widget should show set value")
 	_assert(config.chart_offset_ms == 25, "Menu change should write chart offset to config")
@@ -95,6 +99,7 @@ func _test_config_loading_and_updates() -> void:
 	_assert(is_equal_approx(config.music_volume, 0.3), "Menu change should write music volume to config")
 	_assert(is_equal_approx(config.sfx_volume, 0.5), "Menu change should write SFX volume to config")
 	_assert(config.fullscreen == false, "Menu change should write fullscreen to config")
+	_assert(config.show_debug_monitor == true, "Menu change should write debug monitor visibility to config")
 
 	menu.free()
 
@@ -104,15 +109,19 @@ func _test_real_game_config_updates() -> void:
 	var config := GameConfig.new()
 	config.chart_offset_ms = 4
 	config.input_offset_ms = -2
+	config.show_debug_monitor = false
 	menu.set_config(config)
 
 	menu.chart_offset_spin.value = 44
 	menu._on_chart_offset_changed(44)
 	menu.input_offset_spin.value = -22
 	menu._on_input_offset_changed(-22)
+	menu.debug_monitor_checkbox.button_pressed = true
+	menu._on_debug_monitor_toggled(true)
 
 	_assert(config.chart_offset_ms == 44, "Menu should write chart offset to GameConfig")
 	_assert(config.input_offset_ms == -22, "Menu should write input offset to GameConfig")
+	_assert(config.show_debug_monitor, "Menu should write debug monitor visibility to GameConfig")
 	menu.free()
 
 

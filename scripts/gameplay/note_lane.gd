@@ -17,6 +17,7 @@ var note_nodes: Dictionary = {}:
 		active_sprites = value
 var don_texture: Texture2D
 var ka_texture: Texture2D
+var lane_background: ColorRect
 var gogo_overlay: CanvasItem
 
 
@@ -24,18 +25,18 @@ func build_skin() -> void:
 	if get_node_or_null("LaneBackground") != null:
 		return
 
-	var background := ColorRect.new()
-	background.name = "LaneBackground"
-	background.position = Vector2(HIT_X - 96.0, NOTE_Y - (LANE_HEIGHT * 0.5))
-	background.size = Vector2(SPAWN_X - HIT_X + 160.0, LANE_HEIGHT)
-	background.color = Color.html("#1b1b1b")
-	background.z_index = -30
-	add_child(background)
+	lane_background = ColorRect.new()
+	lane_background.name = "LaneBackground"
+	lane_background.position = Vector2(HIT_X - 96.0, NOTE_Y - (LANE_HEIGHT * 0.5))
+	lane_background.size = Vector2(SPAWN_X - HIT_X + 160.0, LANE_HEIGHT)
+	lane_background.color = Color.html("#1b1b1b")
+	lane_background.z_index = -30
+	add_child(lane_background)
 
 	gogo_overlay = ColorRect.new()
 	gogo_overlay.name = "GogoOverlay"
-	gogo_overlay.position = background.position
-	gogo_overlay.size = background.size
+	gogo_overlay.position = lane_background.position
+	gogo_overlay.size = lane_background.size
 	gogo_overlay.color = Color(0.96, 0.52, 0.12, 0.22)
 	gogo_overlay.visible = false
 	gogo_overlay.z_index = -20
@@ -61,6 +62,13 @@ func set_gogo(enabled: bool) -> void:
 	if gogo_overlay == null:
 		return
 	gogo_overlay.visible = enabled
+
+
+func apply_theme(theme: Variant) -> void:
+	if lane_background != null:
+		lane_background.color = theme.lane_color
+	if gogo_overlay != null:
+		gogo_overlay.color = Color(theme.gogo_color, 0.22)
 
 func configure(don: Texture2D, ka: Texture2D) -> void:
 	don_texture = don

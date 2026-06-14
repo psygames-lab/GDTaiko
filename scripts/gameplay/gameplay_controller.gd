@@ -12,6 +12,7 @@ const BalloonManager := preload("res://scripts/gameplay/balloon_manager.gd")
 const NoteLane := preload("res://scripts/gameplay/note_lane.gd")
 const HitEffects := preload("res://scripts/gameplay/hit_effects.gd")
 const FrameMonitor := preload("res://scripts/debug/frame_monitor.gd")
+const TaikoTheme := preload("res://scripts/theme/taiko_theme.gd")
 const TaikoHud := preload("res://scripts/ui/hud.gd")
 const ResultScreen := preload("res://scripts/ui/result_screen.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
@@ -38,6 +39,7 @@ var result_screen: ResultScreen
 var replay_recorder: ReplayRecorder
 var audio_player: AudioStreamPlayer
 var game_config: GameConfig
+var theme: TaikoTheme
 var don_texture: Texture2D
 var ka_texture: Texture2D
 var playing := false
@@ -74,6 +76,7 @@ func _build_scene() -> void:
 	game_config = GameConfig.new()
 	game_config.load_config()
 	game_config.apply_to_project()
+	theme = TaikoTheme.load_active()
 
 	audio_player = AudioStreamPlayer.new()
 	audio_player.name = "Audio"
@@ -87,6 +90,7 @@ func _build_scene() -> void:
 	lane.name = "Lane"
 	add_child(lane)
 	lane.build_skin()
+	lane.apply_theme(theme)
 
 	hit_effects = HitEffects.new()
 	hit_effects.name = "HitEffects"
@@ -94,21 +98,29 @@ func _build_scene() -> void:
 
 	frame_monitor = FrameMonitor.new()
 	frame_monitor.name = "FrameMonitor"
+	frame_monitor.position = Vector2(1032.0, 16.0)
+	frame_monitor.visible = game_config.show_debug_monitor
 	frame_monitor.build()
 	add_child(frame_monitor)
 
 	hud = TaikoHud.new()
 	hud.name = "Hud"
 	hud.build()
+	hud.apply_theme(theme)
 	add_child(hud)
 
 	result_screen = ResultScene.instantiate() as ResultScreen
 	result_screen.name = "Result"
 	add_child(result_screen)
 	result_screen.build()
+	result_screen.apply_theme(theme)
 
-	don_texture = _load_note_texture("res://assets/notes/note_don.png", Color.RED)
-	ka_texture = _load_note_texture("res://assets/notes/note_ka.png", Color.CORNFLOWER_BLUE)
+	don_texture = theme.get_note_don_texture()
+	if don_texture == null:
+		don_texture = _load_note_texture("res://assets/notes/note_don.png", Color.RED)
+	ka_texture = theme.get_note_ka_texture()
+	if ka_texture == null:
+		ka_texture = _load_note_texture("res://assets/notes/note_ka.png", Color.CORNFLOWER_BLUE)
 	lane.configure(don_texture, ka_texture)
 
 
@@ -142,6 +154,7 @@ func _load_sample_chart() -> void:
 	_build_timing_map()
 	lane.spawn_notes(chart.notes)
 	hud.update_score(scoring.score, scoring.combo)
+	hud.update_gauge(soul_gauge.value)
 	hud.set_status("Loaded %s - press Space" % chart.title)
 
 
@@ -167,6 +180,7 @@ func _start_song() -> void:
 		audio_player.play()
 	playing = true
 	hud.update_score(scoring.score, scoring.combo)
+	hud.update_gauge(soul_gauge.value)
 	hud.set_status("Playing")
 
 
@@ -225,6 +239,7 @@ func _apply_hit_at(lane_name: String, song_time: float, record_replay_input: boo
 	soul_gauge.apply_judgment(result["judgment"])
 	hit_effects.spawn_hit(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y), result["judgment"])
 	hud.update_score(scoring.score, scoring.combo)
+	hud.update_gauge(soul_gauge.value)
 	hud.show_judgment(result["judgment"], result["timing_error_ms"])
 	_process_song_finished()
 
@@ -272,6 +287,7 @@ func _apply_empty_miss() -> void:
 	soul_gauge.apply_judgment("miss")
 	hit_effects.spawn_miss(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y))
 	hud.update_score(scoring.score, scoring.combo)
+	hud.update_gauge(soul_gauge.value)
 	hud.show_judgment("miss", 0.0)
 
 
@@ -318,6 +334,7 @@ func _process_misses(song_time: float) -> void:
 			soul_gauge.apply_judgment("miss")
 			hit_effects.spawn_miss(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y))
 			hud.update_score(scoring.score, scoring.combo)
+			hud.update_gauge(soul_gauge.value)
 			hud.show_judgment("miss", 0.0)
 			lane.update_notes(chart.notes, song_time, timing_map)
 			_process_song_finished()

@@ -15,6 +15,9 @@ func _run_tests() -> void:
 	DirAccess.remove_absolute("user://config.json")
 	_test_instantiates_gameplay_scene()
 	_test_ready_builds_scene_and_loads_sample()
+	_test_config_can_hide_debug_monitor()
+	_test_result_layer_draws_above_hud()
+	_test_user_skin_colors_apply_to_gameplay()
 	_test_ready_loads_session_selected_chart()
 	_test_loads_sample_chart()
 	_test_textures_and_spawned_notes()
@@ -68,7 +71,50 @@ func _test_ready_builds_scene_and_loads_sample() -> void:
 	_assert(controller.lane != null, "NoteLane should be built")
 	_assert(controller.hud != null, "TaikoHud should be built")
 	_assert(controller.frame_monitor != null, "FrameMonitor should be built")
+	_assert(controller.frame_monitor.visible, "FrameMonitor should be visible by default")
+	_assert(controller.frame_monitor.position.x >= 1000.0, "FrameMonitor should be positioned away from the left HUD")
 	controller.free()
+
+
+func _test_config_can_hide_debug_monitor() -> void:
+	var config_path := "user://config.json"
+	DirAccess.remove_absolute(config_path)
+	var config := preload("res://scripts/config/game_config.gd").new()
+	config.show_debug_monitor = false
+	config.save_config()
+
+	var controller := _new_controller()
+	_assert(controller.frame_monitor != null, "FrameMonitor should still be built when hidden")
+	_assert(not controller.frame_monitor.visible, "Config should hide FrameMonitor")
+	controller.free()
+	DirAccess.remove_absolute(config_path)
+
+
+func _test_result_layer_draws_above_hud() -> void:
+	var controller := _new_controller()
+	_assert(controller.result_screen is CanvasLayer, "Result screen should render through a CanvasLayer")
+	_assert(controller.result_screen.layer > controller.hud.layer, "Result screen layer should be above gameplay HUD")
+	controller.free()
+
+
+func _test_user_skin_colors_apply_to_gameplay() -> void:
+	var skin_dir := "user://skins/default"
+	DirAccess.make_dir_recursive_absolute(skin_dir)
+	var skin_path := skin_dir + "/skin.json"
+	var file := FileAccess.open(skin_path, FileAccess.WRITE)
+	file.store_string('{"name":"Gameplay Skin","lane_color":"#123456","gogo_color":"#abcdef","hud_top_band_color":"#222222","gauge_fill_color":"#ffee00","result_panel_color":"#111111"}')
+	file.close()
+
+	var controller := _new_controller()
+	var lane_background := controller.lane.get_node("LaneBackground") as ColorRect
+	var gogo_overlay := controller.lane.get_node("GogoOverlay") as ColorRect
+	_assert(lane_background.color == Color.html("#123456"), "User skin lane color should apply to lane background")
+	_assert(gogo_overlay.color == Color(Color.html("#abcdef"), 0.22), "User skin GOGO color should apply to lane overlay")
+	_assert(controller.hud.top_band.color == Color.html("#222222"), "User skin HUD color should apply")
+	_assert(controller.hud.soul_gauge_fill.color == Color.html("#ffee00"), "User skin gauge color should apply")
+	_assert(controller.result_screen.panel.color == Color.html("#111111"), "User skin result panel color should apply")
+	controller.free()
+	DirAccess.remove_absolute(skin_path)
 
 
 func _test_ready_loads_session_selected_chart() -> void:

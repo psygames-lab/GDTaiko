@@ -32,6 +32,7 @@ func _test_defaults() -> void:
 	_assert(config.don_keys == [KEY_F], "Default Don key should be F")
 	_assert(config.ka_keys == [KEY_J], "Default Ka key should be J")
 	_assert(not config.fullscreen, "Default fullscreen should be false")
+	_assert(config.show_debug_monitor, "Default debug monitor should be visible in development")
 
 
 func _test_save_and_load_config() -> void:
@@ -48,6 +49,7 @@ func _test_save_and_load_config() -> void:
 	config.don_keys = [KEY_D, KEY_F]
 	config.ka_keys = [KEY_J, KEY_K]
 	config.fullscreen = true
+	config.show_debug_monitor = false
 	_assert(config.save_config(), "Config should save")
 
 	var loaded := GameConfig.new()
@@ -61,6 +63,7 @@ func _test_save_and_load_config() -> void:
 	_assert(loaded.don_keys == [KEY_D, KEY_F], "Loaded Don keys should match")
 	_assert(loaded.ka_keys == [KEY_J, KEY_K], "Loaded Ka keys should match")
 	_assert(loaded.fullscreen, "Loaded fullscreen should match")
+	_assert(not loaded.show_debug_monitor, "Loaded debug monitor visibility should match")
 	DirAccess.remove_absolute(path)
 
 

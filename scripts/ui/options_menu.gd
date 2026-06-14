@@ -11,6 +11,7 @@ const DEFAULT_MASTER_VOLUME := 1.0
 const DEFAULT_MUSIC_VOLUME := 1.0
 const DEFAULT_SFX_VOLUME := 1.0
 const DEFAULT_FULLSCREEN := false
+const DEFAULT_SHOW_DEBUG_MONITOR := true
 const DEFAULT_DON_KEYS: Array[int] = [KEY_F]
 const DEFAULT_KA_KEYS: Array[int] = [KEY_J]
 
@@ -24,6 +25,7 @@ var master_volume := DEFAULT_MASTER_VOLUME
 var music_volume := DEFAULT_MUSIC_VOLUME
 var sfx_volume := DEFAULT_SFX_VOLUME
 var fullscreen := DEFAULT_FULLSCREEN
+var show_debug_monitor := DEFAULT_SHOW_DEBUG_MONITOR
 var don_keys: Array = DEFAULT_DON_KEYS.duplicate()
 var ka_keys: Array = DEFAULT_KA_KEYS.duplicate()
 
@@ -36,6 +38,7 @@ var master_volume_label: Label
 var music_volume_label: Label
 var sfx_volume_label: Label
 var fullscreen_checkbox: CheckBox
+var debug_monitor_checkbox: CheckBox
 var don_button: Button
 var ka_button: Button
 
@@ -142,6 +145,14 @@ func build() -> void:
 	fullscreen_checkbox.toggled.connect(_on_fullscreen_toggled)
 	fullscreen_row.add_child(fullscreen_checkbox)
 
+	var debug_row := HBoxContainer.new()
+	debug_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	container.add_child(debug_row)
+	debug_row.add_child(_label("Debug Monitor", 28))
+	debug_monitor_checkbox = CheckBox.new()
+	debug_monitor_checkbox.toggled.connect(_on_debug_monitor_toggled)
+	debug_row.add_child(debug_monitor_checkbox)
+
 	var don_row := HBoxContainer.new()
 	don_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	container.add_child(don_row)
@@ -190,6 +201,7 @@ func _load_from_config() -> void:
 	music_volume = float(_read_float("music_volume", DEFAULT_MUSIC_VOLUME))
 	sfx_volume = float(_read_float("sfx_volume", DEFAULT_SFX_VOLUME))
 	fullscreen = bool(_read_bool("fullscreen", DEFAULT_FULLSCREEN))
+	show_debug_monitor = bool(_read_bool("show_debug_monitor", DEFAULT_SHOW_DEBUG_MONITOR))
 	don_keys = _read_key_list("don_keys", DEFAULT_DON_KEYS.duplicate())
 	ka_keys = _read_key_list("ka_keys", DEFAULT_KA_KEYS.duplicate())
 
@@ -205,6 +217,7 @@ func _sync_ui_from_state() -> void:
 	music_volume_slider.value = clamp(music_volume, 0.0, 1.0)
 	sfx_volume_slider.value = clamp(sfx_volume, 0.0, 1.0)
 	fullscreen_checkbox.button_pressed = fullscreen
+	debug_monitor_checkbox.button_pressed = show_debug_monitor
 
 	master_volume_label.text = "Master: %d%%" % int(round(master_volume * 100.0))
 	music_volume_label.text = "Music: %d%%" % int(round(music_volume * 100.0))
@@ -263,6 +276,14 @@ func _on_fullscreen_toggled(value: bool) -> void:
 		return
 	fullscreen = value
 	_write_config("fullscreen", fullscreen)
+	emit_signal("options_changed")
+
+
+func _on_debug_monitor_toggled(value: bool) -> void:
+	if is_syncing_ui:
+		return
+	show_debug_monitor = value
+	_write_config("show_debug_monitor", show_debug_monitor)
 	emit_signal("options_changed")
 
 

@@ -16,8 +16,10 @@ func build() -> void:
 		return
 	metrics_label = Label.new()
 	metrics_label.position = Vector2(8.0, 8.0)
+	metrics_label.custom_minimum_size = Vector2(220.0, 96.0)
+	metrics_label.size = Vector2(220.0, 96.0)
 	metrics_label.add_theme_font_size_override("font_size", 16)
-	metrics_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	metrics_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	add_child(metrics_label)
 	_render()
 

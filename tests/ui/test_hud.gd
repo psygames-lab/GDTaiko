@@ -19,10 +19,19 @@ func _init() -> void:
 	_assert(hud.status_label.text == "Ready", "Default status text should be Ready")
 	_assert(hud.gogo_label != null, "GOGO label should be created")
 	_assert(hud.gogo_label.text == "", "GOGO label should default to empty")
+	_assert(hud.get("top_band") != null, "HUD should create a top band")
+	_assert(hud.get("soul_gauge_fill") != null, "HUD should create a soul gauge fill")
+	_assert(hud.score_label.position.x >= 760.0, "Score should live in the right HUD area")
+	_assert(hud.combo_label.position.x >= 520.0, "Combo should live near the top center")
+	_assert(hud.judgment_label.position.y >= 520.0, "Judgment should stay below the note lane")
 
 	hud.update_score(1234, 56)
 	_assert(hud.score_label.text == "Score: 1234", "Score text should update")
 	_assert(hud.combo_label.text == "Combo: 56", "Combo text should update")
+	if hud.has_method("update_gauge"):
+		hud.update_gauge(80.0)
+	var gauge_fill = hud.get("soul_gauge_fill")
+	_assert(gauge_fill != null and gauge_fill.size.x > 500.0, "Soul gauge fill should scale with gauge value")
 
 	hud.show_judgment("Great", 12.7)
 	_assert(hud.judgment_label.text == "Great  +13 ms", "Judgment should show capitalized name and ms")

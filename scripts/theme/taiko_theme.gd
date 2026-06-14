@@ -17,13 +17,23 @@ var sfx_ka_path := ""
 var font_main_path := ""
 var lane_color := Color.BLACK
 var gogo_color := Color.ORANGE
+var hud_top_band_color := Color.html("#141417")
+var gauge_fill_color := Color.html("#ff9f1c")
+var result_panel_color := Color.html("#141417")
 var errors: Array[String] = []
 
 
 static func load_from_file(path: String) -> Variant:
 	var script: GDScript = load("res://scripts/theme/taiko_theme.gd")
 	var theme = script.new()
-	theme._load_from_file(path)
+	theme._load_from_file(path, true)
+	return theme
+
+
+static func load_active(default_path: String = "res://themes/default/theme.json", user_path: String = "user://skins/default/skin.json") -> Variant:
+	var theme = load_from_file(default_path)
+	if FileAccess.file_exists(user_path):
+		theme._load_from_file(user_path, false)
 	return theme
 
 
@@ -39,7 +49,7 @@ func get_note_ka_texture() -> Texture2D:
 	return _load_texture(note_ka_path)
 
 
-func _load_from_file(path: String) -> void:
+func _load_from_file(path: String, require_required_keys: bool) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("theme file not found %s" % path)
 		return
@@ -54,18 +64,33 @@ func _load_from_file(path: String) -> void:
 		errors.append("theme json must be an object")
 		return
 
-	for key in REQUIRED_KEYS:
-		if not parsed.has(key) or String(parsed[key]) == "":
-			errors.append("missing required key %s" % key)
+	if require_required_keys:
+		for key in REQUIRED_KEYS:
+			if not parsed.has(key) or String(parsed[key]) == "":
+				errors.append("missing required key %s" % key)
 
-	name = String(parsed.get("name", ""))
-	note_don_path = String(parsed.get("note_don", ""))
-	note_ka_path = String(parsed.get("note_ka", ""))
-	sfx_don_path = String(parsed.get("sfx_don", ""))
-	sfx_ka_path = String(parsed.get("sfx_ka", ""))
-	font_main_path = String(parsed.get("font_main", ""))
-	lane_color = _parse_color(String(parsed.get("lane_color", "#000000")), "lane_color")
-	gogo_color = _parse_color(String(parsed.get("gogo_color", "#ffffff")), "gogo_color")
+	if parsed.has("name"):
+		name = String(parsed["name"])
+	if parsed.has("note_don"):
+		note_don_path = String(parsed["note_don"])
+	if parsed.has("note_ka"):
+		note_ka_path = String(parsed["note_ka"])
+	if parsed.has("sfx_don"):
+		sfx_don_path = String(parsed["sfx_don"])
+	if parsed.has("sfx_ka"):
+		sfx_ka_path = String(parsed["sfx_ka"])
+	if parsed.has("font_main"):
+		font_main_path = String(parsed["font_main"])
+	if parsed.has("lane_color"):
+		lane_color = _parse_color(String(parsed["lane_color"]), "lane_color")
+	if parsed.has("gogo_color"):
+		gogo_color = _parse_color(String(parsed["gogo_color"]), "gogo_color")
+	if parsed.has("hud_top_band_color"):
+		hud_top_band_color = _parse_color(String(parsed["hud_top_band_color"]), "hud_top_band_color")
+	if parsed.has("gauge_fill_color"):
+		gauge_fill_color = _parse_color(String(parsed["gauge_fill_color"]), "gauge_fill_color")
+	if parsed.has("result_panel_color"):
+		result_panel_color = _parse_color(String(parsed["result_panel_color"]), "result_panel_color")
 
 	_validate_resource_exists(note_don_path, "note_don")
 	_validate_resource_exists(note_ka_path, "note_ka")
@@ -92,6 +117,12 @@ func _load_texture(path: String) -> Texture2D:
 		var resource := load(path)
 		if resource is Texture2D:
 			return resource
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		var error := image.load(path)
+		if error == OK:
+			return ImageTexture.create_from_image(image)
+		errors.append("invalid texture %s" % path)
 	return _fallback_texture_for(path)
 
 

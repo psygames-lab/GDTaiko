@@ -6,5 +6,8 @@
   "sfx_ka": "",
   "font_main": "",
   "lane_color": "#1b1b1b",
-  "gogo_color": "#f5a623"
+  "gogo_color": "#f5a623",
+  "hud_top_band_color": "#141417",
+  "gauge_fill_color": "#ff9f1c",
+  "result_panel_color": "#141417"
 }

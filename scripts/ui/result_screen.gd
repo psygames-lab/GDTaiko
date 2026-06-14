@@ -1,4 +1,4 @@
-extends Control
+extends CanvasLayer
 class_name ResultScreen
 
 const ScoreStore := preload("res://scripts/storage/score_store.gd")
@@ -9,19 +9,38 @@ var combo_label: Label
 var counts_label: Label
 var gauge_label: Label
 var clear_label: Label
+var overlay: ColorRect
+var panel: ColorRect
 var last_result: Dictionary = {}
 var score_store := ScoreStore.new()
+
+const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
 
 
 func build() -> void:
 	if title_label != null:
 		return
-	title_label = _label("Result", Vector2(460, 140), 42)
-	score_label = _label("Score: 0", Vector2(460, 210), 30)
-	combo_label = _label("Max Combo: 0", Vector2(460, 250), 30)
-	counts_label = _label("Perfect 0  Good 0  Bad 0  Miss 0", Vector2(460, 290), 24)
-	gauge_label = _label("Gauge: 0.0%", Vector2(460, 330), 28)
-	clear_label = _label("Failed", Vector2(460, 376), 34)
+	layer = 20
+	overlay = ColorRect.new()
+	overlay.name = "ResultOverlay"
+	overlay.position = Vector2.ZERO
+	overlay.size = VIEWPORT_SIZE
+	overlay.color = Color(0.0, 0.0, 0.0, 0.62)
+	add_child(overlay)
+
+	panel = ColorRect.new()
+	panel.name = "ResultPanel"
+	panel.position = Vector2(340.0, 118.0)
+	panel.size = Vector2(600.0, 412.0)
+	panel.color = Color(0.08, 0.08, 0.09, 0.96)
+	add_child(panel)
+
+	title_label = _label("Result", Vector2(390, 150), 44, Vector2(500, 56))
+	score_label = _label("Score: 0", Vector2(390, 224), 30, Vector2(500, 40))
+	combo_label = _label("Max Combo: 0", Vector2(390, 268), 30, Vector2(500, 40))
+	counts_label = _label("Perfect 0  Good 0  Bad 0  Miss 0", Vector2(390, 314), 24, Vector2(500, 34))
+	gauge_label = _label("Gauge: 0.0%", Vector2(390, 360), 28, Vector2(500, 38))
+	clear_label = _label("Failed", Vector2(390, 420), 36, Vector2(500, 50))
 	hide_result()
 
 
@@ -42,6 +61,11 @@ func show_result(result: Dictionary) -> void:
 	visible = true
 
 
+func apply_theme(theme: Variant) -> void:
+	if panel != null:
+		panel.color = theme.result_panel_color
+
+
 func _save_best_result(result: Dictionary) -> void:
 	var song_key := String(result.get("song_key", ""))
 	var course := String(result.get("course", ""))
@@ -54,10 +78,14 @@ func hide_result() -> void:
 	visible = false
 
 
-func _label(text: String, label_position: Vector2, font_size: int) -> Label:
+func _label(text: String, label_position: Vector2, font_size: int, label_size: Vector2 = Vector2.ZERO) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.position = label_position
+	if label_size != Vector2.ZERO:
+		label.size = label_size
+		label.custom_minimum_size = label_size
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label.add_theme_font_size_override("font_size", font_size)
 	add_child(label)
 	return label

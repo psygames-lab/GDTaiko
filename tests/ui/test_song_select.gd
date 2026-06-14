@@ -40,6 +40,7 @@ func _run_tests() -> void:
 	select.select_next_song()
 	_assert(select.title_label.text == "Beta", "Down navigation should select next song")
 	_assert(select.preview_player != null, "Song select should create a preview player")
+	_assert(select.preview_player.bus == "Music", "Song preview should use the Music audio bus")
 	select.select_previous_song()
 	_assert(select.title_label.text == "Alpha", "Up navigation should select previous song")
 	var course := SongCourse.new()

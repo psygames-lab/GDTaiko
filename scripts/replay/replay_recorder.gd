@@ -7,6 +7,7 @@ var version := VERSION
 var chart_hash := ""
 var course := ""
 var offset_ms := 0
+var input_offset_ms := 0
 var inputs: Array[Dictionary] = []
 var result: Dictionary = {}
 
@@ -26,11 +27,12 @@ static func load_from_file(path: String) -> Variant:
 	return recorder
 
 
-func start(new_chart_hash: String, new_course: String, new_offset_ms: int) -> void:
+func start(new_chart_hash: String, new_course: String, new_offset_ms: int, new_input_offset_ms: int = 0) -> void:
 	version = VERSION
 	chart_hash = new_chart_hash
 	course = new_course
 	offset_ms = new_offset_ms
+	input_offset_ms = new_input_offset_ms
 	inputs.clear()
 	result.clear()
 
@@ -59,6 +61,7 @@ func load_from_dictionary(data: Dictionary) -> void:
 	chart_hash = String(data.get("chart_hash", ""))
 	course = String(data.get("course", ""))
 	offset_ms = int(data.get("offset_ms", 0))
+	input_offset_ms = int(data.get("input_offset_ms", 0))
 	inputs.clear()
 	for input in data.get("inputs", []):
 		if input is Dictionary:
@@ -75,6 +78,7 @@ func to_dictionary() -> Dictionary:
 		"chart_hash": chart_hash,
 		"course": course,
 		"offset_ms": offset_ms,
+		"input_offset_ms": input_offset_ms,
 		"inputs": inputs.duplicate(true),
 		"result": result.duplicate(true),
 	}

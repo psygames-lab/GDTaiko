@@ -32,6 +32,8 @@ func build() -> void:
 	metadata_label = _label("", Vector2(520, 318), 22)
 	preview_player = AudioStreamPlayer.new()
 	preview_player.name = "PreviewPlayer"
+	_ensure_audio_bus("Music")
+	preview_player.bus = "Music"
 	add_child(preview_player)
 
 
@@ -218,3 +220,10 @@ func _stop_preview() -> void:
 	if preview_player != null:
 		preview_player.stop()
 		preview_player.stream = null
+
+
+func _ensure_audio_bus(bus_name: String) -> void:
+	if AudioServer.get_bus_index(bus_name) != -1:
+		return
+	AudioServer.add_bus()
+	AudioServer.set_bus_name(AudioServer.get_bus_count() - 1, bus_name)

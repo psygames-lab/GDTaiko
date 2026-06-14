@@ -74,6 +74,7 @@ func _build_scene() -> void:
 
 	audio_player = AudioStreamPlayer.new()
 	audio_player.name = "Audio"
+	audio_player.bus = "Music"
 	add_child(audio_player)
 
 	clock = SongClock.new()
@@ -142,7 +143,7 @@ func _start_song() -> void:
 	result_screen.hide_result()
 	last_result = {}
 	replay_recorder = ReplayRecorder.new()
-	replay_recorder.start(_chart_replay_hash(current_chart_path), chart.course, int(round((chart.offset_sec + (float(game_config.chart_offset_ms) / 1000.0)) * 1000.0)))
+	replay_recorder.start(_chart_replay_hash(current_chart_path), chart.course, int(round((chart.offset_sec + (float(game_config.chart_offset_ms) / 1000.0)) * 1000.0)), game_config.input_offset_ms)
 	clock.reset()
 	if audio_player.stream != null:
 		audio_player.stop()
@@ -156,6 +157,19 @@ func _hit(lane_name: String, record_replay_input: bool = true) -> void:
 	if not playing or chart == null:
 		return
 	var song_time := clock.time_sec() + (float(game_config.input_offset_ms) / 1000.0)
+	_apply_hit_at(lane_name, song_time, record_replay_input)
+
+
+func apply_replay_input(lane_name: String, replay_song_time_sec: Variant = null) -> void:
+	if not playing or chart == null:
+		return
+	var song_time := clock.time_sec()
+	if replay_song_time_sec != null:
+		song_time = float(replay_song_time_sec)
+	_apply_hit_at(lane_name, song_time, false)
+
+
+func _apply_hit_at(lane_name: String, song_time: float, record_replay_input: bool) -> void:
 	if replay_recorder != null and record_replay_input:
 		replay_recorder.record_input(song_time, lane_name)
 	_update_timing_states(song_time)
@@ -196,10 +210,6 @@ func _hit(lane_name: String, record_replay_input: bool = true) -> void:
 	hud.update_score(scoring.score, scoring.combo)
 	hud.show_judgment(result["judgment"], result["timing_error_ms"])
 	_process_song_finished()
-
-
-func apply_replay_input(lane_name: String) -> void:
-	_hit(lane_name, false)
 
 
 func _apply_active_long_note_hit(song_time: float) -> bool:

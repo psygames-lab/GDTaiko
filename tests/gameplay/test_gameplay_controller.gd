@@ -440,10 +440,12 @@ func _test_config_offsets_apply_to_clock_and_input() -> void:
 	controller.game_config.chart_offset_ms = 250
 	controller.game_config.input_offset_ms = 100
 	controller._load_sample_chart()
+	_assert(controller.audio_player.bus == "Music", "Gameplay music should use the Music audio bus")
 	_assert(is_equal_approx(controller.clock.chart_offset_sec, controller.chart.offset_sec + 0.25), "Config chart offset should apply to song clock")
 	controller._start_song()
 	controller._hit(NoteModel.DON)
 	_assert(is_equal_approx(float(controller.replay_recorder.inputs[0]["time_sec"]), controller.chart.offset_sec + 0.35), "Config input offset should apply to recorded hit time")
+	_assert(controller.replay_recorder.input_offset_ms == 100, "Replay metadata should preserve input offset")
 	controller.free()
 
 

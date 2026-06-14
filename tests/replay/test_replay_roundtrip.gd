@@ -15,8 +15,10 @@ func _init() -> void:
 func _run_tests() -> void:
 	_test_recorder_save_load_roundtrip()
 	_test_player_rejects_mismatched_context()
+	_test_failed_load_clears_previous_inputs()
 	_test_player_injects_inputs_by_time()
 	_test_gameplay_controller_records_hits()
+	_test_replay_uses_recorded_calibrated_time()
 	_test_replay_input_does_not_record_again()
 
 	if failed_count == 0:
@@ -32,7 +34,7 @@ func _test_recorder_save_load_roundtrip() -> void:
 	DirAccess.remove_absolute(path)
 
 	var recorder := ReplayRecorder.new()
-	recorder.start("chart-a", "Oni", -25)
+	recorder.start("chart-a", "Oni", -25, 13)
 	recorder.record_input(1.234, NoteModel.DON)
 	recorder.record_input(2.5, NoteModel.KA)
 	recorder.set_result({"score": 1200, "max_combo": 2})
@@ -44,6 +46,7 @@ func _test_recorder_save_load_roundtrip() -> void:
 		_assert(loaded.chart_hash == "chart-a", "Loaded replay should preserve chart hash")
 		_assert(loaded.course == "Oni", "Loaded replay should preserve course")
 		_assert(loaded.offset_ms == -25, "Loaded replay should preserve offset")
+		_assert(loaded.input_offset_ms == 13, "Loaded replay should preserve input offset")
 		_assert(loaded.inputs.size() == 2, "Loaded replay should preserve input count")
 		_assert(loaded.inputs[0]["lane"] == NoteModel.DON, "Loaded replay should preserve first lane")
 		_assert(loaded.inputs[1]["lane"] == NoteModel.KA, "Loaded replay should preserve second lane")
@@ -60,7 +63,7 @@ func _test_player_injects_inputs_by_time() -> void:
 
 	var fake_controller := FakeController.new()
 	var player := ReplayPlayer.new()
-	_assert(player.load_replay(recorder.to_dictionary(), "chart-a", "Oni", 0), "Replay should load for matching context")
+	_assert(player.load_replay(recorder.to_dictionary(), "chart-a", "Oni", 0, 0), "Replay should load for matching context")
 	player.update(fake_controller, 0.5)
 	_assert(fake_controller.hits.is_empty(), "Replay should not inject future inputs")
 	player.update(fake_controller, 1.0)
@@ -71,14 +74,28 @@ func _test_player_injects_inputs_by_time() -> void:
 
 func _test_player_rejects_mismatched_context() -> void:
 	var recorder := ReplayRecorder.new()
-	recorder.start("chart-a", "Oni", 12)
+	recorder.start("chart-a", "Oni", 12, 7)
 	recorder.record_input(1.0, NoteModel.DON)
 
 	var player := ReplayPlayer.new()
-	_assert(not player.load_replay(recorder.to_dictionary(), "chart-b", "Oni", 12), "Replay should reject changed chart")
+	_assert(not player.load_replay(recorder.to_dictionary(), "chart-b", "Oni", 12, 7), "Replay should reject changed chart")
 	_assert(player.last_error == "replay chart mismatch", "Replay should expose chart mismatch error")
-	_assert(not player.load_replay(recorder.to_dictionary(), "chart-a", "Hard", 12), "Replay should reject wrong course")
-	_assert(not player.load_replay(recorder.to_dictionary(), "chart-a", "Oni", 0), "Replay should reject wrong offset")
+	_assert(not player.load_replay(recorder.to_dictionary(), "chart-a", "Hard", 12, 7), "Replay should reject wrong course")
+	_assert(not player.load_replay(recorder.to_dictionary(), "chart-a", "Oni", 0, 7), "Replay should reject wrong offset")
+	_assert(not player.load_replay(recorder.to_dictionary(), "chart-a", "Oni", 12, 0), "Replay should reject wrong input offset")
+
+
+func _test_failed_load_clears_previous_inputs() -> void:
+	var recorder := ReplayRecorder.new()
+	recorder.start("chart-a", "Oni", 0)
+	recorder.record_input(1.0, NoteModel.DON)
+
+	var player := ReplayPlayer.new()
+	_assert(player.load_replay(recorder.to_dictionary(), "chart-a", "Oni", 0), "Replay should load initial context")
+	_assert(not player.load_replay(recorder.to_dictionary(), "chart-b", "Oni", 0), "Replay should reject changed chart")
+	var fake_controller := FakeController.new()
+	player.update(fake_controller, 2.0)
+	_assert(fake_controller.hits.is_empty(), "Rejected replay should not inject stale inputs")
 
 
 func _test_gameplay_controller_records_hits() -> void:
@@ -92,11 +109,21 @@ func _test_gameplay_controller_records_hits() -> void:
 	controller.free()
 
 
+func _test_replay_uses_recorded_calibrated_time() -> void:
+	var controller = GameplayScene.instantiate()
+	get_root().add_child(controller)
+	controller.game_config.input_offset_ms = 100
+	controller._start_song()
+	controller.apply_replay_input(NoteModel.DON, 0.0)
+	_assert(controller.scoring.perfects == 1, "Replay input should judge at recorded calibrated time without applying input offset again")
+	controller.free()
+
+
 func _test_replay_input_does_not_record_again() -> void:
 	var controller = GameplayScene.instantiate()
 	get_root().add_child(controller)
 	controller._start_song()
-	controller.apply_replay_input(NoteModel.DON)
+	controller.apply_replay_input(NoteModel.DON, 0.0)
 	_assert(controller.replay_recorder.inputs.is_empty(), "Replay-injected input should not be recorded again")
 	controller.free()
 

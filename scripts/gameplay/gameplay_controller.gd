@@ -14,6 +14,7 @@ const HitEffects := preload("res://scripts/gameplay/hit_effects.gd")
 const TaikoHud := preload("res://scripts/ui/hud.gd")
 const ResultScreen := preload("res://scripts/ui/result_screen.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
+const ReplayRecorder := preload("res://scripts/replay/replay_recorder.gd")
 const ResultScene := preload("res://scenes/Result.tscn")
 
 const SAMPLE_CHART_PATH := "res://assets/sample/sample.tja"
@@ -31,6 +32,7 @@ var lane: NoteLane
 var hit_effects: HitEffects
 var hud: TaikoHud
 var result_screen: ResultScreen
+var replay_recorder: ReplayRecorder
 var audio_player: AudioStreamPlayer
 var don_texture: Texture2D
 var ka_texture: Texture2D
@@ -133,6 +135,8 @@ func _start_song() -> void:
 	hud.set_gogo(false)
 	result_screen.hide_result()
 	last_result = {}
+	replay_recorder = ReplayRecorder.new()
+	replay_recorder.start(current_chart_path, chart.course, int(round(chart.offset_sec * 1000.0)))
 	clock.reset()
 	if audio_player.stream != null:
 		audio_player.stop()
@@ -146,6 +150,8 @@ func _hit(lane_name: String) -> void:
 	if not playing or chart == null:
 		return
 	var song_time := clock.time_sec()
+	if replay_recorder != null:
+		replay_recorder.record_input(song_time, lane_name)
 	_update_timing_states(song_time)
 	var best_note: Dictionary = {}
 	var best_error := INF
@@ -287,6 +293,8 @@ func _process_song_finished() -> void:
 			return
 	playing = false
 	last_result = _build_result_payload()
+	if replay_recorder != null:
+		replay_recorder.set_result(last_result)
 	result_screen.show_result(last_result)
 
 

@@ -21,6 +21,16 @@ func _run_tests() -> void:
 	var select := SongSelect.new()
 	select.build()
 	get_root().add_child(select)
+	_assert(select.get_node_or_null("Root/TopBar/OptionsButton") != null, "Song select should show an Options button")
+	_assert(select.get_node_or_null("BackgroundDim") is ColorRect, "Song select should dim the background behind panels")
+	_assert(select.get_node_or_null("Root/Content/ListPanel") is TextureRect, "Song select list should use the generated UI panel texture")
+	_assert(select.get_node_or_null("Root/Content/DetailPanel") is TextureRect, "Song select details should use the generated UI panel texture")
+	var content := select.get_node_or_null("Root/Content") as Control
+	_assert(content != null and content.position.x >= 40.0, "Song select content should keep a safe left margin")
+	var detail_panel := select.get_node_or_null("Root/Content/DetailPanel") as Control
+	_assert(detail_panel != null and detail_panel.position.x >= 450.0, "Song select detail panel should stay in the right column")
+	_assert(select.list_label != null and select.list_label.get_parent().name == "ListPanel", "Song list text should be inside the list panel")
+	_assert(select.title_label != null and select.title_label.get_parent().name == "DetailPanel", "Song title should be inside the detail panel")
 	select.songs = [
 		_song("Alpha", "res://songs/alpha", "Oni", 7, "alpha_oni.tja", "alpha.ogg"),
 		_song("Beta", "res://songs/beta", "Normal", 3, "beta_normal.tja", "beta.ogg"),

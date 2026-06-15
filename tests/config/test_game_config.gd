@@ -32,7 +32,7 @@ func _test_defaults() -> void:
 	_assert(config.don_keys == [KEY_F], "Default Don key should be F")
 	_assert(config.ka_keys == [KEY_J], "Default Ka key should be J")
 	_assert(not config.fullscreen, "Default fullscreen should be false")
-	_assert(config.show_debug_monitor, "Default debug monitor should be visible in development")
+	_assert(not config.show_debug_monitor, "Default debug monitor should be hidden in player UI")
 
 
 func _test_save_and_load_config() -> void:

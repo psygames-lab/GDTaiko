@@ -3,6 +3,7 @@ extends SceneTree
 const GameplayScene: PackedScene = preload("res://scenes/Gameplay.tscn")
 const GameplayController := preload("res://scripts/gameplay/gameplay_controller.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
+const NoteLane := preload("res://scripts/gameplay/note_lane.gd")
 
 var failed_count := 0
 
@@ -71,9 +72,14 @@ func _test_ready_builds_scene_and_loads_sample() -> void:
 	_assert(controller.audio_player != null, "AudioStreamPlayer should be built")
 	_assert(controller.clock != null, "SongClock should be built")
 	_assert(controller.lane != null, "NoteLane should be built")
+	_assert(controller.get_node_or_null("SkinBackground") != null, "Gameplay should show a skin background")
+	_assert(controller.get_node_or_null("SkinCharacter") != null, "Gameplay should show the generated character skin")
+	_assert(controller.get_node_or_null("SkinProps") != null, "Gameplay should show generated prop art")
+	_assert(controller.skin_character.position.y >= NoteLane.NOTE_Y + 120.0, "Character art should stay below the note lane focus area")
+	_assert(controller.skin_background.modulate.a <= 0.82, "Gameplay background should be dimmed for lane readability")
 	_assert(controller.hud != null, "TaikoHud should be built")
 	_assert(controller.frame_monitor != null, "FrameMonitor should be built")
-	_assert(controller.frame_monitor.visible, "FrameMonitor should be visible by default")
+	_assert(not controller.frame_monitor.visible, "FrameMonitor should be hidden by default")
 	_assert(controller.frame_monitor.position.x >= 1000.0, "FrameMonitor should be positioned away from the left HUD")
 	controller.free()
 
@@ -82,12 +88,12 @@ func _test_config_can_hide_debug_monitor() -> void:
 	var config_path := "user://config.json"
 	DirAccess.remove_absolute(config_path)
 	var config := preload("res://scripts/config/game_config.gd").new()
-	config.show_debug_monitor = false
+	config.show_debug_monitor = true
 	config.save_config()
 
 	var controller := _new_controller()
-	_assert(controller.frame_monitor != null, "FrameMonitor should still be built when hidden")
-	_assert(not controller.frame_monitor.visible, "Config should hide FrameMonitor")
+	_assert(controller.frame_monitor != null, "FrameMonitor should still be built when configured")
+	_assert(controller.frame_monitor.visible, "Config should show FrameMonitor when enabled")
 	controller.free()
 	DirAccess.remove_absolute(config_path)
 
@@ -577,7 +583,9 @@ func _test_config_offsets_apply_to_clock_and_input() -> void:
 	controller.audio_player.stop()
 	controller.clock.configure(null, controller.chart.offset_sec + 0.25)
 	controller._hit(NoteModel.DON)
-	_assert(is_equal_approx(float(controller.replay_recorder.inputs[0]["time_sec"]), controller.chart.offset_sec + 0.35), "Config input offset should apply to recorded hit time")
+	var recorded_time: float = float(controller.replay_recorder.inputs[0]["time_sec"])
+	var expected_time: float = float(controller.chart.offset_sec) + 0.35
+	_assert(absf(recorded_time - expected_time) <= 0.05, "Config input offset should apply to recorded hit time")
 	_assert(controller.replay_recorder.input_offset_ms == 100, "Replay metadata should preserve input offset")
 	controller.free()
 

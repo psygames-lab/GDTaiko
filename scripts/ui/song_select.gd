@@ -5,6 +5,10 @@ const SongFolderScanner := preload("res://scripts/song/song_folder_scanner.gd")
 const SongEntry := preload("res://scripts/song/song_entry.gd")
 const SongCourse := preload("res://scripts/song/song_course.gd")
 
+const SONG_SELECT_BACKGROUND := "res://assets/skin/night_festival/backgrounds/main_menu.png"
+const UI_PANEL_SHEET := "res://assets/skin/night_festival/ui/ui_panels.png"
+const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
+
 var songs: Array[SongEntry] = []
 var selected_song_index := 0
 var selected_course_index := 0
@@ -13,6 +17,7 @@ var subtitle_label: Label
 var detail_label: Label
 var metadata_label: Label
 var list_label: Label
+var options_button: Button
 var preview_player: AudioStreamPlayer
 var preview_fade_tween: Tween
 
@@ -25,11 +30,64 @@ func _ready() -> void:
 func build() -> void:
 	if title_label != null:
 		return
-	list_label = _label("", Vector2(80, 96), 24)
-	title_label = _label("No songs", Vector2(520, 160), 42)
-	subtitle_label = _label("", Vector2(520, 216), 24)
-	detail_label = _label("", Vector2(520, 270), 28)
-	metadata_label = _label("", Vector2(520, 318), 22)
+	_add_background()
+	_add_background_dim(0.34)
+
+	var root := Control.new()
+	root.name = "Root"
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(root)
+
+	var top_bar := HBoxContainer.new()
+	top_bar.name = "TopBar"
+	top_bar.position = Vector2(32, 20)
+	top_bar.size = Vector2(1216, 52)
+	top_bar.add_theme_constant_override("separation", 12)
+	root.add_child(top_bar)
+
+	var heading := Label.new()
+	heading.name = "Heading"
+	heading.text = "Song Select"
+	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_theme_font_size_override("font_size", 30)
+	top_bar.add_child(heading)
+
+	options_button = Button.new()
+	options_button.name = "OptionsButton"
+	options_button.text = "Options"
+	options_button.custom_minimum_size = Vector2(132, 44)
+	options_button.pressed.connect(_on_options_pressed)
+	top_bar.add_child(options_button)
+
+	var content := Control.new()
+	content.name = "Content"
+	content.position = Vector2(44.0, 84.0)
+	content.size = Vector2(1192.0, 584.0)
+	root.add_child(content)
+
+	var list_panel := TextureRect.new()
+	list_panel.name = "ListPanel"
+	list_panel.position = Vector2.ZERO
+	list_panel.size = Vector2(430, 584)
+	list_panel.texture = _make_ui_panel_texture(Rect2(42.0, 74.0, 690.0, 486.0))
+	list_panel.stretch_mode = TextureRect.STRETCH_SCALE
+	list_panel.modulate = Color(1.0, 1.0, 1.0, 0.88)
+	content.add_child(list_panel)
+
+	var detail_panel := TextureRect.new()
+	detail_panel.name = "DetailPanel"
+	detail_panel.position = Vector2(464, 44)
+	detail_panel.size = Vector2(728, 332)
+	detail_panel.texture = _make_ui_panel_texture(Rect2(782.0, 302.0, 704.0, 438.0))
+	detail_panel.stretch_mode = TextureRect.STRETCH_SCALE
+	detail_panel.modulate = Color(1.0, 1.0, 1.0, 0.94)
+	content.add_child(detail_panel)
+
+	list_label = _label(list_panel, "", Vector2(34, 30), 24, Vector2(360, 510))
+	title_label = _label(detail_panel, "No songs", Vector2(42, 38), 40, Vector2(620, 56))
+	subtitle_label = _label(detail_panel, "", Vector2(42, 96), 23, Vector2(620, 36))
+	detail_label = _label(detail_panel, "", Vector2(42, 156), 28, Vector2(620, 42))
+	metadata_label = _label(detail_panel, "", Vector2(42, 214), 22, Vector2(620, 78))
 	preview_player = AudioStreamPlayer.new()
 	preview_player.name = "PreviewPlayer"
 	_ensure_audio_bus("Music")
@@ -105,6 +163,10 @@ func start_selected_course() -> void:
 	get_tree().change_scene_to_file("res://scenes/Gameplay.tscn")
 
 
+func open_options() -> void:
+	get_tree().change_scene_to_file("res://scenes/Options.tscn")
+
+
 func apply_selected_course_to_session() -> bool:
 	var course := selected_course()
 	if course == null:
@@ -131,6 +193,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		select_previous_course()
 	elif event.is_action_pressed("ui_accept"):
 		start_selected_course()
+
+
+func _on_options_pressed() -> void:
+	open_options()
 
 
 func _update_selection() -> void:
@@ -167,13 +233,63 @@ func _update_selection() -> void:
 		_update_preview(song)
 
 
-func _label(text: String, label_position: Vector2, font_size: int) -> Label:
+func _label(parent: Node, text: String, label_position: Vector2, font_size: int, label_size: Vector2) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.position = label_position
+	label.size = label_size
+	label.custom_minimum_size = label_size
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", font_size)
-	add_child(label)
+	parent.add_child(label)
 	return label
+
+
+func _add_background() -> void:
+	var texture := _load_png_texture(SONG_SELECT_BACKGROUND)
+	if texture != null:
+		var background := TextureRect.new()
+		background.name = "Background"
+		background.texture = texture
+		background.set_anchors_preset(Control.PRESET_FULL_RECT)
+		background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		add_child(background)
+		return
+
+	var fallback := ColorRect.new()
+	fallback.name = "Background"
+	fallback.color = Color(0.035, 0.04, 0.055)
+	fallback.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(fallback)
+
+
+func _add_background_dim(alpha: float) -> void:
+	var dim := ColorRect.new()
+	dim.name = "BackgroundDim"
+	dim.color = Color(0.0, 0.0, 0.0, alpha)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(dim)
+
+
+func _load_png_texture(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		var texture := load(path)
+		if texture is Texture2D:
+			return texture
+	var image := Image.load_from_file(path)
+	if image == null or image.is_empty():
+		return null
+	return ImageTexture.create_from_image(image)
+
+
+func _make_ui_panel_texture(region: Rect2) -> Texture2D:
+	var sheet := _load_png_texture(UI_PANEL_SHEET)
+	if sheet == null:
+		return null
+	var texture := AtlasTexture.new()
+	texture.atlas = sheet
+	texture.region = region
+	return texture
 
 
 func _song_has_missing_audio(song: SongEntry) -> bool:

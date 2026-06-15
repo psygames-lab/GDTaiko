@@ -21,6 +21,10 @@ const GameConfig := preload("res://scripts/config/game_config.gd")
 const ResultScene := preload("res://scenes/Result.tscn")
 
 const SAMPLE_CHART_PATH := "res://assets/sample/sample.tja"
+const SKIN_BACKGROUND_PATH := "res://assets/skin/night_festival/backgrounds/gameplay_stage.png"
+const SKIN_CHARACTER_PATH := "res://assets/skin/night_festival/characters/festival_drummer.png"
+const SKIN_PROPS_PATH := "res://assets/skin/night_festival/props/props_sheet.png"
+const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
 
 var chart
 var timing_map := TimingMap.new()
@@ -37,6 +41,9 @@ var hud: TaikoHud
 var result_screen: ResultScreen
 var replay_recorder: ReplayRecorder
 var audio_player: AudioStreamPlayer
+var skin_background: TextureRect
+var skin_character: TextureRect
+var skin_props: TextureRect
 var game_config: GameConfig
 var theme: TaikoTheme
 var don_texture: Texture2D
@@ -76,6 +83,9 @@ func _build_scene() -> void:
 	game_config.load_config()
 	game_config.apply_to_project()
 	theme = TaikoTheme.load_active()
+
+	_add_skin_background()
+	_add_skin_decorations()
 
 	audio_player = AudioStreamPlayer.new()
 	audio_player.name = "Audio"
@@ -130,6 +140,55 @@ func _update_frame_monitor(delta: float) -> void:
 	if lane != null:
 		active_note_count = lane.active_sprites.size()
 	frame_monitor.update_metrics(delta, active_note_count)
+
+
+func _add_skin_background() -> void:
+	var texture := _load_png_texture(SKIN_BACKGROUND_PATH)
+	if texture == null:
+		return
+	skin_background = TextureRect.new()
+	skin_background.name = "SkinBackground"
+	skin_background.texture = texture
+	skin_background.size = VIEWPORT_SIZE
+	skin_background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	skin_background.modulate = Color(1.0, 1.0, 1.0, 0.78)
+	skin_background.z_index = -100
+	add_child(skin_background)
+
+
+func _load_png_texture(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		var texture := load(path)
+		if texture is Texture2D:
+			return texture
+	var image := Image.load_from_file(path)
+	if image == null or image.is_empty():
+		return null
+	return ImageTexture.create_from_image(image)
+
+
+func _add_skin_decorations() -> void:
+	var character_texture := _load_png_texture(SKIN_CHARACTER_PATH)
+	if character_texture != null:
+		skin_character = TextureRect.new()
+		skin_character.name = "SkinCharacter"
+		skin_character.texture = character_texture
+		skin_character.position = Vector2(18.0, 420.0)
+		skin_character.size = Vector2(220.0, 260.0)
+		skin_character.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		skin_character.z_index = -50
+		add_child(skin_character)
+
+	var props_texture := _load_png_texture(SKIN_PROPS_PATH)
+	if props_texture != null:
+		skin_props = TextureRect.new()
+		skin_props.name = "SkinProps"
+		skin_props.texture = props_texture
+		skin_props.position = Vector2(1000.0, 510.0)
+		skin_props.size = Vector2(220.0, 146.0)
+		skin_props.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		skin_props.z_index = -50
+		add_child(skin_props)
 
 
 func _load_sample_chart() -> void:

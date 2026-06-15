@@ -18,6 +18,7 @@ const MISS_FEEDBACK_COLOR := "#7a7a7a"
 const DEFAULT_DRUM_PAD_COLOR := "#7b2622"
 const DEFAULT_DRUM_FACE_COLOR := "#f3d6a3"
 const DEFAULT_HIT_TARGET_COLOR := "#b9bec4"
+const FEEDBACK_RELEASE_SEC := 0.14
 
 var active_sprites: Dictionary = {}
 var pooled_sprites: Array[Sprite2D] = []
@@ -41,6 +42,7 @@ var hit_target_glow: Sprite2D
 var drum_pad_base_color := Color.html(DEFAULT_DRUM_PAD_COLOR)
 var drum_face_base_color := Color.html(DEFAULT_DRUM_FACE_COLOR)
 var hit_target_base_color := Color.html(DEFAULT_HIT_TARGET_COLOR)
+var feedback_tween: Tween
 
 
 func build_skin() -> void:
@@ -172,6 +174,8 @@ func apply_theme(theme: Variant) -> void:
 
 func show_input_feedback(lane_name: String) -> void:
 	set_meta("last_feedback_lane", lane_name)
+	if feedback_tween != null and feedback_tween.is_valid():
+		feedback_tween.kill()
 	var face_color := drum_face_base_color
 	var pad_color := drum_pad_base_color
 	if lane_name == "don":
@@ -193,6 +197,52 @@ func show_input_feedback(lane_name: String) -> void:
 		hit_target_glow.modulate = Color(hit_target_base_color, 0.45)
 	if hit_target_ring != null:
 		hit_target_ring.scale = Vector2(1.08, 1.08)
+		hit_target_ring.modulate = hit_target_base_color
+	if is_inside_tree():
+		_start_input_feedback_release()
+
+
+func clear_input_feedback() -> void:
+	if feedback_tween != null and feedback_tween.is_valid():
+		feedback_tween.kill()
+	feedback_tween = null
+	_reset_input_feedback_visuals()
+
+
+func _start_input_feedback_release() -> void:
+	feedback_tween = create_tween()
+	feedback_tween.set_parallel(true)
+	if drum_pad != null:
+		feedback_tween.tween_property(drum_pad, "scale", Vector2.ONE, FEEDBACK_RELEASE_SEC).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		feedback_tween.tween_property(drum_pad, "modulate", drum_pad_base_color, FEEDBACK_RELEASE_SEC).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if drum_face != null:
+		feedback_tween.tween_property(drum_face, "scale", Vector2.ONE, FEEDBACK_RELEASE_SEC).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		feedback_tween.tween_property(drum_face, "modulate", drum_face_base_color, FEEDBACK_RELEASE_SEC).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if hit_target_glow != null:
+		feedback_tween.tween_property(hit_target_glow, "scale", Vector2.ONE, FEEDBACK_RELEASE_SEC).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if hit_target_ring != null:
+		feedback_tween.tween_property(hit_target_ring, "scale", Vector2.ONE, FEEDBACK_RELEASE_SEC).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	feedback_tween.chain().tween_callback(_finish_input_feedback_release)
+
+
+func _finish_input_feedback_release() -> void:
+	feedback_tween = null
+	_reset_input_feedback_visuals()
+
+
+func _reset_input_feedback_visuals() -> void:
+	if drum_pad != null:
+		drum_pad.scale = Vector2.ONE
+		drum_pad.modulate = drum_pad_base_color
+	if drum_face != null:
+		drum_face.scale = Vector2.ONE
+		drum_face.modulate = drum_face_base_color
+	if hit_target_glow != null:
+		hit_target_glow.visible = false
+		hit_target_glow.scale = Vector2.ONE
+		hit_target_glow.modulate = Color(hit_target_base_color, 0.45)
+	if hit_target_ring != null:
+		hit_target_ring.scale = Vector2.ONE
 		hit_target_ring.modulate = hit_target_base_color
 
 

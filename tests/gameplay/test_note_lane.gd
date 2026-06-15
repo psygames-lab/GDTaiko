@@ -9,6 +9,10 @@ var failed_count := 0
 
 
 func _init() -> void:
+	call_deferred("_run_tests")
+
+
+func _run_tests() -> void:
 	_test_model_constants()
 	_test_spawn_notes()
 	_test_update_notes_position()
@@ -20,6 +24,7 @@ func _init() -> void:
 	_test_gogo_overlay_visibility()
 	_test_theme_applies_to_lane_skin()
 	_test_input_feedback_updates_skin_state()
+	await _test_input_feedback_returns_to_base_state()
 
 	if failed_count == 0:
 		print("PASS: NoteLane")
@@ -279,6 +284,28 @@ func _test_input_feedback_updates_skin_state() -> void:
 	lane.show_input_feedback("miss")
 	_assert(lane.get_meta("last_feedback_lane", "") == "miss", "Miss feedback should record miss state")
 	_assert((lane.get_node("HitTargetGlow") as CanvasItem).visible, "Miss feedback should still show target glow")
+	lane.queue_free()
+
+
+func _test_input_feedback_returns_to_base_state() -> void:
+	var lane: Node2D = _new_lane()
+	get_root().add_child(lane)
+	lane.build_skin()
+
+	lane.show_input_feedback(NoteModelScript.DON)
+	await create_timer(0.24).timeout
+
+	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#f3d6a3"), "Don feedback should return drum face to its base color")
+	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#7b2622"), "Don feedback should return drum rim to its base color")
+	_assert(is_equal_approx((lane.get_node("DrumFace") as Sprite2D).scale.x, 1.0), "Don feedback should return drum face to base scale")
+	_assert(is_equal_approx((lane.get_node("DrumPad") as Sprite2D).scale.x, 1.0), "Don feedback should return drum rim to base scale")
+	_assert(not (lane.get_node("HitTargetGlow") as CanvasItem).visible, "Input feedback should hide target glow after the hit pulse")
+
+	lane.show_input_feedback(NoteModelScript.KA)
+	await create_timer(0.24).timeout
+
+	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#f3d6a3"), "Ka feedback should leave drum face at its base color after pulse")
+	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#7b2622"), "Ka feedback should return drum rim to its base color")
 	lane.queue_free()
 
 

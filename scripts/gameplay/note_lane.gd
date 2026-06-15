@@ -3,10 +3,10 @@ class_name NoteLane
 
 const HIT_X := 260.0
 const SPAWN_X := 1180.0
-const NOTE_Y := 180.0
+const NOTE_Y := 292.0
 const APPROACH_TIME_SEC := 2.0
-const LANE_HEIGHT := 96.0
-const TARGET_SIZE := 96
+const LANE_HEIGHT := 88.0
+const TARGET_SIZE := 88
 
 var active_sprites: Dictionary = {}
 var pooled_sprites: Array[Sprite2D] = []
@@ -27,9 +27,9 @@ func build_skin() -> void:
 
 	lane_background = ColorRect.new()
 	lane_background.name = "LaneBackground"
-	lane_background.position = Vector2(HIT_X - 96.0, NOTE_Y - (LANE_HEIGHT * 0.5))
-	lane_background.size = Vector2(SPAWN_X - HIT_X + 160.0, LANE_HEIGHT)
-	lane_background.color = Color.html("#1b1b1b")
+	lane_background.position = Vector2(HIT_X - 90.0, NOTE_Y - (LANE_HEIGHT * 0.5))
+	lane_background.size = Vector2(SPAWN_X - HIT_X + 132.0, LANE_HEIGHT)
+	lane_background.color = Color(0.04, 0.04, 0.05, 0.78)
 	lane_background.z_index = -30
 	add_child(lane_background)
 
@@ -51,8 +51,8 @@ func build_skin() -> void:
 
 	var timing_line := ColorRect.new()
 	timing_line.name = "TimingLine"
-	timing_line.position = Vector2(HIT_X - 2.0, NOTE_Y - 72.0)
-	timing_line.size = Vector2(4.0, 144.0)
+	timing_line.position = Vector2(HIT_X - 2.0, NOTE_Y - 62.0)
+	timing_line.size = Vector2(4.0, 124.0)
 	timing_line.color = Color(1.0, 1.0, 1.0, 0.85)
 	timing_line.z_index = -4
 	add_child(timing_line)

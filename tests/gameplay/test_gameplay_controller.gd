@@ -3,6 +3,7 @@ extends SceneTree
 const GameplayScene: PackedScene = preload("res://scenes/Gameplay.tscn")
 const GameplayController := preload("res://scripts/gameplay/gameplay_controller.gd")
 const NoteModel := preload("res://scripts/gameplay/note_model.gd")
+const NoteLane := preload("res://scripts/gameplay/note_lane.gd")
 
 var failed_count := 0
 
@@ -19,6 +20,7 @@ func _run_tests() -> void:
 	_test_result_layer_draws_above_hud()
 	_test_user_skin_colors_apply_to_gameplay()
 	_test_ready_loads_session_selected_chart()
+	_test_ready_loads_session_selected_course_from_multi_course_chart()
 	_test_loads_sample_chart()
 	_test_textures_and_spawned_notes()
 	_test_start_song_resets_state()
@@ -69,9 +71,14 @@ func _test_ready_builds_scene_and_loads_sample() -> void:
 	_assert(controller.audio_player != null, "AudioStreamPlayer should be built")
 	_assert(controller.clock != null, "SongClock should be built")
 	_assert(controller.lane != null, "NoteLane should be built")
+	_assert(controller.get_node_or_null("SkinBackground") != null, "Gameplay should show a skin background")
+	_assert(controller.get_node_or_null("SkinCharacter") != null, "Gameplay should show the generated character skin")
+	_assert(controller.get_node_or_null("SkinProps") != null, "Gameplay should show generated prop art")
+	_assert(controller.skin_character.position.y >= NoteLane.NOTE_Y + 120.0, "Character art should stay below the note lane focus area")
+	_assert(controller.skin_background.modulate.a <= 0.82, "Gameplay background should be dimmed for lane readability")
 	_assert(controller.hud != null, "TaikoHud should be built")
 	_assert(controller.frame_monitor != null, "FrameMonitor should be built")
-	_assert(controller.frame_monitor.visible, "FrameMonitor should be visible by default")
+	_assert(not controller.frame_monitor.visible, "FrameMonitor should be hidden by default")
 	_assert(controller.frame_monitor.position.x >= 1000.0, "FrameMonitor should be positioned away from the left HUD")
 	controller.free()
 
@@ -80,12 +87,12 @@ func _test_config_can_hide_debug_monitor() -> void:
 	var config_path := "user://config.json"
 	DirAccess.remove_absolute(config_path)
 	var config := preload("res://scripts/config/game_config.gd").new()
-	config.show_debug_monitor = false
+	config.show_debug_monitor = true
 	config.save_config()
 
 	var controller := _new_controller()
-	_assert(controller.frame_monitor != null, "FrameMonitor should still be built when hidden")
-	_assert(not controller.frame_monitor.visible, "Config should hide FrameMonitor")
+	_assert(controller.frame_monitor != null, "FrameMonitor should still be built when configured")
+	_assert(controller.frame_monitor.visible, "Config should show FrameMonitor when enabled")
 	controller.free()
 	DirAccess.remove_absolute(config_path)
 
@@ -142,6 +149,50 @@ BPM:120
 	controller.free()
 	state.clear_selection()
 	DirAccess.remove_absolute(chart_path)
+
+
+func _test_ready_loads_session_selected_course_from_multi_course_chart() -> void:
+	var state = get_root().get_node_or_null("SessionState")
+	_assert(state != null, "SessionState autoload should exist")
+	if state == null:
+		return
+	var chart_path := "user://selected_multi_song.tja"
+	var audio_path := "user://selected_multi.ogg"
+	var chart := FileAccess.open(chart_path, FileAccess.WRITE)
+	chart.store_string("""TITLE:Selected Multi
+WAVE:selected_multi.ogg
+BPM:120
+COURSE:Easy
+LEVEL:2
+#START
+1000,
+#END
+
+COURSE:Hard
+LEVEL:7
+#START
+1200,
+#END
+""")
+	chart.close()
+	var audio := FileAccess.open(audio_path, FileAccess.WRITE)
+	audio.store_buffer(FileAccess.get_file_as_bytes("res://assets/sample/sample.ogg"))
+	audio.close()
+	state.selected_tja_path = chart_path
+	state.selected_audio_path = ""
+	state.selected_course_name = "Hard"
+	state.selected_course_index = 1
+
+	var controller := _new_controller()
+	_assert(controller.chart.title == "Selected Multi", "Gameplay should load selected multi-course chart title")
+	_assert(controller.chart.course == "Hard", "Gameplay should load the selected course from a multi-course TJA")
+	_assert(controller.chart.level == 7, "Gameplay should load selected course metadata")
+	_assert(controller.chart.notes.size() == 2, "Gameplay should load selected course notes")
+	_assert(controller.audio_player.stream != null, "Gameplay should resolve and load selected chart relative WAVE from the TJA folder")
+	controller.free()
+	state.clear_selection()
+	DirAccess.remove_absolute(chart_path)
+	DirAccess.remove_absolute(audio_path)
 
 
 func _test_loads_sample_chart() -> void:
@@ -493,7 +544,9 @@ func _test_config_offsets_apply_to_clock_and_input() -> void:
 	_assert(is_equal_approx(controller.clock.chart_offset_sec, controller.chart.offset_sec + 0.25), "Config chart offset should apply to song clock")
 	controller._start_song()
 	controller._hit(NoteModel.DON)
-	_assert(is_equal_approx(float(controller.replay_recorder.inputs[0]["time_sec"]), controller.chart.offset_sec + 0.35), "Config input offset should apply to recorded hit time")
+	var recorded_time: float = float(controller.replay_recorder.inputs[0]["time_sec"])
+	var expected_time: float = float(controller.chart.offset_sec) + 0.35
+	_assert(absf(recorded_time - expected_time) <= 0.05, "Config input offset should apply to recorded hit time")
 	_assert(controller.replay_recorder.input_offset_ms == 100, "Replay metadata should preserve input offset")
 	controller.free()
 

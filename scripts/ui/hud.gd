@@ -7,11 +7,12 @@ var judgment_label: Label
 var status_label: Label
 var gogo_label: Label
 var top_band: ColorRect
+var bottom_band: ColorRect
 var soul_gauge_background: ColorRect
 var soul_gauge_fill: ColorRect
 
 const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
-const GAUGE_MAX_WIDTH := 680.0
+const GAUGE_MAX_WIDTH := 640.0
 
 func build() -> void:
 	if score_label != null:
@@ -19,14 +20,21 @@ func build() -> void:
 	top_band = ColorRect.new()
 	top_band.name = "TopBand"
 	top_band.position = Vector2(0.0, 0.0)
-	top_band.size = Vector2(VIEWPORT_SIZE.x, 112.0)
+	top_band.size = Vector2(VIEWPORT_SIZE.x, 88.0)
 	top_band.color = Color(0.08, 0.08, 0.09, 0.92)
 	add_child(top_band)
 
+	bottom_band = ColorRect.new()
+	bottom_band.name = "BottomBand"
+	bottom_band.position = Vector2(0.0, 584.0)
+	bottom_band.size = Vector2(VIEWPORT_SIZE.x, 96.0)
+	bottom_band.color = Color(0.04, 0.04, 0.05, 0.82)
+	add_child(bottom_band)
+
 	soul_gauge_background = ColorRect.new()
 	soul_gauge_background.name = "SoulGaugeBackground"
-	soul_gauge_background.position = Vector2(300.0, 26.0)
-	soul_gauge_background.size = Vector2(GAUGE_MAX_WIDTH, 26.0)
+	soul_gauge_background.position = Vector2(300.0, 16.0)
+	soul_gauge_background.size = Vector2(GAUGE_MAX_WIDTH, 22.0)
 	soul_gauge_background.color = Color(0.18, 0.16, 0.12, 1.0)
 	add_child(soul_gauge_background)
 
@@ -37,11 +45,11 @@ func build() -> void:
 	soul_gauge_fill.color = Color(1.0, 0.65, 0.12, 1.0)
 	add_child(soul_gauge_fill)
 
-	combo_label = _label("Combo: 0", Vector2(520, 58), 32, Vector2(240, 40))
-	score_label = _label("Score: 0", Vector2(840, 58), 30, Vector2(320, 40))
-	gogo_label = _label("", Vector2(180, 32), 30, Vector2(96, 40))
-	judgment_label = _label("F = Don    J = Ka    Space = Start", Vector2(380, 586), 28, Vector2(560, 48))
-	status_label = _label("Ready", Vector2(32, 642), 24, Vector2(420, 36))
+	combo_label = _label("Combo: 0", Vector2(500, 44), 30, Vector2(240, 38))
+	score_label = _label("Score: 0", Vector2(800, 44), 30, Vector2(340, 38))
+	gogo_label = _label("", Vector2(182, 32), 28, Vector2(100, 38))
+	judgment_label = _label("F = Don    J = Ka    Space = Start", Vector2(350, 594), 27, Vector2(600, 42))
+	status_label = _label("Ready", Vector2(32, 636), 23, Vector2(620, 34))
 
 func update_score(score: int, combo: int) -> void:
 	score_label.text = "Score: %d" % score
@@ -54,6 +62,8 @@ func update_gauge(value: float) -> void:
 func apply_theme(theme: Variant) -> void:
 	if top_band != null:
 		top_band.color = theme.hud_top_band_color
+	if bottom_band != null:
+		bottom_band.color = Color(theme.hud_top_band_color, 0.82)
 	if soul_gauge_fill != null:
 		soul_gauge_fill.color = theme.gauge_fill_color
 

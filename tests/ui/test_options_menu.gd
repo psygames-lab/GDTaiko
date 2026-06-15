@@ -37,6 +37,14 @@ func _test_defaults() -> void:
 	var menu := OptionsMenuScript.new() as Node
 	menu.build()
 
+	_assert(menu.get_node_or_null("OptionsPanel/OptionsContainer/Header/BackButton") != null, "Options menu should show a Back button")
+	_assert(menu.get_node_or_null("BackgroundDim") is ColorRect, "Options menu should dim the background behind UI")
+	_assert(menu.get_node_or_null("OptionsPanel") is TextureRect, "Options menu should use the generated UI panel texture")
+	var panel := menu.get_node_or_null("OptionsPanel") as Control
+	_assert(panel != null and panel.position.x >= 260.0, "Options panel should be centered away from the left edge")
+	_assert(panel != null and panel.size.x <= 760.0, "Options panel should keep a focused content width")
+	var container := menu.get_node_or_null("OptionsPanel/OptionsContainer") as VBoxContainer
+	_assert(container != null and container.position.x >= 48.0, "Options content should have panel padding")
 	_assert(menu.chart_offset_spin.value == float(0), "Default chart offset should be 0 ms")
 	_assert(menu.input_offset_spin.value == float(0), "Default input offset should be 0 ms")
 	_assert(is_equal_approx(menu.master_volume_slider.value, 1.0), "Default master volume should be 1.0")

@@ -196,6 +196,9 @@ func _test_build_skin_elements() -> void:
 	_assert(lane.get_node_or_null("HitTarget") != null, "Lane skin should include a hit target")
 	_assert(lane.get_node_or_null("TimingLine") != null, "Lane skin should include a timing line")
 	_assert(lane.get_node_or_null("GogoOverlay") != null, "Lane skin should include a GOGO overlay")
+	_assert(NoteLaneScript.NOTE_Y >= 260.0 and NoteLaneScript.NOTE_Y <= 320.0, "Note lane should sit in the upper gameplay band")
+	var lane_background := lane.get_node("LaneBackground") as ColorRect
+	_assert(lane_background.size.y <= 92.0, "Lane background should not dominate the stage")
 	_assert(lane.get_child_count() == 4, "Building skin before notes should add only skin nodes")
 	lane.queue_free()
 

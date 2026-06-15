@@ -45,8 +45,9 @@ static func _scan_song_folder(folder_path: String) -> SongEntry:
 
 	for tja_file in tja_files:
 		var tja_path := folder_path.path_join(tja_file)
-		var chart := TjaParser.parse_file(tja_path)
-		if chart != null:
+		var charts := TjaParser.parse_courses_file(tja_path)
+		for chart_index in range(charts.size()):
+			var chart = charts[chart_index]
 			if entry.title == "":
 				entry.title = chart.title
 				entry.subtitle = chart.subtitle
@@ -59,6 +60,7 @@ static func _scan_song_folder(folder_path: String) -> SongEntry:
 			course.course = chart.course
 			course.level = chart.level
 			course.tja_path = tja_path
+			course.course_index = chart_index
 			if chart.wave != "":
 				course.wave = _resolve_wave_path(folder_path, chart.wave)
 				course.expected_audio_path = course.wave

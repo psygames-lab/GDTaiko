@@ -21,7 +21,10 @@ const GameConfig := preload("res://scripts/config/game_config.gd")
 const ResultScene := preload("res://scenes/Result.tscn")
 
 const SAMPLE_CHART_PATH := "res://assets/sample/sample.tja"
-const SAMPLE_ASSET_PATH := "res://assets/sample/"
+const SKIN_BACKGROUND_PATH := "res://assets/skin/night_festival/backgrounds/gameplay_stage.png"
+const SKIN_CHARACTER_PATH := "res://assets/skin/night_festival/characters/festival_drummer.png"
+const SKIN_PROPS_PATH := "res://assets/skin/night_festival/props/props_sheet.png"
+const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
 
 var chart
 var timing_map := TimingMap.new()
@@ -38,6 +41,9 @@ var hud: TaikoHud
 var result_screen: ResultScreen
 var replay_recorder: ReplayRecorder
 var audio_player: AudioStreamPlayer
+var skin_background: TextureRect
+var skin_character: TextureRect
+var skin_props: TextureRect
 var game_config: GameConfig
 var theme: TaikoTheme
 var don_texture: Texture2D
@@ -77,6 +83,9 @@ func _build_scene() -> void:
 	game_config.load_config()
 	game_config.apply_to_project()
 	theme = TaikoTheme.load_active()
+
+	_add_skin_background()
+	_add_skin_decorations()
 
 	audio_player = AudioStreamPlayer.new()
 	audio_player.name = "Audio"
@@ -133,21 +142,74 @@ func _update_frame_monitor(delta: float) -> void:
 	frame_monitor.update_metrics(delta, active_note_count)
 
 
+func _add_skin_background() -> void:
+	var texture := _load_png_texture(SKIN_BACKGROUND_PATH)
+	if texture == null:
+		return
+	skin_background = TextureRect.new()
+	skin_background.name = "SkinBackground"
+	skin_background.texture = texture
+	skin_background.size = VIEWPORT_SIZE
+	skin_background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	skin_background.modulate = Color(1.0, 1.0, 1.0, 0.78)
+	skin_background.z_index = -100
+	add_child(skin_background)
+
+
+func _load_png_texture(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		var texture := load(path)
+		if texture is Texture2D:
+			return texture
+	var image := Image.load_from_file(path)
+	if image == null or image.is_empty():
+		return null
+	return ImageTexture.create_from_image(image)
+
+
+func _add_skin_decorations() -> void:
+	var character_texture := _load_png_texture(SKIN_CHARACTER_PATH)
+	if character_texture != null:
+		skin_character = TextureRect.new()
+		skin_character.name = "SkinCharacter"
+		skin_character.texture = character_texture
+		skin_character.position = Vector2(18.0, 420.0)
+		skin_character.size = Vector2(220.0, 260.0)
+		skin_character.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		skin_character.z_index = -50
+		add_child(skin_character)
+
+	var props_texture := _load_png_texture(SKIN_PROPS_PATH)
+	if props_texture != null:
+		skin_props = TextureRect.new()
+		skin_props.name = "SkinProps"
+		skin_props.texture = props_texture
+		skin_props.position = Vector2(1000.0, 510.0)
+		skin_props.size = Vector2(220.0, 146.0)
+		skin_props.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		skin_props.z_index = -50
+		add_child(skin_props)
+
+
 func _load_sample_chart() -> void:
 	var chart_path := SAMPLE_CHART_PATH
 	var audio_path := ""
+	var selected_course_name := ""
+	var selected_course_index := -1
 	var session := get_node_or_null("/root/SessionState")
 	if session != null and String(session.get("selected_tja_path")) != "":
 		chart_path = String(session.get("selected_tja_path"))
 		audio_path = String(session.get("selected_audio_path"))
+		selected_course_name = String(session.get("selected_course_name"))
+		selected_course_index = int(session.get("selected_course_index"))
 	current_chart_path = chart_path
-	chart = TjaParser.parse_file(chart_path)
+	chart = _parse_selected_chart(chart_path, selected_course_name, selected_course_index)
 	if chart == null:
 		push_error("Failed to load chart from %s" % chart_path)
 		hud.set_status("Missing chart")
 		return
 	if audio_path == "":
-		audio_path = SAMPLE_ASSET_PATH + String(chart.wave)
+		audio_path = _resolve_chart_audio_path(chart_path, String(chart.wave))
 	var loaded_stream := _load_optional_audio(audio_path)
 	audio_player.stream = loaded_stream
 	clock.configure(audio_player, chart.offset_sec + (float(game_config.chart_offset_ms) / 1000.0))
@@ -375,7 +437,30 @@ func _load_optional_audio(path: String) -> AudioStream:
 		var stream = load(path)
 		if stream is AudioStream:
 			return stream
+	if path.get_extension().to_lower() == "ogg":
+		return AudioStreamOggVorbis.load_from_file(path)
 	return null
+
+
+func _parse_selected_chart(chart_path: String, course_name: String, course_index: int) -> Variant:
+	if course_name != "":
+		var candidates := TjaParser.parse_courses_file(chart_path)
+		if course_index >= 0 and course_index < candidates.size():
+			var indexed_candidate = candidates[course_index]
+			if String(indexed_candidate.course).to_lower() == course_name.to_lower():
+				return indexed_candidate
+		for candidate in candidates:
+			if String(candidate.course).to_lower() == course_name.to_lower():
+				return candidate
+	return TjaParser.parse_file(chart_path)
+
+
+func _resolve_chart_audio_path(chart_path: String, wave_path: String) -> String:
+	if wave_path == "":
+		return ""
+	if wave_path.begins_with("res://") or wave_path.begins_with("user://") or wave_path.is_absolute_path():
+		return wave_path
+	return chart_path.get_base_dir().path_join(wave_path)
 
 
 func _load_note_texture(path: String, fallback_color: Color) -> Texture2D:

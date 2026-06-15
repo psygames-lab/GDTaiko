@@ -5,13 +5,18 @@ signal options_changed
 
 const GameConfig := preload("res://scripts/config/game_config.gd")
 
+const OPTIONS_BACKGROUND := "res://assets/skin/night_festival/backgrounds/main_menu.png"
+const UI_PANEL_SHEET := "res://assets/skin/night_festival/ui/ui_panels.png"
+const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
+const OPTIONS_PANEL_SIZE := Vector2(720.0, 624.0)
+
 const DEFAULT_CHART_OFFSET_MS := 0
 const DEFAULT_INPUT_OFFSET_MS := 0
 const DEFAULT_MASTER_VOLUME := 1.0
 const DEFAULT_MUSIC_VOLUME := 1.0
 const DEFAULT_SFX_VOLUME := 1.0
 const DEFAULT_FULLSCREEN := false
-const DEFAULT_SHOW_DEBUG_MONITOR := true
+const DEFAULT_SHOW_DEBUG_MONITOR := false
 const DEFAULT_DON_KEYS: Array[int] = [KEY_F]
 const DEFAULT_KA_KEYS: Array[int] = [KEY_J]
 
@@ -41,6 +46,7 @@ var fullscreen_checkbox: CheckBox
 var debug_monitor_checkbox: CheckBox
 var don_button: Button
 var ka_button: Button
+var back_button: Button
 
 
 func _ready() -> void:
@@ -66,14 +72,31 @@ func set_config(new_config: Object) -> void:
 func build() -> void:
 	if chart_offset_spin != null:
 		return
+	var panel := _add_background()
 
 	var container := VBoxContainer.new()
 	container.name = "OptionsContainer"
-	container.position = Vector2(24, 24)
-	container.add_theme_constant_override("separation", 18)
-	add_child(container)
+	container.position = Vector2(56, 42)
+	container.size = OPTIONS_PANEL_SIZE - Vector2(112, 84)
+	container.add_theme_constant_override("separation", 14)
+	panel.add_child(container)
 
-	container.add_child(_label("Options", 36))
+	var header := HBoxContainer.new()
+	header.name = "Header"
+	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_theme_constant_override("separation", 16)
+	container.add_child(header)
+
+	var title := _label("Options", 36)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+
+	back_button = Button.new()
+	back_button.name = "BackButton"
+	back_button.text = "Back"
+	back_button.custom_minimum_size = Vector2(120, 44)
+	back_button.pressed.connect(_on_back_pressed)
+	header.add_child(back_button)
 
 	var chart_row := HBoxContainer.new()
 	chart_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -297,6 +320,10 @@ func _on_ka_bind_pressed() -> void:
 	_sync_ui_from_state()
 
 
+func _on_back_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+
+
 func _bind_key(keycode: int) -> void:
 	if pending_keybind_action == "don":
 		don_keys = [keycode]
@@ -400,3 +427,57 @@ func _label(text: String, font_size: int) -> Label:
 	label.text = text
 	label.add_theme_font_size_override("font_size", font_size)
 	return label
+
+
+func _add_background() -> TextureRect:
+	var texture := _load_png_texture(OPTIONS_BACKGROUND)
+	if texture is Texture2D:
+		var background := TextureRect.new()
+		background.name = "Background"
+		background.texture = texture
+		background.set_anchors_preset(Control.PRESET_FULL_RECT)
+		background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		add_child(background)
+	else:
+		var fallback := ColorRect.new()
+		fallback.name = "Background"
+		fallback.color = Color(0.035, 0.04, 0.055)
+		fallback.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(fallback)
+
+	var dim := ColorRect.new()
+	dim.name = "BackgroundDim"
+	dim.color = Color(0.0, 0.0, 0.0, 0.36)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(dim)
+
+	var panel := TextureRect.new()
+	panel.name = "OptionsPanel"
+	panel.position = (VIEWPORT_SIZE - OPTIONS_PANEL_SIZE) * 0.5
+	panel.size = OPTIONS_PANEL_SIZE
+	panel.texture = _make_ui_panel_texture(Rect2(42.0, 74.0, 690.0, 486.0))
+	panel.stretch_mode = TextureRect.STRETCH_SCALE
+	panel.modulate = Color(1.0, 1.0, 1.0, 0.92)
+	add_child(panel)
+	return panel
+
+
+func _load_png_texture(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		var texture := load(path)
+		if texture is Texture2D:
+			return texture
+	var image := Image.load_from_file(path)
+	if image == null or image.is_empty():
+		return null
+	return ImageTexture.create_from_image(image)
+
+
+func _make_ui_panel_texture(region: Rect2) -> Texture2D:
+	var sheet := _load_png_texture(UI_PANEL_SHEET)
+	if sheet == null:
+		return null
+	var texture := AtlasTexture.new()
+	texture.atlas = sheet
+	texture.region = region
+	return texture

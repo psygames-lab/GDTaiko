@@ -21,6 +21,16 @@ func _run_tests() -> void:
 	var select := SongSelect.new()
 	select.build()
 	get_root().add_child(select)
+	_assert(select.get_node_or_null("Root/TopBar/OptionsButton") != null, "Song select should show an Options button")
+	_assert(select.get_node_or_null("BackgroundDim") is ColorRect, "Song select should dim the background behind panels")
+	_assert(select.get_node_or_null("Root/Content/ListPanel") is TextureRect, "Song select list should use the generated UI panel texture")
+	_assert(select.get_node_or_null("Root/Content/DetailPanel") is TextureRect, "Song select details should use the generated UI panel texture")
+	var content := select.get_node_or_null("Root/Content") as Control
+	_assert(content != null and content.position.x >= 40.0, "Song select content should keep a safe left margin")
+	var detail_panel := select.get_node_or_null("Root/Content/DetailPanel") as Control
+	_assert(detail_panel != null and detail_panel.position.x >= 450.0, "Song select detail panel should stay in the right column")
+	_assert(select.list_label != null and select.list_label.get_parent().name == "ListPanel", "Song list text should be inside the list panel")
+	_assert(select.title_label != null and select.title_label.get_parent().name == "DetailPanel", "Song title should be inside the detail panel")
 	select.songs = [
 		_song("Alpha", "res://songs/alpha", "Oni", 7, "alpha_oni.tja", "alpha.ogg"),
 		_song("Beta", "res://songs/beta", "Normal", 3, "beta_normal.tja", "beta.ogg"),
@@ -62,6 +72,8 @@ func _run_tests() -> void:
 		_assert(select.apply_selected_course_to_session(), "Song select should write selected course to session")
 		_assert(state.selected_tja_path == "res://songs/alpha/alpha_hard.tja", "Launch payload should include selected TJA path")
 		_assert(state.selected_audio_path == "res://songs/alpha/hard.ogg", "Launch payload should include selected audio path")
+		_assert(state.selected_course_name == "Hard", "Launch payload should include selected course name")
+		_assert(state.selected_course_index == 1, "Launch payload should include selected embedded course index")
 		state.clear_selection()
 		if state.get_parent() == get_root():
 			state.free()
@@ -85,12 +97,14 @@ BPM:120
 """)
 	user_chart.close()
 	var user_audio := FileAccess.open(user_root + "/local/local.ogg", FileAccess.WRITE)
-	user_audio.store_buffer(PackedByteArray())
+	user_audio.store_buffer(FileAccess.get_file_as_bytes("res://assets/sample/sample.ogg"))
 	user_audio.close()
 
 	select.load_song_roots(["res://songs", user_root])
 	_assert(_has_song(select.songs, "GDTaiko Sample"), "Song select should include bundled songs")
 	_assert(_has_song(select.songs, "Local Import"), "Song select should include user-local songs")
+	select.load_songs(user_root)
+	_assert(select.preview_player.stream != null, "Song select should load user-local OGG previews")
 
 	var missing_root := "user://song_select_missing_audio_test"
 	_remove_dir_recursive(missing_root)

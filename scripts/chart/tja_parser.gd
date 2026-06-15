@@ -10,6 +10,42 @@ static func parse_file(path: String) -> TaikoChart:
 	return parse_text(FileAccess.get_file_as_string(path), path)
 
 
+static func parse_courses_file(path: String) -> Array:
+	return parse_courses_text(FileAccess.get_file_as_string(path), path)
+
+
+static func parse_courses_text(text: String, source_path: String = "") -> Array:
+	var courses: Array = []
+	var global_tokens: Array[Dictionary] = []
+	var course_metadata_tokens: Array[Dictionary] = []
+	var chart_tokens: Array[Dictionary] = []
+	var in_chart := false
+
+	for token in TjaTokenizer.tokenize(text):
+		var kind := String(token["kind"])
+		if kind == "command" and String(token["command"]) == "START":
+			in_chart = true
+			chart_tokens = [token]
+		elif kind == "command" and String(token["command"]) == "END" and in_chart:
+			chart_tokens.append(token)
+			var course_text := _tokens_to_text(global_tokens, course_metadata_tokens, chart_tokens)
+			courses.append(parse_text(course_text, source_path))
+			course_metadata_tokens.clear()
+			chart_tokens.clear()
+			in_chart = false
+		elif in_chart:
+			chart_tokens.append(token)
+		elif kind == "metadata":
+			if courses.is_empty() and not _is_first_course_local_metadata(String(token["key"])):
+				global_tokens.append(token)
+			else:
+				course_metadata_tokens.append(token)
+		elif not courses.is_empty():
+			course_metadata_tokens.append(token)
+
+	return courses
+
+
 static func parse_text(text: String, source_path: String = "") -> TaikoChart:
 	var chart := TaikoChart.new()
 	var in_chart := false
@@ -148,6 +184,33 @@ static func parse_text(text: String, source_path: String = "") -> TaikoChart:
 	_add_missing_audio_diagnostic(chart, source_path, metadata_line_numbers)
 	chart.sort_notes()
 	return chart
+
+
+static func _tokens_to_text(global_tokens: Array[Dictionary], course_metadata_tokens: Array[Dictionary], chart_tokens: Array[Dictionary]) -> String:
+	var lines: Array[String] = []
+	for token in global_tokens:
+		lines.append(_token_to_text(token))
+	for token in course_metadata_tokens:
+		lines.append(_token_to_text(token))
+	for token in chart_tokens:
+		lines.append(_token_to_text(token))
+	return "\n".join(lines)
+
+
+static func _token_to_text(token: Dictionary) -> String:
+	var kind := String(token["kind"])
+	if kind == "metadata":
+		return "%s:%s" % [String(token["key"]), String(token["value"])]
+	if kind == "command":
+		var argument := String(token.get("argument", ""))
+		if argument == "":
+			return "#%s" % String(token["command"])
+		return "#%s %s" % [String(token["command"]), argument]
+	return String(token["text"])
+
+
+static func _is_first_course_local_metadata(key: String) -> bool:
+	return key == "COURSE" or key == "LEVEL" or key == "BALLOON"
 
 
 static func _apply_metadata(chart: TaikoChart, token: Dictionary, metadata_line_numbers: Dictionary) -> void:

@@ -12,7 +12,7 @@ var input_offset_ms := 0
 var don_keys: Array = [KEY_F]
 var ka_keys: Array = [KEY_J]
 var fullscreen := false
-var show_debug_monitor := true
+var show_debug_monitor := false
 
 
 func load_config() -> bool:

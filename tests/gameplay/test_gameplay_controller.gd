@@ -25,6 +25,7 @@ func _run_tests() -> void:
 	_test_loads_sample_chart()
 	_test_textures_and_spawned_notes()
 	_test_start_song_resets_state()
+	_test_input_feedback_before_song_start()
 	_test_input_actions_start_and_hit()
 	_test_ka_input_action_hits_ka()
 	_test_process_moves_notes()
@@ -285,6 +286,17 @@ func _test_input_actions_start_and_hit() -> void:
 	controller._unhandled_input(don_event)
 	_assert(controller.chart.notes[0]["state"] == NoteModel.HIT, "taiko_don action should hit the first Don")
 	_assert(controller.scoring.combo == 1, "taiko_don action should update combo")
+	controller.free()
+
+
+func _test_input_feedback_before_song_start() -> void:
+	var controller := _new_controller()
+	var don_event := InputEventAction.new()
+	don_event.action = "taiko_don"
+	don_event.pressed = true
+	controller._unhandled_input(don_event)
+	_assert(not controller.playing, "Don input before start should not start playback")
+	_assert(controller.lane.get_meta("last_feedback_lane", "") == NoteModel.DON, "Don input before start should still pulse the drum skin")
 	controller.free()
 
 

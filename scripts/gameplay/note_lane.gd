@@ -7,6 +7,11 @@ const NOTE_Y := 292.0
 const APPROACH_TIME_SEC := 2.0
 const LANE_HEIGHT := 88.0
 const TARGET_SIZE := 88
+const TARGET_GLOW_SIZE := 108
+const DRUM_X := 96.0
+const DRUM_PAD_SIZE := 112
+const DRUM_FACE_SIZE := 82
+const NOTE_SCALE := 0.58
 
 var active_sprites: Dictionary = {}
 var pooled_sprites: Array[Sprite2D] = []
@@ -27,6 +32,7 @@ var drum_face: Sprite2D
 var hit_target: Sprite2D
 var hit_target_ring: Sprite2D
 var hit_target_glow: Sprite2D
+var drum_face_base_color := Color.html("#f3d6a3")
 
 
 func build_skin() -> void:
@@ -79,15 +85,15 @@ func build_skin() -> void:
 
 	drum_pad = Sprite2D.new()
 	drum_pad.name = "DrumPad"
-	drum_pad.texture = _make_circle_texture(130, 0.48, 0.0)
-	drum_pad.position = Vector2(HIT_X - 120.0, NOTE_Y)
+	drum_pad.texture = _make_circle_texture(DRUM_PAD_SIZE, 0.47, 0.0)
+	drum_pad.position = Vector2(DRUM_X, NOTE_Y)
 	drum_pad.modulate = Color.html("#7b2622")
 	drum_pad.z_index = -10
 	add_child(drum_pad)
 
 	drum_face = Sprite2D.new()
 	drum_face.name = "DrumFace"
-	drum_face.texture = _make_circle_texture(98, 0.48, 0.0)
+	drum_face.texture = _make_circle_texture(DRUM_FACE_SIZE, 0.47, 0.0)
 	drum_face.position = drum_pad.position
 	drum_face.modulate = Color.html("#f3d6a3")
 	drum_face.z_index = -9
@@ -95,7 +101,7 @@ func build_skin() -> void:
 
 	hit_target_glow = Sprite2D.new()
 	hit_target_glow.name = "HitTargetGlow"
-	hit_target_glow.texture = _make_circle_texture(136, 0.48, 0.18)
+	hit_target_glow.texture = _make_circle_texture(TARGET_GLOW_SIZE, 0.48, 0.18)
 	hit_target_glow.position = Vector2(HIT_X, NOTE_Y)
 	hit_target_glow.modulate = Color(1.0, 0.78, 0.28, 0.55)
 	hit_target_glow.visible = false
@@ -145,6 +151,7 @@ func apply_theme(theme: Variant) -> void:
 		drum_pad.modulate = theme.drum_body_color
 	if drum_face != null:
 		drum_face.modulate = theme.drum_face_color
+		drum_face_base_color = theme.drum_face_color
 	if hit_target_ring != null:
 		hit_target_ring.modulate = theme.hit_target_color
 	if hit_target_glow != null:
@@ -155,15 +162,24 @@ func apply_theme(theme: Variant) -> void:
 
 func show_input_feedback(lane_name: String) -> void:
 	set_meta("last_feedback_lane", lane_name)
+	var feedback_color := drum_face_base_color
+	if lane_name == "don":
+		feedback_color = Color.html("#ff6a3d")
+	elif lane_name == "ka":
+		feedback_color = Color.html("#55d7ff")
+	elif lane_name == "miss":
+		feedback_color = Color.html("#7a7a7a")
 	if drum_pad != null:
-		drum_pad.scale = Vector2(1.08, 1.08)
+		drum_pad.scale = Vector2(1.12, 1.12)
 	if drum_face != null:
-		drum_face.scale = Vector2(1.04, 1.04)
+		drum_face.scale = Vector2(1.1, 1.1)
+		drum_face.modulate = feedback_color
 	if hit_target_glow != null:
 		hit_target_glow.visible = true
-		hit_target_glow.scale = Vector2(1.08, 1.08)
+		hit_target_glow.scale = Vector2(1.12, 1.12)
+		hit_target_glow.modulate = Color(feedback_color, 0.62)
 	if hit_target_ring != null:
-		hit_target_ring.scale = Vector2(1.06, 1.06)
+		hit_target_ring.scale = Vector2(1.08, 1.08)
 
 
 func configure(don: Texture2D, ka: Texture2D) -> void:
@@ -175,6 +191,8 @@ func spawn_notes(notes: Array[Dictionary]) -> void:
 	for note in notes:
 		var sprite: Sprite2D = _acquire_sprite()
 		sprite.texture = don_texture if String(note.get("lane", "don")) == "don" else ka_texture
+		sprite.scale = Vector2(NOTE_SCALE, NOTE_SCALE)
+		sprite.z_index = 2
 		sprite.position = Vector2(SPAWN_X, NOTE_Y)
 		sprite.visible = true
 		if sprite.get_parent() != self:

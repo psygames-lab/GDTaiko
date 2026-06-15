@@ -11,6 +11,7 @@ func _init() -> void:
 
 func _run_tests() -> void:
 	_test_default_theme_loads_release_allowed_assets()
+	_test_default_note_textures_have_face_detail()
 	_test_user_skin_overrides_default_theme()
 	_test_user_skin_loads_user_png_texture()
 	_test_missing_required_key_fails()
@@ -44,6 +45,11 @@ func _test_default_theme_loads_release_allowed_assets() -> void:
 	_assert(theme.hit_target_color == Color.html("#ffd36a"), "Hit target color should parse")
 	_assert(theme.sfx_don_path == "", "No SFX should be configured before approved SFX exists")
 	_assert(theme.font_main_path == "", "No font should be configured before approved font import")
+
+
+func _test_default_note_textures_have_face_detail() -> void:
+	_assert(_has_dark_face_detail("res://assets/notes/note_don.png"), "Default Don note should include dark face details")
+	_assert(_has_dark_face_detail("res://assets/notes/note_ka.png"), "Default Ka note should include dark face details")
 
 
 func _test_user_skin_overrides_default_theme() -> void:
@@ -112,3 +118,19 @@ func _assert(condition: bool, message: String) -> void:
 	if not condition:
 		failed_count += 1
 		push_error("ASSERTION FAILED: " + message)
+
+
+func _has_dark_face_detail(path: String) -> bool:
+	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
+	if image == null or image.is_empty():
+		return false
+	var samples := [
+		image.get_pixel(47, 54),
+		image.get_pixel(81, 54),
+		image.get_pixel(64, 82),
+	]
+	for color in samples:
+		var brightness: float = (color.r + color.g + color.b) / 3.0
+		if color.a < 0.8 or brightness > 0.25:
+			return false
+	return true

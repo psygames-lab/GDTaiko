@@ -73,8 +73,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("taiko_start"):
 		_start_song()
 	elif event.is_action_pressed("taiko_don"):
+		lane.show_input_feedback(NoteModel.DON)
 		_hit(NoteModel.DON)
 	elif event.is_action_pressed("taiko_ka"):
+		lane.show_input_feedback(NoteModel.KA)
 		_hit(NoteModel.KA)
 
 

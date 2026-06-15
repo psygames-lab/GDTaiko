@@ -83,6 +83,10 @@ func _test_spawn_notes() -> void:
 		(lane.note_nodes["ka_a"] as Sprite2D).position == Vector2(NoteLaneScript.SPAWN_X, NoteLaneScript.NOTE_Y),
 		"second spawned note should also start at SPAWN_X"
 	)
+	_assert(
+		is_equal_approx((lane.note_nodes["don_a"] as Sprite2D).scale.x, NoteLaneScript.NOTE_SCALE),
+		"spawned note should use the lane note scale"
+	)
 	lane.queue_free()
 
 
@@ -209,6 +213,11 @@ func _test_build_skin_elements() -> void:
 	_assert(NoteLaneScript.NOTE_Y >= 260.0 and NoteLaneScript.NOTE_Y <= 320.0, "Note lane should sit in the upper gameplay band")
 	var lane_background := lane.get_node("LaneBackground") as ColorRect
 	_assert(lane_background.size.y <= 92.0, "Lane background should not dominate the stage")
+	var drum_pad := lane.get_node("DrumPad") as Sprite2D
+	var target_glow := lane.get_node("HitTargetGlow") as Sprite2D
+	var drum_right := drum_pad.position.x + (drum_pad.texture.get_width() * drum_pad.scale.x * 0.5)
+	var target_left := target_glow.position.x - (target_glow.texture.get_width() * target_glow.scale.x * 0.5)
+	_assert(drum_right + 18.0 <= target_left, "Drum pad should not overlap the judgment target area")
 	_assert(lane.get_child_count() >= 9, "Building skin before notes should add themed skin nodes")
 	lane.queue_free()
 
@@ -256,7 +265,11 @@ func _test_input_feedback_updates_skin_state() -> void:
 	lane.show_input_feedback(NoteModelScript.DON)
 	_assert(lane.get_meta("last_feedback_lane", "") == NoteModelScript.DON, "Don feedback should record feedback lane")
 	_assert((lane.get_node("DrumPad") as Sprite2D).scale.x > 1.0, "Don feedback should pulse drum pad")
+	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#ff6a3d"), "Don feedback should tint drum face red")
 	_assert((lane.get_node("HitTargetGlow") as CanvasItem).visible, "Don feedback should show target glow")
+
+	lane.show_input_feedback(NoteModelScript.KA)
+	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#55d7ff"), "Ka feedback should tint drum face blue")
 
 	lane.show_input_feedback("miss")
 	_assert(lane.get_meta("last_feedback_lane", "") == "miss", "Miss feedback should record miss state")

@@ -41,6 +41,8 @@ var hud: TaikoHud
 var result_screen: ResultScreen
 var replay_recorder: ReplayRecorder
 var audio_player: AudioStreamPlayer
+var don_sfx_player: AudioStreamPlayer
+var ka_sfx_player: AudioStreamPlayer
 var skin_background: TextureRect
 var skin_character: TextureRect
 var skin_props: TextureRect
@@ -73,9 +75,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("taiko_start"):
 		_start_song()
 	elif event.is_action_pressed("taiko_don"):
+		_play_hit_sfx(NoteModel.DON)
 		lane.show_input_feedback(NoteModel.DON)
 		_hit(NoteModel.DON)
 	elif event.is_action_pressed("taiko_ka"):
+		_play_hit_sfx(NoteModel.KA)
 		lane.show_input_feedback(NoteModel.KA)
 		_hit(NoteModel.KA)
 
@@ -93,6 +97,9 @@ func _build_scene() -> void:
 	audio_player.name = "Audio"
 	audio_player.bus = "Music"
 	add_child(audio_player)
+
+	don_sfx_player = _build_hit_sfx_player("DonSfx", theme.sfx_don_path)
+	ka_sfx_player = _build_hit_sfx_player("KaSfx", theme.sfx_ka_path)
 
 	clock = SongClock.new()
 	add_child(clock)
@@ -445,7 +452,27 @@ func _load_optional_audio(path: String) -> AudioStream:
 			return stream
 	if path.get_extension().to_lower() == "ogg":
 		return AudioStreamOggVorbis.load_from_file(path)
+	if path.get_extension().to_lower() == "wav":
+		return AudioStreamWAV.load_from_file(path)
 	return null
+
+
+func _build_hit_sfx_player(player_name: String, stream_path: String) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.name = player_name
+	player.bus = "SFX"
+	player.stream = _load_optional_audio(stream_path)
+	add_child(player)
+	return player
+
+
+func _play_hit_sfx(lane_name: String) -> void:
+	set_meta("last_sfx_lane", lane_name)
+	var player := don_sfx_player if lane_name == NoteModel.DON else ka_sfx_player
+	if player == null or player.stream == null:
+		return
+	player.stop()
+	player.play()
 
 
 func _parse_selected_chart(chart_path: String, course_name: String, course_index: int) -> Variant:

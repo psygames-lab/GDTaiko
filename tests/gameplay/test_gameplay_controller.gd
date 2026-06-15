@@ -71,6 +71,12 @@ func _test_ready_builds_scene_and_loads_sample() -> void:
 	var controller := _new_controller()
 	_assert(controller.chart != null, "Ready should load sample chart")
 	_assert(controller.audio_player != null, "AudioStreamPlayer should be built")
+	_assert(controller.get("don_sfx_player") is AudioStreamPlayer, "Don SFX player should be built")
+	_assert(controller.get("ka_sfx_player") is AudioStreamPlayer, "Ka SFX player should be built")
+	_assert(controller.get("don_sfx_player").stream != null, "Don SFX player should load a default stream")
+	_assert(controller.get("ka_sfx_player").stream != null, "Ka SFX player should load a default stream")
+	_assert(controller.get("don_sfx_player").bus == "SFX", "Don SFX should use the SFX bus")
+	_assert(controller.get("ka_sfx_player").bus == "SFX", "Ka SFX should use the SFX bus")
 	_assert(controller.clock != null, "SongClock should be built")
 	_assert(controller.lane != null, "NoteLane should be built")
 	_assert(controller.get_node_or_null("SkinBackground") != null, "Gameplay should show a skin background")
@@ -297,6 +303,7 @@ func _test_input_feedback_before_song_start() -> void:
 	controller._unhandled_input(don_event)
 	_assert(not controller.playing, "Don input before start should not start playback")
 	_assert(controller.lane.get_meta("last_feedback_lane", "") == NoteModel.DON, "Don input before start should still pulse the drum skin")
+	_assert(controller.get_meta("last_sfx_lane", "") == NoteModel.DON, "Don input before start should still play the Don hit sound")
 	controller.free()
 
 
@@ -314,6 +321,7 @@ func _test_ka_input_action_hits_ka() -> void:
 
 	_assert(controller.chart.notes[1]["state"] == NoteModel.HIT, "taiko_ka action should hit the first Ka")
 	_assert(controller.scoring.combo == 1, "taiko_ka action should update combo")
+	_assert(controller.get_meta("last_sfx_lane", "") == NoteModel.KA, "Ka input should play the Ka hit sound")
 	controller.free()
 
 

@@ -43,7 +43,8 @@ func _test_default_theme_loads_release_allowed_assets() -> void:
 	_assert(theme.drum_body_color == Color.html("#7b2622"), "Drum body color should parse")
 	_assert(theme.drum_face_color == Color.html("#f3d6a3"), "Drum face color should parse")
 	_assert(theme.hit_target_color == Color.html("#b9bec4"), "Hit target color should parse")
-	_assert(theme.sfx_don_path == "", "No SFX should be configured before approved SFX exists")
+	_assert(theme.sfx_don_path == "res://assets/sfx/don.wav", "Don SFX path should use audited original asset")
+	_assert(theme.sfx_ka_path == "res://assets/sfx/ka.wav", "Ka SFX path should use audited original asset")
 	_assert(theme.font_main_path == "", "No font should be configured before approved font import")
 
 

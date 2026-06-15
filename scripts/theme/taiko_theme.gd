@@ -25,7 +25,7 @@ var lane_border_color := Color.html("#d1a45f")
 var lane_text_strip_color := Color.html("#2f3034")
 var drum_body_color := Color.html("#7b2622")
 var drum_face_color := Color.html("#f3d6a3")
-var hit_target_color := Color.html("#ffd36a")
+var hit_target_color := Color.html("#b9bec4")
 var errors: Array[String] = []
 
 

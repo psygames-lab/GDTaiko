@@ -12,6 +12,12 @@ const DRUM_X := 96.0
 const DRUM_PAD_SIZE := 112
 const DRUM_FACE_SIZE := 82
 const NOTE_SCALE := 0.58
+const DON_FEEDBACK_COLOR := "#ff6a3d"
+const KA_FEEDBACK_COLOR := "#55d7ff"
+const MISS_FEEDBACK_COLOR := "#7a7a7a"
+const DEFAULT_DRUM_PAD_COLOR := "#7b2622"
+const DEFAULT_DRUM_FACE_COLOR := "#f3d6a3"
+const DEFAULT_HIT_TARGET_COLOR := "#b9bec4"
 
 var active_sprites: Dictionary = {}
 var pooled_sprites: Array[Sprite2D] = []
@@ -32,7 +38,9 @@ var drum_face: Sprite2D
 var hit_target: Sprite2D
 var hit_target_ring: Sprite2D
 var hit_target_glow: Sprite2D
-var drum_face_base_color := Color.html("#f3d6a3")
+var drum_pad_base_color := Color.html(DEFAULT_DRUM_PAD_COLOR)
+var drum_face_base_color := Color.html(DEFAULT_DRUM_FACE_COLOR)
+var hit_target_base_color := Color.html(DEFAULT_HIT_TARGET_COLOR)
 
 
 func build_skin() -> void:
@@ -87,7 +95,7 @@ func build_skin() -> void:
 	drum_pad.name = "DrumPad"
 	drum_pad.texture = _make_circle_texture(DRUM_PAD_SIZE, 0.47, 0.0)
 	drum_pad.position = Vector2(DRUM_X, NOTE_Y)
-	drum_pad.modulate = Color.html("#7b2622")
+	drum_pad.modulate = drum_pad_base_color
 	drum_pad.z_index = -10
 	add_child(drum_pad)
 
@@ -95,7 +103,7 @@ func build_skin() -> void:
 	drum_face.name = "DrumFace"
 	drum_face.texture = _make_circle_texture(DRUM_FACE_SIZE, 0.47, 0.0)
 	drum_face.position = drum_pad.position
-	drum_face.modulate = Color.html("#f3d6a3")
+	drum_face.modulate = drum_face_base_color
 	drum_face.z_index = -9
 	add_child(drum_face)
 
@@ -103,7 +111,7 @@ func build_skin() -> void:
 	hit_target_glow.name = "HitTargetGlow"
 	hit_target_glow.texture = _make_circle_texture(TARGET_GLOW_SIZE, 0.48, 0.18)
 	hit_target_glow.position = Vector2(HIT_X, NOTE_Y)
-	hit_target_glow.modulate = Color(1.0, 0.78, 0.28, 0.55)
+	hit_target_glow.modulate = Color(hit_target_base_color, 0.45)
 	hit_target_glow.visible = false
 	hit_target_glow.z_index = -7
 	add_child(hit_target_glow)
@@ -112,7 +120,7 @@ func build_skin() -> void:
 	hit_target_ring.name = "HitTargetRing"
 	hit_target_ring.texture = _make_circle_texture(TARGET_SIZE, 0.44, 0.31)
 	hit_target_ring.position = Vector2(HIT_X, NOTE_Y)
-	hit_target_ring.modulate = Color.html("#ffd36a")
+	hit_target_ring.modulate = hit_target_base_color
 	hit_target_ring.z_index = -6
 	add_child(hit_target_ring)
 
@@ -149,37 +157,43 @@ func apply_theme(theme: Variant) -> void:
 		lane_text_strip.color = theme.lane_text_strip_color
 	if drum_pad != null:
 		drum_pad.modulate = theme.drum_body_color
+		drum_pad_base_color = theme.drum_body_color
 	if drum_face != null:
 		drum_face.modulate = theme.drum_face_color
 		drum_face_base_color = theme.drum_face_color
 	if hit_target_ring != null:
 		hit_target_ring.modulate = theme.hit_target_color
+		hit_target_base_color = theme.hit_target_color
 	if hit_target_glow != null:
-		hit_target_glow.modulate = Color(theme.hit_target_color, 0.55)
+		hit_target_glow.modulate = Color(hit_target_base_color, 0.45)
 	if gogo_overlay != null:
 		gogo_overlay.color = Color(theme.gogo_color, 0.22)
 
 
 func show_input_feedback(lane_name: String) -> void:
 	set_meta("last_feedback_lane", lane_name)
-	var feedback_color := drum_face_base_color
+	var face_color := drum_face_base_color
+	var pad_color := drum_pad_base_color
 	if lane_name == "don":
-		feedback_color = Color.html("#ff6a3d")
+		face_color = Color.html(DON_FEEDBACK_COLOR)
 	elif lane_name == "ka":
-		feedback_color = Color.html("#55d7ff")
+		pad_color = Color.html(KA_FEEDBACK_COLOR)
 	elif lane_name == "miss":
-		feedback_color = Color.html("#7a7a7a")
+		face_color = Color.html(MISS_FEEDBACK_COLOR)
+		pad_color = Color.html(MISS_FEEDBACK_COLOR)
 	if drum_pad != null:
 		drum_pad.scale = Vector2(1.12, 1.12)
+		drum_pad.modulate = pad_color
 	if drum_face != null:
 		drum_face.scale = Vector2(1.1, 1.1)
-		drum_face.modulate = feedback_color
+		drum_face.modulate = face_color
 	if hit_target_glow != null:
 		hit_target_glow.visible = true
 		hit_target_glow.scale = Vector2(1.12, 1.12)
-		hit_target_glow.modulate = Color(feedback_color, 0.62)
+		hit_target_glow.modulate = Color(hit_target_base_color, 0.45)
 	if hit_target_ring != null:
 		hit_target_ring.scale = Vector2(1.08, 1.08)
+		hit_target_ring.modulate = hit_target_base_color
 
 
 func configure(don: Texture2D, ka: Texture2D) -> void:
@@ -239,7 +253,7 @@ func _make_target_texture() -> Texture2D:
 		for y in range(TARGET_SIZE):
 			var distance := center.distance_to(Vector2(x, y))
 			if distance <= outer_radius and distance >= inner_radius:
-				image.set_pixel(x, y, Color(1.0, 1.0, 1.0, 0.9))
+				image.set_pixel(x, y, Color(hit_target_base_color, 0.92))
 	return ImageTexture.create_from_image(image)
 
 

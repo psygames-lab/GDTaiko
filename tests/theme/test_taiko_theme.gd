@@ -42,7 +42,7 @@ func _test_default_theme_loads_release_allowed_assets() -> void:
 	_assert(theme.lane_text_strip_color == Color.html("#2f3034"), "Lane text strip color should parse")
 	_assert(theme.drum_body_color == Color.html("#7b2622"), "Drum body color should parse")
 	_assert(theme.drum_face_color == Color.html("#f3d6a3"), "Drum face color should parse")
-	_assert(theme.hit_target_color == Color.html("#ffd36a"), "Hit target color should parse")
+	_assert(theme.hit_target_color == Color.html("#b9bec4"), "Hit target color should parse")
 	_assert(theme.sfx_don_path == "", "No SFX should be configured before approved SFX exists")
 	_assert(theme.font_main_path == "", "No font should be configured before approved font import")
 
@@ -50,6 +50,8 @@ func _test_default_theme_loads_release_allowed_assets() -> void:
 func _test_default_note_textures_have_face_detail() -> void:
 	_assert(_has_dark_face_detail("res://assets/notes/note_don.png"), "Default Don note should include dark face details")
 	_assert(_has_dark_face_detail("res://assets/notes/note_ka.png"), "Default Ka note should include dark face details")
+	_assert(_has_solid_note_interior("res://assets/notes/note_don.png"), "Default Don note should not have transparent holes inside the face")
+	_assert(_has_solid_note_interior("res://assets/notes/note_ka.png"), "Default Ka note should not have transparent holes inside the face")
 
 
 func _test_user_skin_overrides_default_theme() -> void:
@@ -125,12 +127,24 @@ func _has_dark_face_detail(path: String) -> bool:
 	if image == null or image.is_empty():
 		return false
 	var samples := [
-		image.get_pixel(47, 54),
-		image.get_pixel(81, 54),
-		image.get_pixel(64, 82),
+		image.get_pixel(50, 58),
+		image.get_pixel(80, 58),
+		image.get_pixel(64, 65),
 	]
 	for color in samples:
 		var brightness: float = (color.r + color.g + color.b) / 3.0
 		if color.a < 0.8 or brightness > 0.25:
 			return false
+	return true
+
+
+func _has_solid_note_interior(path: String) -> bool:
+	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
+	if image == null or image.is_empty():
+		return false
+	var center := Vector2(image.get_width() * 0.5, image.get_height() * 0.5)
+	for x in range(image.get_width()):
+		for y in range(image.get_height()):
+			if center.distance_to(Vector2(x, y)) <= 38.0 and image.get_pixel(x, y).a < 0.98:
+				return false
 	return true

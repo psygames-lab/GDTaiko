@@ -266,10 +266,15 @@ func _test_input_feedback_updates_skin_state() -> void:
 	_assert(lane.get_meta("last_feedback_lane", "") == NoteModelScript.DON, "Don feedback should record feedback lane")
 	_assert((lane.get_node("DrumPad") as Sprite2D).scale.x > 1.0, "Don feedback should pulse drum pad")
 	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#ff6a3d"), "Don feedback should tint drum face red")
+	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#7b2622"), "Don feedback should keep drum rim at its base color")
+	_assert((lane.get_node("HitTargetRing") as Sprite2D).modulate == Color.html("#b9bec4"), "Don feedback should keep hit target ring gray")
 	_assert((lane.get_node("HitTargetGlow") as CanvasItem).visible, "Don feedback should show target glow")
+	_assert((lane.get_node("HitTargetGlow") as Sprite2D).modulate == Color(Color.html("#b9bec4"), 0.45), "Don feedback should keep hit target glow gray")
 
 	lane.show_input_feedback(NoteModelScript.KA)
-	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#55d7ff"), "Ka feedback should tint drum face blue")
+	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#f3d6a3"), "Ka feedback should keep drum face at its base color")
+	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#55d7ff"), "Ka feedback should tint drum rim blue")
+	_assert((lane.get_node("HitTargetRing") as Sprite2D).modulate == Color.html("#b9bec4"), "Ka feedback should keep hit target ring gray")
 
 	lane.show_input_feedback("miss")
 	_assert(lane.get_meta("last_feedback_lane", "") == "miss", "Miss feedback should record miss state")

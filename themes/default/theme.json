@@ -9,5 +9,11 @@
   "gogo_color": "#f5a623",
   "hud_top_band_color": "#141417",
   "gauge_fill_color": "#ff9f1c",
-  "result_panel_color": "#141417"
+  "result_panel_color": "#141417",
+  "lane_panel_color": "#101317",
+  "lane_border_color": "#d1a45f",
+  "lane_text_strip_color": "#2f3034",
+  "drum_body_color": "#7b2622",
+  "drum_face_color": "#f3d6a3",
+  "hit_target_color": "#ffd36a"
 }

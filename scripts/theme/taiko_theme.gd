@@ -20,6 +20,12 @@ var gogo_color := Color.ORANGE
 var hud_top_band_color := Color.html("#141417")
 var gauge_fill_color := Color.html("#ff9f1c")
 var result_panel_color := Color.html("#141417")
+var lane_panel_color := Color.html("#101317")
+var lane_border_color := Color.html("#d1a45f")
+var lane_text_strip_color := Color.html("#2f3034")
+var drum_body_color := Color.html("#7b2622")
+var drum_face_color := Color.html("#f3d6a3")
+var hit_target_color := Color.html("#ffd36a")
 var errors: Array[String] = []
 
 
@@ -91,6 +97,18 @@ func _load_from_file(path: String, require_required_keys: bool) -> void:
 		gauge_fill_color = _parse_color(String(parsed["gauge_fill_color"]), "gauge_fill_color")
 	if parsed.has("result_panel_color"):
 		result_panel_color = _parse_color(String(parsed["result_panel_color"]), "result_panel_color")
+	if parsed.has("lane_panel_color"):
+		lane_panel_color = _parse_color(String(parsed["lane_panel_color"]), "lane_panel_color")
+	if parsed.has("lane_border_color"):
+		lane_border_color = _parse_color(String(parsed["lane_border_color"]), "lane_border_color")
+	if parsed.has("lane_text_strip_color"):
+		lane_text_strip_color = _parse_color(String(parsed["lane_text_strip_color"]), "lane_text_strip_color")
+	if parsed.has("drum_body_color"):
+		drum_body_color = _parse_color(String(parsed["drum_body_color"]), "drum_body_color")
+	if parsed.has("drum_face_color"):
+		drum_face_color = _parse_color(String(parsed["drum_face_color"]), "drum_face_color")
+	if parsed.has("hit_target_color"):
+		hit_target_color = _parse_color(String(parsed["hit_target_color"]), "hit_target_color")
 
 	_validate_resource_exists(note_don_path, "note_don")
 	_validate_resource_exists(note_ka_path, "note_ka")

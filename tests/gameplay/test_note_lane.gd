@@ -3,6 +3,7 @@ extends SceneTree
 const NoteModelScript: GDScript = preload("res://scripts/gameplay/note_model.gd")
 const NoteLaneScript: GDScript = preload("res://scripts/gameplay/note_lane.gd")
 const TimingMap := preload("res://scripts/chart/timing_map.gd")
+const TaikoTheme := preload("res://scripts/theme/taiko_theme.gd")
 
 var failed_count := 0
 
@@ -17,6 +18,8 @@ func _init() -> void:
 	_test_clear_notes()
 	_test_build_skin_elements()
 	_test_gogo_overlay_visibility()
+	_test_theme_applies_to_lane_skin()
+	_test_input_feedback_updates_skin_state()
 
 	if failed_count == 0:
 		print("PASS: NoteLane")
@@ -193,13 +196,20 @@ func _test_build_skin_elements() -> void:
 	lane.build_skin()
 
 	_assert(lane.get_node_or_null("LaneBackground") != null, "Lane skin should include a background band")
+	_assert(lane.get_node_or_null("LanePanel") != null, "Lane skin should include a themed panel")
+	_assert(lane.get_node_or_null("LaneBorder") != null, "Lane skin should include a panel border")
+	_assert(lane.get_node_or_null("LaneTextStrip") != null, "Lane skin should include a bottom text strip")
+	_assert(lane.get_node_or_null("DrumPad") != null, "Lane skin should include a left drum pad")
+	_assert(lane.get_node_or_null("DrumFace") != null, "Lane skin should include a drum face")
 	_assert(lane.get_node_or_null("HitTarget") != null, "Lane skin should include a hit target")
+	_assert(lane.get_node_or_null("HitTargetRing") != null, "Lane skin should include a target ring")
+	_assert(lane.get_node_or_null("HitTargetGlow") != null, "Lane skin should include a target glow")
 	_assert(lane.get_node_or_null("TimingLine") != null, "Lane skin should include a timing line")
 	_assert(lane.get_node_or_null("GogoOverlay") != null, "Lane skin should include a GOGO overlay")
 	_assert(NoteLaneScript.NOTE_Y >= 260.0 and NoteLaneScript.NOTE_Y <= 320.0, "Note lane should sit in the upper gameplay band")
 	var lane_background := lane.get_node("LaneBackground") as ColorRect
 	_assert(lane_background.size.y <= 92.0, "Lane background should not dominate the stage")
-	_assert(lane.get_child_count() == 4, "Building skin before notes should add only skin nodes")
+	_assert(lane.get_child_count() >= 9, "Building skin before notes should add themed skin nodes")
 	lane.queue_free()
 
 
@@ -213,6 +223,44 @@ func _test_gogo_overlay_visibility() -> void:
 	_assert(overlay.visible, "GOGO overlay should show when enabled")
 	lane.set_gogo(false)
 	_assert(not overlay.visible, "GOGO overlay should hide when disabled")
+	lane.queue_free()
+
+
+func _test_theme_applies_to_lane_skin() -> void:
+	var lane: Node2D = _new_lane()
+	lane.build_skin()
+	var theme = TaikoTheme.new()
+	theme.lane_color = Color.html("#111111")
+	theme.gogo_color = Color.html("#222222")
+	theme.lane_panel_color = Color.html("#010203")
+	theme.lane_border_color = Color.html("#040506")
+	theme.lane_text_strip_color = Color.html("#070809")
+	theme.drum_body_color = Color.html("#101112")
+	theme.drum_face_color = Color.html("#131415")
+	theme.hit_target_color = Color.html("#161718")
+	lane.apply_theme(theme)
+
+	_assert((lane.get_node("LanePanel") as ColorRect).color == Color.html("#010203"), "Theme should apply lane panel color")
+	_assert((lane.get_node("LaneBorder") as ColorRect).color == Color.html("#040506"), "Theme should apply lane border color")
+	_assert((lane.get_node("LaneTextStrip") as ColorRect).color == Color.html("#070809"), "Theme should apply text strip color")
+	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#101112"), "Theme should apply drum body color")
+	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#131415"), "Theme should apply drum face color")
+	_assert((lane.get_node("HitTargetRing") as Sprite2D).modulate == Color.html("#161718"), "Theme should apply hit target color")
+	lane.queue_free()
+
+
+func _test_input_feedback_updates_skin_state() -> void:
+	var lane: Node2D = _new_lane()
+	lane.build_skin()
+
+	lane.show_input_feedback(NoteModelScript.DON)
+	_assert(lane.get_meta("last_feedback_lane", "") == NoteModelScript.DON, "Don feedback should record feedback lane")
+	_assert((lane.get_node("DrumPad") as Sprite2D).scale.x > 1.0, "Don feedback should pulse drum pad")
+	_assert((lane.get_node("HitTargetGlow") as CanvasItem).visible, "Don feedback should show target glow")
+
+	lane.show_input_feedback("miss")
+	_assert(lane.get_meta("last_feedback_lane", "") == "miss", "Miss feedback should record miss state")
+	_assert((lane.get_node("HitTargetGlow") as CanvasItem).visible, "Miss feedback should still show target glow")
 	lane.queue_free()
 
 

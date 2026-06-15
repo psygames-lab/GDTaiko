@@ -36,6 +36,12 @@ func _test_default_theme_loads_release_allowed_assets() -> void:
 	_assert(theme.hud_top_band_color == Color.html("#141417"), "HUD top band color should parse")
 	_assert(theme.gauge_fill_color == Color.html("#ff9f1c"), "Gauge fill color should parse")
 	_assert(theme.result_panel_color == Color.html("#141417"), "Result panel color should parse")
+	_assert(theme.lane_panel_color == Color.html("#101317"), "Lane panel color should parse")
+	_assert(theme.lane_border_color == Color.html("#d1a45f"), "Lane border color should parse")
+	_assert(theme.lane_text_strip_color == Color.html("#2f3034"), "Lane text strip color should parse")
+	_assert(theme.drum_body_color == Color.html("#7b2622"), "Drum body color should parse")
+	_assert(theme.drum_face_color == Color.html("#f3d6a3"), "Drum face color should parse")
+	_assert(theme.hit_target_color == Color.html("#ffd36a"), "Hit target color should parse")
 	_assert(theme.sfx_don_path == "", "No SFX should be configured before approved SFX exists")
 	_assert(theme.font_main_path == "", "No font should be configured before approved font import")
 
@@ -45,7 +51,7 @@ func _test_user_skin_overrides_default_theme() -> void:
 	DirAccess.make_dir_recursive_absolute(skin_dir)
 	var skin_path := skin_dir + "/skin.json"
 	var file := FileAccess.open(skin_path, FileAccess.WRITE)
-	file.store_string('{"name":"Local Dev Skin","lane_color":"#123456","gogo_color":"#abcdef","hud_top_band_color":"#222222","gauge_fill_color":"#ffee00","result_panel_color":"#111111"}')
+	file.store_string('{"name":"Local Dev Skin","lane_color":"#123456","gogo_color":"#abcdef","hud_top_band_color":"#222222","gauge_fill_color":"#ffee00","result_panel_color":"#111111","lane_panel_color":"#010203","lane_border_color":"#040506","lane_text_strip_color":"#070809","drum_body_color":"#101112","drum_face_color":"#131415","hit_target_color":"#161718"}')
 	file.close()
 
 	var theme = TaikoTheme.load_active("res://themes/default/theme.json", skin_path)
@@ -57,6 +63,12 @@ func _test_user_skin_overrides_default_theme() -> void:
 	_assert(theme.hud_top_band_color == Color.html("#222222"), "User skin should override HUD color")
 	_assert(theme.gauge_fill_color == Color.html("#ffee00"), "User skin should override gauge color")
 	_assert(theme.result_panel_color == Color.html("#111111"), "User skin should override result panel color")
+	_assert(theme.lane_panel_color == Color.html("#010203"), "User skin should override lane panel color")
+	_assert(theme.lane_border_color == Color.html("#040506"), "User skin should override lane border color")
+	_assert(theme.lane_text_strip_color == Color.html("#070809"), "User skin should override lane text strip color")
+	_assert(theme.drum_body_color == Color.html("#101112"), "User skin should override drum body color")
+	_assert(theme.drum_face_color == Color.html("#131415"), "User skin should override drum face color")
+	_assert(theme.hit_target_color == Color.html("#161718"), "User skin should override hit target color")
 	DirAccess.remove_absolute(skin_path)
 
 

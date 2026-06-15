@@ -298,6 +298,7 @@ func _apply_hit_at(lane_name: String, song_time: float, record_replay_input: boo
 		return
 
 	best_note["state"] = NoteModel.HIT
+	lane.show_input_feedback(lane_name)
 	scoring.apply_judgment(result["judgment"])
 	soul_gauge.apply_judgment(result["judgment"])
 	hit_effects.spawn_hit(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y), result["judgment"])
@@ -346,6 +347,7 @@ func _apply_active_roll_hit(song_time: float) -> bool:
 
 
 func _apply_empty_miss() -> void:
+	lane.show_input_feedback("miss")
 	scoring.apply_judgment("miss")
 	soul_gauge.apply_judgment("miss")
 	hit_effects.spawn_miss(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y))
@@ -393,6 +395,7 @@ func _process_misses(song_time: float) -> void:
 			continue
 		if judge.is_expired(expiry_time, song_time):
 			note["state"] = NoteModel.MISSED
+			lane.show_input_feedback("miss")
 			scoring.apply_judgment("miss")
 			soul_gauge.apply_judgment("miss")
 			hit_effects.spawn_miss(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y))

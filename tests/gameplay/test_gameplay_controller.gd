@@ -325,6 +325,7 @@ func _test_immediate_don_hit() -> void:
 	_assert(controller.scoring.score == 1000, "Hitting first Don at time 0 should score perfect")
 	_assert(controller.scoring.combo == 1, "Hitting first Don should increment combo to 1")
 	_assert(controller.chart.notes[0]["state"] == NoteModel.HIT, "First sample note should become hit")
+	_assert(controller.lane.get_meta("last_feedback_lane", "") == NoteModel.DON, "Don hit should pulse the note lane skin")
 	controller.free()
 
 
@@ -347,6 +348,7 @@ func _test_process_misses_marks_pending_as_missed() -> void:
 	_assert(miss_count == controller.chart.notes.size(), "All pending notes should be marked missed at late time")
 	_assert(controller.scoring.misses == controller.chart.notes.size(), "Miss count should match number of missed notes")
 	_assert(controller.scoring.combo == 0, "Combo should be zero after miss processing")
+	_assert(controller.lane.get_meta("last_feedback_lane", "") == "miss", "Processed miss should pulse the note lane skin")
 	controller.free()
 
 
@@ -355,6 +357,7 @@ func _test_empty_miss_spawns_effect() -> void:
 	controller._start_song()
 	controller._apply_empty_miss()
 	_assert(_has_effect(controller.hit_effects, "miss", "miss"), "Empty miss should spawn a miss effect")
+	_assert(controller.lane.get_meta("last_feedback_lane", "") == "miss", "Empty miss should pulse the note lane skin")
 	controller.free()
 
 

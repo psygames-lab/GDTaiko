@@ -148,12 +148,13 @@ func _add_skin_background() -> void:
 		return
 	skin_background = TextureRect.new()
 	skin_background.name = "SkinBackground"
+	skin_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	skin_background.stretch_mode = TextureRect.STRETCH_SCALE
 	skin_background.texture = texture
-	skin_background.size = VIEWPORT_SIZE
-	skin_background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	skin_background.modulate = Color(1.0, 1.0, 1.0, 0.78)
 	skin_background.z_index = -100
 	add_child(skin_background)
+	skin_background.size = VIEWPORT_SIZE
 
 
 func _load_png_texture(path: String) -> Texture2D:

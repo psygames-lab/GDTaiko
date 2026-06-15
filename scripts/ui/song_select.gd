@@ -250,10 +250,12 @@ func _add_background() -> void:
 	if texture != null:
 		var background := TextureRect.new()
 		background.name = "Background"
+		background.position = Vector2.ZERO
+		background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		background.stretch_mode = TextureRect.STRETCH_SCALE
 		background.texture = texture
-		background.set_anchors_preset(Control.PRESET_FULL_RECT)
-		background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		add_child(background)
+		background.size = VIEWPORT_SIZE
 		return
 
 	var fallback := ColorRect.new()

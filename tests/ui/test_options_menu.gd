@@ -39,6 +39,10 @@ func _test_defaults() -> void:
 
 	_assert(menu.get_node_or_null("OptionsPanel/OptionsContainer/Header/BackButton") != null, "Options menu should show a Back button")
 	_assert(menu.get_node_or_null("BackgroundDim") is ColorRect, "Options menu should dim the background behind UI")
+	var background := menu.get_node_or_null("Background") as TextureRect
+	_assert(background != null and background.stretch_mode == TextureRect.STRETCH_SCALE, "Options background should scale the full image without cropping")
+	_assert(background != null and background.expand_mode == TextureRect.EXPAND_IGNORE_SIZE, "Options background should ignore texture minimum size")
+	_assert(background != null and background.size == Vector2(1280, 720), "Options background should fill the 1280x720 viewport")
 	_assert(menu.get_node_or_null("OptionsPanel") is TextureRect, "Options menu should use the generated UI panel texture")
 	var panel := menu.get_node_or_null("OptionsPanel") as Control
 	_assert(panel != null and panel.position.x >= 260.0, "Options panel should be centered away from the left edge")

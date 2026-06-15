@@ -15,6 +15,10 @@ func _init() -> void:
 	_assert(scene.get_node_or_null("MenuPanel/MainMenu/OptionsButton") != null, "Main menu should show an Options button")
 	_assert(scene.get_node_or_null("MenuPanel") is TextureRect, "Main menu should use the generated UI panel texture")
 	_assert(scene.get_node_or_null("BackgroundDim") is ColorRect, "Main menu should dim the busy background behind UI")
+	var background := scene.get_node_or_null("Background") as TextureRect
+	_assert(background != null and background.stretch_mode == TextureRect.STRETCH_SCALE, "Main menu background should scale the full image without cropping")
+	_assert(background != null and background.expand_mode == TextureRect.EXPAND_IGNORE_SIZE, "Main menu background should ignore texture minimum size")
+	_assert(background != null and background.size == Vector2(1280, 720), "Main menu background should fill the 1280x720 viewport")
 	var panel := scene.get_node_or_null("MenuPanel") as Control
 	_assert(panel != null and panel.size.x <= 560.0, "Main menu panel should stay compact")
 	_assert(panel != null and panel.position.x >= 340.0, "Main menu panel should be centered with safe margins")

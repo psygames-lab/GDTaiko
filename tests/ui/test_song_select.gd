@@ -23,6 +23,10 @@ func _run_tests() -> void:
 	get_root().add_child(select)
 	_assert(select.get_node_or_null("Root/TopBar/OptionsButton") != null, "Song select should show an Options button")
 	_assert(select.get_node_or_null("BackgroundDim") is ColorRect, "Song select should dim the background behind panels")
+	var background := select.get_node_or_null("Background") as TextureRect
+	_assert(background != null and background.stretch_mode == TextureRect.STRETCH_SCALE, "Song select background should scale the full image without cropping")
+	_assert(background != null and background.expand_mode == TextureRect.EXPAND_IGNORE_SIZE, "Song select background should ignore texture minimum size")
+	_assert(background != null and background.size == Vector2(1280, 720), "Song select background should fill the 1280x720 viewport")
 	_assert(select.get_node_or_null("Root/Content/ListPanel") is TextureRect, "Song select list should use the generated UI panel texture")
 	_assert(select.get_node_or_null("Root/Content/DetailPanel") is TextureRect, "Song select details should use the generated UI panel texture")
 	var content := select.get_node_or_null("Root/Content") as Control

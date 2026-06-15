@@ -19,6 +19,8 @@ func _run_tests() -> void:
 	_test_result_layer_draws_above_hud()
 	_test_user_skin_colors_apply_to_gameplay()
 	_test_ready_loads_session_selected_chart()
+	_test_ready_loads_session_selected_course_from_multi_course_chart()
+	_test_ready_loads_duplicate_named_course_by_index()
 	_test_loads_sample_chart()
 	_test_textures_and_spawned_notes()
 	_test_start_song_resets_state()
@@ -139,6 +141,86 @@ BPM:120
 	var controller := _new_controller()
 	_assert(controller.chart.title == "Selected Song", "Gameplay should load SessionState selected chart")
 	_assert(controller.chart.level == 4, "Gameplay should load selected chart metadata")
+	controller.free()
+	state.clear_selection()
+	DirAccess.remove_absolute(chart_path)
+
+
+func _test_ready_loads_session_selected_course_from_multi_course_chart() -> void:
+	var state = get_root().get_node_or_null("SessionState")
+	_assert(state != null, "SessionState autoload should exist")
+	if state == null:
+		return
+	var chart_path := "user://selected_multi_song.tja"
+	var audio_path := "user://selected_multi.ogg"
+	var chart := FileAccess.open(chart_path, FileAccess.WRITE)
+	chart.store_string("""TITLE:Selected Multi
+WAVE:selected_multi.ogg
+BPM:120
+COURSE:Easy
+LEVEL:2
+#START
+1000,
+#END
+
+COURSE:Hard
+LEVEL:7
+#START
+1200,
+#END
+""")
+	chart.close()
+	var audio := FileAccess.open(audio_path, FileAccess.WRITE)
+	audio.store_buffer(FileAccess.get_file_as_bytes("res://assets/sample/sample.ogg"))
+	audio.close()
+	state.selected_tja_path = chart_path
+	state.selected_audio_path = ""
+	state.selected_course_name = "Hard"
+	state.selected_course_index = 1
+
+	var controller := _new_controller()
+	_assert(controller.chart.title == "Selected Multi", "Gameplay should load selected multi-course chart title")
+	_assert(controller.chart.course == "Hard", "Gameplay should load the selected course from a multi-course TJA")
+	_assert(controller.chart.level == 7, "Gameplay should load selected course metadata")
+	_assert(controller.chart.notes.size() == 2, "Gameplay should load selected course notes")
+	_assert(controller.audio_player.stream != null, "Gameplay should resolve selected chart relative WAVE from the TJA folder")
+	controller.free()
+	state.clear_selection()
+	DirAccess.remove_absolute(chart_path)
+	DirAccess.remove_absolute(audio_path)
+
+
+func _test_ready_loads_duplicate_named_course_by_index() -> void:
+	var state = get_root().get_node_or_null("SessionState")
+	_assert(state != null, "SessionState autoload should exist")
+	if state == null:
+		return
+	var chart_path := "user://duplicate_course_song.tja"
+	var chart := FileAccess.open(chart_path, FileAccess.WRITE)
+	chart.store_string("""TITLE:Duplicate Course
+BPM:120
+COURSE:Hard
+LEVEL:4
+#START
+1000,
+#END
+
+COURSE:Hard
+LEVEL:7
+#START
+1200,
+#END
+""")
+	chart.close()
+	state.selected_tja_path = chart_path
+	state.selected_audio_path = ""
+	state.selected_course_name = "Hard"
+	state.selected_course_index = 1
+
+	var controller := _new_controller()
+	_assert(controller.chart.course == "Hard", "Gameplay should load duplicate selected course name")
+	_assert(controller.chart.level == 7, "Gameplay should use selected course index when names are duplicated")
+	_assert(controller.chart.notes.size() == 2, "Gameplay should load notes for the selected duplicate course index")
 	controller.free()
 	state.clear_selection()
 	DirAccess.remove_absolute(chart_path)
@@ -492,6 +574,8 @@ func _test_config_offsets_apply_to_clock_and_input() -> void:
 	_assert(controller.audio_player.bus == "Music", "Gameplay music should use the Music audio bus")
 	_assert(is_equal_approx(controller.clock.chart_offset_sec, controller.chart.offset_sec + 0.25), "Config chart offset should apply to song clock")
 	controller._start_song()
+	controller.audio_player.stop()
+	controller.clock.configure(null, controller.chart.offset_sec + 0.25)
 	controller._hit(NoteModel.DON)
 	_assert(is_equal_approx(float(controller.replay_recorder.inputs[0]["time_sec"]), controller.chart.offset_sec + 0.35), "Config input offset should apply to recorded hit time")
 	_assert(controller.replay_recorder.input_offset_ms == 100, "Replay metadata should preserve input offset")

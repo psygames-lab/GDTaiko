@@ -21,7 +21,6 @@ const GameConfig := preload("res://scripts/config/game_config.gd")
 const ResultScene := preload("res://scenes/Result.tscn")
 
 const SAMPLE_CHART_PATH := "res://assets/sample/sample.tja"
-const SAMPLE_ASSET_PATH := "res://assets/sample/"
 
 var chart
 var timing_map := TimingMap.new()
@@ -136,18 +135,22 @@ func _update_frame_monitor(delta: float) -> void:
 func _load_sample_chart() -> void:
 	var chart_path := SAMPLE_CHART_PATH
 	var audio_path := ""
+	var selected_course_name := ""
+	var selected_course_index := -1
 	var session := get_node_or_null("/root/SessionState")
 	if session != null and String(session.get("selected_tja_path")) != "":
 		chart_path = String(session.get("selected_tja_path"))
 		audio_path = String(session.get("selected_audio_path"))
+		selected_course_name = String(session.get("selected_course_name"))
+		selected_course_index = int(session.get("selected_course_index"))
 	current_chart_path = chart_path
-	chart = TjaParser.parse_file(chart_path)
+	chart = _parse_selected_chart(chart_path, selected_course_name, selected_course_index)
 	if chart == null:
 		push_error("Failed to load chart from %s" % chart_path)
 		hud.set_status("Missing chart")
 		return
 	if audio_path == "":
-		audio_path = SAMPLE_ASSET_PATH + String(chart.wave)
+		audio_path = _resolve_chart_audio_path(chart_path, String(chart.wave))
 	var loaded_stream := _load_optional_audio(audio_path)
 	audio_player.stream = loaded_stream
 	clock.configure(audio_player, chart.offset_sec + (float(game_config.chart_offset_ms) / 1000.0))
@@ -375,7 +378,30 @@ func _load_optional_audio(path: String) -> AudioStream:
 		var stream = load(path)
 		if stream is AudioStream:
 			return stream
+	if path.get_extension().to_lower() == "ogg":
+		return AudioStreamOggVorbis.load_from_file(path)
 	return null
+
+
+func _parse_selected_chart(chart_path: String, course_name: String, course_index: int) -> Variant:
+	if course_name != "":
+		var candidates := TjaParser.parse_courses_file(chart_path)
+		if course_index >= 0 and course_index < candidates.size():
+			var indexed_candidate = candidates[course_index]
+			if String(indexed_candidate.course).to_lower() == course_name.to_lower():
+				return indexed_candidate
+		for candidate in candidates:
+			if String(candidate.course).to_lower() == course_name.to_lower():
+				return candidate
+	return TjaParser.parse_file(chart_path)
+
+
+func _resolve_chart_audio_path(chart_path: String, wave_path: String) -> String:
+	if wave_path == "":
+		return ""
+	if wave_path.begins_with("res://") or wave_path.begins_with("user://") or wave_path.is_absolute_path():
+		return wave_path
+	return chart_path.get_base_dir().path_join(wave_path)
 
 
 func _load_note_texture(path: String, fallback_color: Color) -> Texture2D:

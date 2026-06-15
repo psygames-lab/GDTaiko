@@ -39,6 +39,9 @@ func _init() -> void:
 	_test_metadata_has_only_tja_keys()
 	_test_absolute_wave_path_is_not_joined_to_source_folder()
 	_test_branch_lane_unterminated_long_note_diagnostic()
+	_test_parse_courses_text_returns_each_course()
+	_test_parse_text_returns_first_course_for_compatibility()
+	_test_parse_courses_text_keeps_between_course_metadata_local()
 
 	if failed_count == 0:
 		print("PASS: TjaParser")
@@ -669,6 +672,94 @@ BPM:120
 	for diagnostic in chart.diagnostics:
 		codes.append(String(diagnostic.code))
 	_assert(codes.has("unterminated_long_note"), "Unterminated long note inside branch lanes should be preserved on parent chart")
+
+
+func _test_parse_courses_text_returns_each_course() -> void:
+	var text := """TITLE:Multi Course
+WAVE:multi.ogg
+BPM:120
+COURSE:Easy
+LEVEL:2
+#START
+1000,
+#END
+
+COURSE:Hard
+LEVEL:6
+#START
+1200,
+#END
+"""
+
+	var charts: Array = TjaParserScript.parse_courses_text(text)
+	_assert(charts.size() == 2, "parse_courses_text should return every COURSE block in one TJA")
+	if charts.size() < 2:
+		return
+	_assert(charts[0].title == "Multi Course", "First course should inherit global title")
+	_assert(charts[0].wave == "multi.ogg", "First course should inherit global WAVE")
+	_assert(charts[0].course == "Easy", "First course should preserve Easy metadata")
+	_assert(charts[0].level == 2, "First course should preserve Easy level")
+	_assert(charts[0].notes.size() == 1, "Easy course should parse its own notes")
+	_assert(charts[1].title == "Multi Course", "Second course should inherit global title")
+	_assert(charts[1].wave == "multi.ogg", "Second course should inherit global WAVE")
+	_assert(charts[1].course == "Hard", "Second course should preserve Hard metadata")
+	_assert(charts[1].level == 6, "Second course should preserve Hard level")
+	_assert(charts[1].notes.size() == 2, "Hard course should parse its own notes")
+
+
+func _test_parse_text_returns_first_course_for_compatibility() -> void:
+	var text := """TITLE:Compat Multi
+BPM:120
+COURSE:Easy
+LEVEL:1
+#START
+1000,
+#END
+
+COURSE:Oni
+LEVEL:8
+#START
+2222,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.course == "Easy", "parse_text should keep returning the first course")
+	_assert(chart.level == 1, "parse_text should keep first course metadata")
+	_assert(chart.notes.size() == 1, "parse_text should not merge later courses")
+
+
+func _test_parse_courses_text_keeps_between_course_metadata_local() -> void:
+	var text := """TITLE:Local Metadata
+WAVE:shared.ogg
+BPM:120
+COURSE:Easy
+LEVEL:1
+#START
+1000,
+#END
+
+WAVE:hard.ogg
+COURSE:Hard
+LEVEL:6
+#START
+1000,
+#END
+
+COURSE:Oni
+LEVEL:8
+#START
+1000,
+#END
+"""
+
+	var charts: Array = TjaParserScript.parse_courses_text(text)
+	_assert(charts.size() == 3, "parse_courses_text should parse all three courses")
+	if charts.size() < 3:
+		return
+	_assert(charts[0].wave == "shared.ogg", "First course should use global WAVE")
+	_assert(charts[1].wave == "hard.ogg", "Second course should use its local WAVE")
+	_assert(charts[2].wave == "shared.ogg", "Third course should not inherit second course local WAVE")
 
 
 func _assert(condition: bool, message: String) -> void:

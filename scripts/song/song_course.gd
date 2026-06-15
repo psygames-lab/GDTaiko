@@ -5,6 +5,7 @@ var course: String = ""
 var level: int = 0
 var tja_path: String = ""
 var wave: String = ""
+var course_index: int = -1
 var audio_missing: bool = false
 var expected_audio_path: String = ""
 

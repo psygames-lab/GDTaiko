@@ -62,6 +62,8 @@ func _run_tests() -> void:
 		_assert(select.apply_selected_course_to_session(), "Song select should write selected course to session")
 		_assert(state.selected_tja_path == "res://songs/alpha/alpha_hard.tja", "Launch payload should include selected TJA path")
 		_assert(state.selected_audio_path == "res://songs/alpha/hard.ogg", "Launch payload should include selected audio path")
+		_assert(state.selected_course_name == "Hard", "Launch payload should include selected course name")
+		_assert(state.selected_course_index == 1, "Launch payload should include selected embedded course index")
 		state.clear_selection()
 		if state.get_parent() == get_root():
 			state.free()
@@ -85,12 +87,14 @@ BPM:120
 """)
 	user_chart.close()
 	var user_audio := FileAccess.open(user_root + "/local/local.ogg", FileAccess.WRITE)
-	user_audio.store_buffer(PackedByteArray())
+	user_audio.store_buffer(FileAccess.get_file_as_bytes("res://assets/sample/sample.ogg"))
 	user_audio.close()
 
 	select.load_song_roots(["res://songs", user_root])
 	_assert(_has_song(select.songs, "GDTaiko Sample"), "Song select should include bundled songs")
 	_assert(_has_song(select.songs, "Local Import"), "Song select should include user-local songs")
+	select.load_songs(user_root)
+	_assert(select.preview_player.stream != null, "Song select should load user-local OGG previews")
 
 	var missing_root := "user://song_select_missing_audio_test"
 	_remove_dir_recursive(missing_root)

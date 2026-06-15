@@ -115,6 +115,8 @@ func apply_selected_course_to_session() -> bool:
 	if state != null:
 		state.selected_tja_path = course.tja_path
 		state.selected_audio_path = course.wave
+		state.selected_course_name = course.course
+		state.selected_course_index = course.course_index if course.course_index >= 0 else selected_course_index
 	return state != null
 
 
@@ -201,10 +203,8 @@ func _update_preview(song: SongEntry) -> void:
 	_stop_preview()
 	if song.preview_audio_path == "" or not FileAccess.file_exists(song.preview_audio_path):
 		return
-	if not ResourceLoader.exists(song.preview_audio_path):
-		return
-	var stream = load(song.preview_audio_path)
-	if not stream is AudioStream:
+	var stream := _load_audio_stream(song.preview_audio_path)
+	if stream == null:
 		return
 	preview_player.stream = stream
 	preview_player.volume_db = linear_to_db(0.01)
@@ -227,3 +227,13 @@ func _ensure_audio_bus(bus_name: String) -> void:
 		return
 	AudioServer.add_bus()
 	AudioServer.set_bus_name(AudioServer.get_bus_count() - 1, bus_name)
+
+
+func _load_audio_stream(path: String) -> AudioStream:
+	if ResourceLoader.exists(path):
+		var stream = load(path)
+		if stream is AudioStream:
+			return stream
+	if path.get_extension().to_lower() == "ogg":
+		return AudioStreamOggVorbis.load_from_file(path)
+	return null

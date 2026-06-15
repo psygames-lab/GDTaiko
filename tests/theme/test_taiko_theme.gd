@@ -40,7 +40,7 @@ func _test_default_theme_loads_release_allowed_assets() -> void:
 	_assert(theme.lane_panel_color == Color.html("#101317"), "Lane panel color should parse")
 	_assert(theme.lane_border_color == Color.html("#d1a45f"), "Lane border color should parse")
 	_assert(theme.lane_text_strip_color == Color.html("#2f3034"), "Lane text strip color should parse")
-	_assert(theme.drum_body_color == Color.html("#7b2622"), "Drum body color should parse")
+	_assert(theme.drum_body_color == Color.html("#3f444a"), "Drum body color should parse")
 	_assert(theme.drum_face_color == Color.html("#f3d6a3"), "Drum face color should parse")
 	_assert(theme.hit_target_color == Color.html("#b9bec4"), "Hit target color should parse")
 	_assert(theme.sfx_don_path == "res://assets/sfx/don.wav", "Don SFX path should use audited original asset")

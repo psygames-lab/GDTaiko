@@ -267,11 +267,13 @@ func _test_input_feedback_updates_skin_state() -> void:
 	var lane: Node2D = _new_lane()
 	lane.build_skin()
 
+	_assert(NoteLaneScript.FEEDBACK_RELEASE_SEC >= 0.18 and NoteLaneScript.FEEDBACK_RELEASE_SEC <= 0.24, "Input feedback should be a short visible hit pulse")
+
 	lane.show_input_feedback(NoteModelScript.DON)
 	_assert(lane.get_meta("last_feedback_lane", "") == NoteModelScript.DON, "Don feedback should record feedback lane")
 	_assert((lane.get_node("DrumPad") as Sprite2D).scale.x > 1.0, "Don feedback should pulse drum pad")
 	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#ff6a3d"), "Don feedback should tint drum face red")
-	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#7b2622"), "Don feedback should keep drum rim at its base color")
+	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#3f444a"), "Don feedback should keep drum rim at its base color")
 	_assert((lane.get_node("HitTargetRing") as Sprite2D).modulate == Color.html("#b9bec4"), "Don feedback should keep hit target ring gray")
 	_assert((lane.get_node("HitTargetGlow") as CanvasItem).visible, "Don feedback should show target glow")
 	_assert((lane.get_node("HitTargetGlow") as Sprite2D).modulate == Color(Color.html("#b9bec4"), 0.45), "Don feedback should keep hit target glow gray")
@@ -296,7 +298,7 @@ func _test_input_feedback_returns_to_base_state() -> void:
 	await create_timer(0.24).timeout
 
 	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#f3d6a3"), "Don feedback should return drum face to its base color")
-	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#7b2622"), "Don feedback should return drum rim to its base color")
+	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#3f444a"), "Don feedback should return drum rim to its base color")
 	_assert(is_equal_approx((lane.get_node("DrumFace") as Sprite2D).scale.x, 1.0), "Don feedback should return drum face to base scale")
 	_assert(is_equal_approx((lane.get_node("DrumPad") as Sprite2D).scale.x, 1.0), "Don feedback should return drum rim to base scale")
 	_assert(not (lane.get_node("HitTargetGlow") as CanvasItem).visible, "Input feedback should hide target glow after the hit pulse")
@@ -305,7 +307,7 @@ func _test_input_feedback_returns_to_base_state() -> void:
 	await create_timer(0.24).timeout
 
 	_assert((lane.get_node("DrumFace") as Sprite2D).modulate == Color.html("#f3d6a3"), "Ka feedback should leave drum face at its base color after pulse")
-	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#7b2622"), "Ka feedback should return drum rim to its base color")
+	_assert((lane.get_node("DrumPad") as Sprite2D).modulate == Color.html("#3f444a"), "Ka feedback should return drum rim to its base color")
 	lane.queue_free()
 
 

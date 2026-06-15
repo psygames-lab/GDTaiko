@@ -15,10 +15,10 @@ const NOTE_SCALE := 0.58
 const DON_FEEDBACK_COLOR := "#ff6a3d"
 const KA_FEEDBACK_COLOR := "#55d7ff"
 const MISS_FEEDBACK_COLOR := "#7a7a7a"
-const DEFAULT_DRUM_PAD_COLOR := "#7b2622"
+const DEFAULT_DRUM_PAD_COLOR := "#3f444a"
 const DEFAULT_DRUM_FACE_COLOR := "#f3d6a3"
 const DEFAULT_HIT_TARGET_COLOR := "#b9bec4"
-const FEEDBACK_RELEASE_SEC := 0.14
+const FEEDBACK_RELEASE_SEC := 0.20
 
 var active_sprites: Dictionary = {}
 var pooled_sprites: Array[Sprite2D] = []

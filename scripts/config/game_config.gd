@@ -42,7 +42,17 @@ func apply_to_project() -> void:
 	_set_bus_volume("SFX", sfx_volume)
 	_ensure_action_keys("taiko_don", don_keys)
 	_ensure_action_keys("taiko_ka", ka_keys)
-	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
+	DisplayServer.window_set_mode(_window_mode_for_fullscreen(fullscreen))
+
+
+func toggle_fullscreen() -> void:
+	fullscreen = not fullscreen
+	apply_to_project()
+	save_config()
+
+
+func _window_mode_for_fullscreen(is_fullscreen: bool) -> DisplayServer.WindowMode:
+	return DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN if is_fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
 
 
 func _to_dictionary() -> Dictionary:

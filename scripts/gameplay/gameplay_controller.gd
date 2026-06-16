@@ -25,6 +25,7 @@ const SKIN_BACKGROUND_PATH := "res://assets/skin/night_festival/backgrounds/game
 const SKIN_CHARACTER_PATH := "res://assets/skin/night_festival/characters/festival_drummer.png"
 const SKIN_PROPS_PATH := "res://assets/skin/night_festival/props/props_sheet.png"
 const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
+const SONG_SELECT_SCENE_PATH := "res://scenes/SongSelect.tscn"
 
 var chart
 var timing_map := TimingMap.new()
@@ -46,11 +47,17 @@ var ka_sfx_player: AudioStreamPlayer
 var skin_background: TextureRect
 var skin_character: TextureRect
 var skin_props: TextureRect
+var pause_button: Button
+var pause_menu: CanvasLayer
+var resume_button: Button
+var restart_button: Button
+var back_to_select_button: Button
 var game_config: GameConfig
 var theme: TaikoTheme
 var don_texture: Texture2D
 var ka_texture: Texture2D
 var playing := false
+var gameplay_paused := false
 var last_result: Dictionary = {}
 var current_chart_path := SAMPLE_CHART_PATH
 
@@ -62,7 +69,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_update_frame_monitor(delta)
-	if not playing:
+	if not playing or gameplay_paused:
 		return
 	clock.advance(delta)
 	var song_time := clock.time_sec()
@@ -72,6 +79,12 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _is_pause_event(event):
+		_toggle_pause()
+		get_viewport().set_input_as_handled()
+		return
+	if gameplay_paused:
+		return
 	if event.is_action_pressed("taiko_start"):
 		_start_song()
 	elif event.is_action_pressed("taiko_don"):
@@ -140,6 +153,7 @@ func _build_scene() -> void:
 	if ka_texture == null:
 		ka_texture = _load_note_texture("res://assets/notes/note_ka.png", Color.CORNFLOWER_BLUE)
 	lane.configure(don_texture, ka_texture)
+	_build_pause_controls()
 
 
 func _update_frame_monitor(delta: float) -> void:
@@ -233,8 +247,11 @@ func _load_sample_chart() -> void:
 func _start_song() -> void:
 	if chart == null:
 		return
+	_set_paused(false)
 	for note in chart.notes:
 		note["state"] = NoteModel.PENDING
+		if balloon_manager.is_balloon(note):
+			note["balloon_hits"] = 0
 	lane.spawn_notes(chart.notes)
 	scoring.reset()
 	soul_gauge.reset()
@@ -254,6 +271,108 @@ func _start_song() -> void:
 	hud.update_score(scoring.score, scoring.combo)
 	hud.update_gauge(soul_gauge.value)
 	hud.set_status("Playing")
+
+
+func _build_pause_controls() -> void:
+	pause_button = Button.new()
+	pause_button.name = "PauseButton"
+	pause_button.text = "Pause"
+	pause_button.position = Vector2(1150.0, 18.0)
+	pause_button.size = Vector2(98.0, 42.0)
+	pause_button.z_index = 100
+	pause_button.pressed.connect(_toggle_pause)
+	add_child(pause_button)
+
+	pause_menu = CanvasLayer.new()
+	pause_menu.name = "PauseMenu"
+	pause_menu.layer = 20
+	pause_menu.visible = false
+	add_child(pause_menu)
+
+	var overlay := ColorRect.new()
+	overlay.name = "PauseOverlay"
+	overlay.position = Vector2.ZERO
+	overlay.size = VIEWPORT_SIZE
+	overlay.color = Color(0.0, 0.0, 0.0, 0.48)
+	pause_menu.add_child(overlay)
+
+	var panel := Panel.new()
+	panel.name = "PausePanel"
+	panel.position = Vector2(440.0, 210.0)
+	panel.size = Vector2(400.0, 280.0)
+	pause_menu.add_child(panel)
+
+	var title := Label.new()
+	title.name = "PauseTitle"
+	title.text = "Paused"
+	title.position = Vector2(44.0, 28.0)
+	title.size = Vector2(312.0, 44.0)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 34)
+	panel.add_child(title)
+
+	resume_button = _pause_menu_button("ResumeButton", "Resume", Vector2(70.0, 92.0))
+	restart_button = _pause_menu_button("RestartButton", "Restart", Vector2(70.0, 148.0))
+	back_to_select_button = _pause_menu_button("BackToSelectButton", "Song Select", Vector2(70.0, 204.0))
+	panel.add_child(resume_button)
+	panel.add_child(restart_button)
+	panel.add_child(back_to_select_button)
+	resume_button.pressed.connect(_resume_song)
+	restart_button.pressed.connect(_restart_song)
+	back_to_select_button.pressed.connect(_return_to_song_select)
+
+
+func _pause_menu_button(button_name: String, text: String, position: Vector2) -> Button:
+	var button := Button.new()
+	button.name = button_name
+	button.text = text
+	button.position = position
+	button.size = Vector2(260.0, 42.0)
+	return button
+
+
+func _is_pause_event(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		return key_event.pressed and not key_event.echo and key_event.keycode == KEY_ESCAPE
+	return false
+
+
+func _toggle_pause() -> void:
+	_set_paused(not gameplay_paused)
+
+
+func _resume_song() -> void:
+	_set_paused(false)
+
+
+func _restart_song() -> void:
+	_set_paused(false)
+	_start_song()
+
+
+func _return_to_song_select() -> void:
+	playing = false
+	_set_paused(false)
+	if audio_player != null:
+		audio_player.stop()
+	set_meta("last_scene_request", SONG_SELECT_SCENE_PATH)
+	call_deferred("_change_scene_to_file", SONG_SELECT_SCENE_PATH)
+
+
+func _change_scene_to_file(path: String) -> void:
+	if is_inside_tree():
+		get_tree().change_scene_to_file(path)
+
+
+func _set_paused(paused: bool) -> void:
+	gameplay_paused = paused
+	if pause_menu != null:
+		pause_menu.visible = gameplay_paused
+	if audio_player != null:
+		audio_player.stream_paused = gameplay_paused
+	if hud != null:
+		hud.set_status("Paused" if gameplay_paused else ("Playing" if playing else "Ready"))
 
 
 func _hit(lane_name: String, record_replay_input: bool = true) -> void:
@@ -308,9 +427,10 @@ func _apply_hit_at(lane_name: String, song_time: float, record_replay_input: boo
 
 	best_note["state"] = NoteModel.HIT
 	lane.show_input_feedback(lane_name)
-	scoring.apply_judgment(result["judgment"])
+	var note_kind := String(best_note.get("kind", ""))
+	scoring.apply_judgment(result["judgment"], note_kind)
 	soul_gauge.apply_judgment(result["judgment"])
-	hit_effects.spawn_hit(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y), result["judgment"])
+	hit_effects.spawn_hit(Vector2(NoteLane.HIT_X, NoteLane.NOTE_Y), result["judgment"], note_kind)
 	hud.update_score(scoring.score, scoring.combo)
 	hud.update_gauge(soul_gauge.value)
 	hud.show_judgment(result["judgment"], result["timing_error_ms"])
@@ -333,10 +453,12 @@ func _apply_active_balloon_hit(song_time: float) -> bool:
 			continue
 		if balloon_manager.register_hit(note):
 			note["state"] = NoteModel.HIT
+			lane.update_notes(chart.notes, song_time, timing_map)
 			scoring.apply_balloon_clear()
 			_process_song_finished()
 		else:
 			scoring.apply_roll_hit()
+			lane.update_notes(chart.notes, song_time, timing_map)
 		hud.update_score(scoring.score, scoring.combo)
 		return true
 	return false

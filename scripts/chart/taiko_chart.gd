@@ -11,6 +11,7 @@ var level: int = 1
 var balloon_counts: Array[int] = []
 var metadata: Dictionary = {}
 var notes: Array[Dictionary] = []
+var raw_note_codes: Array[Dictionary] = []
 var branch_events: Array[Dictionary] = []
 var timing_events: Array[Dictionary] = []
 var diagnostics: Array = []
@@ -41,6 +42,16 @@ func add_note(
 	for key in extra:
 		note[key] = extra[key]
 	notes.append(note)
+
+
+func add_raw_note_code(code: String, time_sec: float, measure_index: int, subdivision_index: int, line_number: int) -> void:
+	raw_note_codes.append({
+		"code": code,
+		"time_sec": time_sec,
+		"measure_index": measure_index,
+		"subdivision_index": subdivision_index,
+		"line_number": line_number,
+	})
 
 
 func add_timing_event(time_sec: float, event_type: String, value: Variant) -> void:

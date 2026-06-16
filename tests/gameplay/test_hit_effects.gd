@@ -23,19 +23,25 @@ func _test_spawns_hit_and_miss_effects() -> void:
 	_assert(hit_effects.effects.is_empty(), "HitEffects should start with no active effects")
 
 	hit_effects.spawn_hit(Vector2(10, 20), "perfect")
+	hit_effects.spawn_hit(Vector2(20, 30), "perfect", "big_don")
 	hit_effects.spawn_miss(Vector2(30, 40))
 
 	var hit_node := _find_effect(hit_effects.effects, "hit", "perfect")
+	var big_hit_node := _find_effect(hit_effects.effects, "hit", "perfect", "big_don")
 	var miss_node := _find_effect(hit_effects.effects, "miss", "miss")
 
-	_assert(hit_effects.get_child_count() == 2, "HitEffects should add one child per spawn")
-	_assert(hit_effects.effects.size() == 2, "Effect tracker should contain both spawned effects")
+	_assert(hit_effects.get_child_count() == 3, "HitEffects should add one child per spawn")
+	_assert(hit_effects.effects.size() == 3, "Effect tracker should contain all spawned effects")
 	_assert(hit_node != null, "Hit effect should be tracked with hit metadata")
+	_assert(big_hit_node != null, "Big hit effect should preserve the note kind metadata")
 	_assert(miss_node != null, "Miss effect should be tracked with miss metadata")
 	if hit_node != null:
 		_assert(hit_node.visible, "Hit effect node should be visible")
 		_assert(hit_node.get_meta("judgment") == "perfect", "Hit effect should store the judgment")
 		_assert(hit_node.get_meta("effect_type") == "hit", "Hit effect should store hit effect type")
+	if big_hit_node != null and hit_node != null:
+		_assert(big_hit_node.get_meta("note_kind") == "big_don", "Big hit effect should store note kind")
+		_assert(big_hit_node.scale.x > hit_node.scale.x, "Big hit effect should start larger than a small hit")
 
 	var hit_sprite := _sprite_from_effect(hit_node)
 	var miss_sprite := _sprite_from_effect(miss_node)
@@ -48,9 +54,11 @@ func _test_spawns_hit_and_miss_effects() -> void:
 	hit_effects.queue_free()
 
 
-func _find_effect(effects: Array, kind: String, judgment: String) -> Node:
+func _find_effect(effects: Array, kind: String, judgment: String, note_kind: String = "") -> Node:
 	for effect in effects:
 		if effect.get_meta("effect_type", "") == kind and effect.get_meta("judgment", "") == judgment:
+			if note_kind != "" and effect.get_meta("note_kind", "") != note_kind:
+				continue
 			return effect
 	return null
 

@@ -13,6 +13,7 @@ func _init() -> void:
 	_test_reset_clears_roll_hits()
 	_test_balloon_clear()
 	_test_reset_clears_balloon_count()
+	_test_big_notes_score_as_distinct_note_types()
 	_test_gogo_multiplier_for_normal_judgments()
 	_test_reset_clears_gogo()
 
@@ -115,6 +116,19 @@ func _test_reset_clears_balloon_count() -> void:
 	scoring.apply_balloon_clear()
 	scoring.reset()
 	_assert(scoring.balloons_cleared == 0, "reset() should clear balloons_cleared")
+
+
+func _test_big_notes_score_as_distinct_note_types() -> void:
+	var scoring: RefCounted = ScoringScript.new()
+	scoring.apply_judgment("perfect", "big_don")
+	scoring.apply_judgment("good", "big_ka")
+	scoring.apply_judgment("bad", "big_don")
+	_assert(scoring.score == 3400, "Big note judgments should score double normal note points")
+	_assert(scoring.combo == 0, "Big bad should still reset combo")
+	_assert(scoring.max_combo == 2, "Big perfect and good should still count combo")
+	_assert(scoring.perfects == 1, "Big perfect should increment perfect count")
+	_assert(scoring.goods == 1, "Big good should increment good count")
+	_assert(scoring.bads == 1, "Big bad should increment bad count")
 
 
 func _test_gogo_multiplier_for_normal_judgments() -> void:

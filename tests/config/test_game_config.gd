@@ -13,6 +13,8 @@ func _run_tests() -> void:
 	_test_defaults()
 	_test_save_and_load_config()
 	_test_apply_to_project_updates_audio_and_input_map()
+	_test_toggle_fullscreen_saves_config()
+	_test_fullscreen_uses_exclusive_window_mode()
 
 	if failed_count == 0:
 		print("PASS: GameConfig")
@@ -86,6 +88,29 @@ func _test_apply_to_project_updates_audio_and_input_map() -> void:
 	_assert(AudioServer.get_bus_index("SFX") != -1, "Config should ensure SFX bus exists")
 	_assert(is_equal_approx(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Music")), linear_to_db(0.25)), "Config should apply music volume")
 	_assert(is_equal_approx(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("SFX")), linear_to_db(0.75)), "Config should apply SFX volume")
+
+
+func _test_toggle_fullscreen_saves_config() -> void:
+	var path := "user://config_toggle_fullscreen_test.json"
+	DirAccess.remove_absolute(path)
+
+	var config := GameConfig.new()
+	config.config_path = path
+	config.fullscreen = false
+	config.toggle_fullscreen()
+
+	var loaded := GameConfig.new()
+	loaded.config_path = path
+	_assert(config.fullscreen, "Fullscreen toggle should update the config state")
+	_assert(loaded.load_config(), "Fullscreen toggle should save config")
+	_assert(loaded.fullscreen, "Saved config should keep toggled fullscreen state")
+	DirAccess.remove_absolute(path)
+
+
+func _test_fullscreen_uses_exclusive_window_mode() -> void:
+	var config := GameConfig.new()
+	_assert(config._window_mode_for_fullscreen(true) == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN, "Fullscreen should use exclusive fullscreen mode")
+	_assert(config._window_mode_for_fullscreen(false) == DisplayServer.WINDOW_MODE_WINDOWED, "Windowed mode should use windowed display mode")
 
 
 func _action_has_key(action: String, keycode: Key) -> bool:

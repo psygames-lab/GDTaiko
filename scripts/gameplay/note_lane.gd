@@ -12,6 +12,8 @@ const DRUM_X := 96.0
 const DRUM_PAD_SIZE := 112
 const DRUM_FACE_SIZE := 82
 const NOTE_SCALE := 0.58
+const BIG_NOTE_SCALE := 0.74
+const BALLOON_NOTE_SCALE := 0.86
 const DON_FEEDBACK_COLOR := "#ff6a3d"
 const KA_FEEDBACK_COLOR := "#55d7ff"
 const MISS_FEEDBACK_COLOR := "#7a7a7a"
@@ -29,6 +31,7 @@ var note_nodes: Dictionary = {}:
 		active_sprites = value
 var don_texture: Texture2D
 var ka_texture: Texture2D
+var balloon_texture: Texture2D
 var lane_panel: ColorRect
 var lane_border: ColorRect
 var lane_text_strip: ColorRect
@@ -254,8 +257,9 @@ func spawn_notes(notes: Array[Dictionary]) -> void:
 	clear_notes()
 	for note in notes:
 		var sprite: Sprite2D = _acquire_sprite()
-		sprite.texture = don_texture if String(note.get("lane", "don")) == "don" else ka_texture
-		sprite.scale = Vector2(NOTE_SCALE, NOTE_SCALE)
+		sprite.texture = _texture_for_note(note)
+		var note_scale := _scale_for_note(note)
+		sprite.scale = Vector2(note_scale, note_scale)
 		sprite.z_index = 2
 		sprite.position = Vector2(SPAWN_X, NOTE_Y)
 		sprite.visible = true
@@ -277,11 +281,16 @@ func update_notes(notes: Array[Dictionary], song_time_sec: float, timing_map: Va
 			continue
 		var sprite: Sprite2D = active_sprites[id]
 		var scheduled: float = float(note.get("time_sec", 0.0))
+		var note_scale := _scale_for_note(note)
+		sprite.scale = Vector2(note_scale, note_scale)
 		var scroll := 1.0
 		if timing_map != null:
 			scroll = float(timing_map.scroll_at(scheduled))
-		var progress: float = clamp(1.0 - ((scheduled - song_time_sec) / (APPROACH_TIME_SEC / max(0.1, scroll))), 0.0, 1.25)
-		sprite.position = Vector2(lerpf(SPAWN_X, HIT_X, progress), NOTE_Y)
+		if _is_active_long_note(note, song_time_sec):
+			sprite.position = Vector2(HIT_X, NOTE_Y)
+		else:
+			var progress: float = clamp(1.0 - ((scheduled - song_time_sec) / (APPROACH_TIME_SEC / max(0.1, scroll))), 0.0, 1.25)
+			sprite.position = Vector2(lerpf(SPAWN_X, HIT_X, progress), NOTE_Y)
 		sprite.visible = String(note.get("state", "pending")) == "pending"
 
 
@@ -292,6 +301,43 @@ func _acquire_sprite() -> Sprite2D:
 	if is_instance_valid(sprite):
 		return sprite
 	return Sprite2D.new()
+
+
+func _scale_for_note(note: Dictionary) -> float:
+	var kind := String(note.get("kind", ""))
+	if _is_balloon_note(note):
+		return BALLOON_NOTE_SCALE + _balloon_inflation_scale(note)
+	if kind == "big_don" or kind == "big_ka":
+		return BIG_NOTE_SCALE
+	return NOTE_SCALE
+
+
+func _balloon_inflation_scale(note: Dictionary) -> float:
+	var required_hits: int = max(1, int(note.get("required_hits", 1)))
+	var current_hits: int = clampi(int(note.get("balloon_hits", 0)), 0, required_hits)
+	return 0.28 * (float(current_hits) / float(required_hits))
+
+
+func _texture_for_note(note: Dictionary) -> Texture2D:
+	if _is_balloon_note(note):
+		if balloon_texture == null:
+			balloon_texture = _make_balloon_texture()
+		return balloon_texture
+	return don_texture if String(note.get("lane", "don")) == "don" else ka_texture
+
+
+func _is_balloon_note(note: Dictionary) -> bool:
+	var kind := String(note.get("kind", ""))
+	return kind == "balloon_start" or kind == "special_balloon_start"
+
+
+func _is_active_long_note(note: Dictionary, song_time_sec: float) -> bool:
+	var kind := String(note.get("kind", ""))
+	if kind != "balloon_start" and kind != "special_balloon_start" and not kind.contains("roll"):
+		return false
+	var start := float(note.get("time_sec", 0.0))
+	var end := start + float(note.get("duration_sec", 0.0))
+	return song_time_sec >= start and song_time_sec <= end
 
 func _make_target_texture() -> Texture2D:
 	var image := Image.create(TARGET_SIZE, TARGET_SIZE, false, Image.FORMAT_RGBA8)
@@ -318,4 +364,29 @@ func _make_circle_texture(size: int, outer_factor: float, inner_factor: float) -
 			var distance := center.distance_to(Vector2(x, y))
 			if distance <= outer_radius and distance >= inner_radius:
 				image.set_pixel(x, y, Color.WHITE)
+	return ImageTexture.create_from_image(image)
+
+
+func _make_balloon_texture() -> Texture2D:
+	var size := 128
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0, 0, 0, 0))
+	var center := Vector2(size * 0.5, size * 0.48)
+	var radius := 48.0
+	var border := Color.html("#b83220")
+	var fill := Color.html("#ffb52e")
+	var highlight := Color.html("#fff0a0")
+	for x in range(size):
+		for y in range(size):
+			var point := Vector2(x, y)
+			var distance := center.distance_to(point)
+			if distance <= radius:
+				if distance >= radius - 5.0:
+					image.set_pixel(x, y, border)
+				elif point.distance_to(center + Vector2(-14.0, -16.0)) <= 12.0:
+					image.set_pixel(x, y, highlight)
+				else:
+					image.set_pixel(x, y, fill)
+			elif y >= 98 and y <= 112 and x >= 54 and x <= 74:
+				image.set_pixel(x, y, border)
 	return ImageTexture.create_from_image(image)

@@ -17,9 +17,11 @@ func _init() -> void:
 	_test_invalid_measure_argument_ignored()
 	_test_trailing_text_measure_is_invalid()
 	_test_unsupported_note_character_warning()
+	_test_standard_note_codes_parse_distinct_types()
 	_test_roll_and_balloon_notes()
 	_test_bpm_change_timing_event()
 	_test_gogo_timing_events()
+	_test_barline_timing_events()
 	_test_scroll_timing_event()
 	_test_preserves_all_metadata()
 	_test_title_wins_over_titleen()
@@ -36,6 +38,7 @@ func _init() -> void:
 	_test_unterminated_long_note_diagnostic()
 	_test_missing_audio_diagnostic()
 	_test_branch_lane_diagnostics_are_preserved()
+	_test_branch_lane_raw_extension_codes_are_preserved()
 	_test_metadata_has_only_tja_keys()
 	_test_absolute_wave_path_is_not_joined_to_source_folder()
 	_test_branch_lane_unterminated_long_note_diagnostic()
@@ -96,7 +99,7 @@ func _test_notes_before_start_are_ignored() -> void:
 
 func _test_unsupported_note_character_warning() -> void:
 	var text := """#START
-13,
+1D,
 #END
 """
 
@@ -104,7 +107,40 @@ func _test_unsupported_note_character_warning() -> void:
 	_assert(chart.notes.size() == 1, "Unsupported note chars should be ignored but valid notes still parse")
 	_assert(chart.warnings.size() == 1, "Unsupported note char should add one warning")
 	_assert(chart.warnings[0].find("Unsupported note character") >= 0, "Warning should mention unsupported note character")
-	_assert(chart.warnings[0].find("3") >= 0, "Warning should identify unsupported char value")
+	_assert(chart.warnings[0].find("D") >= 0, "Warning should identify unsupported char value")
+
+
+func _test_standard_note_codes_parse_distinct_types() -> void:
+	var text := """TITLE:Standard Notes
+BPM:120
+BALLOON:5
+#START
+123490ABCFGHI,
+8,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.notes.size() == 5, "Standard note codes 1/2/3/4/9 should create playable notes")
+	if chart.notes.size() < 5:
+		return
+	_assert(chart.notes[0]["kind"] == "don", "1 should create small Don")
+	_assert(chart.notes[1]["kind"] == "ka", "2 should create small Ka")
+	_assert(chart.notes[2]["kind"] == "big_don", "3 should create distinct big Don")
+	_assert(chart.notes[2]["lane"] == "don", "Big Don should remain hittable by Don input")
+	_assert(chart.notes[2]["raw_code"] == "3", "Big Don should preserve raw note code")
+	_assert(chart.notes[3]["kind"] == "big_ka", "4 should create distinct big Ka")
+	_assert(chart.notes[3]["lane"] == "ka", "Big Ka should remain hittable by Ka input")
+	_assert(chart.notes[3]["raw_code"] == "4", "Big Ka should preserve raw note code")
+	_assert(chart.notes[4]["kind"] == "special_balloon_start", "9 should create a special balloon start")
+	_assert(chart.notes[4]["lane"] == "balloon", "Special balloon should use the balloon lane")
+	_assert(chart.notes[4]["required_hits"] == 5, "Special balloon should use BALLOON metadata")
+	_assert(is_equal_approx(chart.notes[4]["duration_sec"], 18.0 / 13.0), "8 should close special balloon duration")
+	_assert(chart.raw_note_codes.size() == 7, "A/B/C/F/G/H/I should be preserved as raw extension codes")
+	if chart.raw_note_codes.size() == 7:
+		_assert(chart.raw_note_codes[0]["code"] == "A", "First raw extension code should be A")
+		_assert(chart.raw_note_codes[6]["code"] == "I", "Last raw extension code should be I")
+	_assert(chart.warnings.is_empty(), "Known standard and extension note codes should not warn")
 
 
 func _test_roll_and_balloon_notes() -> void:
@@ -308,6 +344,33 @@ BPM:120
 			_assert(is_equal_approx(float(event["time_sec"]), 2.0), "GOGOEND should use current chart time")
 	_assert(found_start, "Parser should add GOGOSTART timing event")
 	_assert(found_end, "Parser should add GOGOEND timing event")
+
+
+func _test_barline_timing_events() -> void:
+	var text := """TITLE:Barline
+BPM:120
+#START
+1000,
+#BARLINEOFF
+1000,
+#BARLINEON
+1000,
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	var found_off := false
+	var found_on := false
+	for event in chart.timing_events:
+		if String(event["type"]) == "barline" and bool(event["value"]) == false:
+			found_off = true
+			_assert(is_equal_approx(float(event["time_sec"]), 2.0), "BARLINEOFF should use current chart time")
+		if String(event["type"]) == "barline" and bool(event["value"]) == true:
+			found_on = true
+			_assert(is_equal_approx(float(event["time_sec"]), 4.0), "BARLINEON should use current chart time")
+	_assert(found_off, "Parser should add BARLINEOFF timing event")
+	_assert(found_on, "Parser should add BARLINEON timing event")
+	_assert(chart.warnings.is_empty(), "Supported BARLINE commands should not warn")
 
 
 func _test_scroll_timing_event() -> void:
@@ -541,7 +604,7 @@ BPM:120
 func _test_diagnostic_codes_and_line_numbers() -> void:
 	var text := """BPM:abc
 #START
-13,
+1D,
 #END
 """
 
@@ -610,7 +673,7 @@ BPM:120
 #N
 1000,
 #E
-3000,
+D000,
 #M
 1000,
 #BRANCHEND
@@ -622,6 +685,31 @@ BPM:120
 	for diagnostic in chart.diagnostics:
 		codes.append(String(diagnostic.code))
 	_assert(codes.has("unsupported_note"), "Unsupported note inside branch lanes should be preserved on parent chart")
+
+
+func _test_branch_lane_raw_extension_codes_are_preserved() -> void:
+	var text := """TITLE:Branch Raw Codes
+BPM:120
+#START
+#BRANCHSTART p,50,90
+#N
+A000,
+#E
+F000,
+#M
+I000,
+#BRANCHEND
+#END
+"""
+
+	var chart: RefCounted = TjaParserScript.parse_text(text)
+	_assert(chart.raw_note_codes.size() == 3, "Raw extension codes inside branch lanes should be preserved on parent chart")
+	if chart.raw_note_codes.size() < 3:
+		return
+	_assert(chart.raw_note_codes[0]["code"] == "A", "Normal branch raw code should be preserved")
+	_assert(chart.raw_note_codes[1]["code"] == "F", "Expert branch raw code should be preserved")
+	_assert(chart.raw_note_codes[2]["code"] == "I", "Master branch raw code should be preserved")
+	_assert(chart.warnings.is_empty(), "Preserved branch extension codes should not warn")
 
 
 func _test_metadata_has_only_tja_keys() -> void:

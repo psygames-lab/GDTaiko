@@ -8,6 +8,7 @@ const FIXTURE_NAMES := [
 	"bpm_changes",
 	"scroll_changes",
 	"measure_changes",
+	"standard_notes",
 	"roll_balloon",
 	"gogo",
 	"branch_basic",

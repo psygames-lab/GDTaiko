@@ -125,6 +125,10 @@ static func parse_text(text: String, source_path: String = "") -> TaikoChart:
 					chart.add_timing_event(current_time + chart.offset_sec, "gogo", true)
 				elif in_chart and command == "GOGOEND":
 					chart.add_timing_event(current_time + chart.offset_sec, "gogo", false)
+				elif in_chart and command == "BARLINEOFF":
+					chart.add_timing_event(current_time + chart.offset_sec, "barline", false)
+				elif in_chart and command == "BARLINEON":
+					chart.add_timing_event(current_time + chart.offset_sec, "barline", true)
 				elif in_chart and command == "SCROLL":
 					chart.add_timing_event(current_time + chart.offset_sec, "scroll", argument.to_float())
 				elif in_chart and command == "MEASURE":
@@ -331,19 +335,23 @@ static func _parse_measure(
 		if note == "0":
 			continue
 		elif note == "1":
-			chart.add_note(note_time, "don", "don", measure_index, slot)
+			chart.add_note(note_time, "don", "don", measure_index, slot, {"raw_code": note})
 		elif note == "2":
-			chart.add_note(note_time, "ka", "ka", measure_index, slot)
+			chart.add_note(note_time, "ka", "ka", measure_index, slot, {"raw_code": note})
+		elif note == "3":
+			chart.add_note(note_time, "don", "big_don", measure_index, slot, {"raw_code": note})
+		elif note == "4":
+			chart.add_note(note_time, "ka", "big_ka", measure_index, slot, {"raw_code": note})
 		elif note == "5":
 			var note_index := chart.notes.size()
 			active_long_note.clear()
-			chart.add_note(note_time, "roll", "roll_start", measure_index, slot, {"duration_sec": 0.0})
+			chart.add_note(note_time, "roll", "roll_start", measure_index, slot, {"duration_sec": 0.0, "raw_code": note})
 			active_long_note["index"] = note_index
 			active_long_note["line_number"] = line_number
 		elif note == "6":
 			var note_index := chart.notes.size()
 			active_long_note.clear()
-			chart.add_note(note_time, "roll", "roll_big_start", measure_index, slot, {"duration_sec": 0.0})
+			chart.add_note(note_time, "roll", "roll_big_start", measure_index, slot, {"duration_sec": 0.0, "raw_code": note})
 			active_long_note["index"] = note_index
 			active_long_note["line_number"] = line_number
 		elif note == "7":
@@ -355,7 +363,8 @@ static func _parse_measure(
 			active_long_note.clear()
 			chart.add_note(note_time, "balloon", "balloon_start", measure_index, slot, {
 				"duration_sec": 0.0,
-				"required_hits": required_hits
+				"required_hits": required_hits,
+				"raw_code": note
 			})
 			active_long_note["index"] = note_index
 			active_long_note["line_number"] = line_number
@@ -365,6 +374,22 @@ static func _parse_measure(
 				if start_index >= 0 and start_index < chart.notes.size():
 					chart.notes[start_index]["duration_sec"] = note_time - float(chart.notes[start_index]["time_sec"])
 				active_long_note.clear()
+		elif note == "9":
+			var note_index := chart.notes.size()
+			var required_hits := 0
+			if balloon_index < chart.balloon_counts.size():
+				required_hits = chart.balloon_counts[balloon_index]
+			balloon_index += 1
+			active_long_note.clear()
+			chart.add_note(note_time, "balloon", "special_balloon_start", measure_index, slot, {
+				"duration_sec": 0.0,
+				"required_hits": required_hits,
+				"raw_code": note
+			})
+			active_long_note["index"] = note_index
+			active_long_note["line_number"] = line_number
+		elif _is_preserved_extension_note(note):
+			chart.add_raw_note_code(note, note_time, measure_index, slot, line_number)
 		else:
 			_add_diagnostic(chart, line_number, "unsupported_note", "Unsupported note character '%s' in measure %d" % [note, measure_index])
 
@@ -378,6 +403,10 @@ static func _to_positive_float(value: String) -> float:
 	if not value.is_valid_float():
 		return 0.0
 	return value.to_float()
+
+
+static func _is_preserved_extension_note(note: String) -> bool:
+	return note == "A" or note == "B" or note == "C" or note == "F" or note == "G" or note == "H" or note == "I"
 
 
 static func _new_branch_event(
@@ -498,6 +527,7 @@ static func _finish_branch(chart: TaikoChart, active_branch: Dictionary) -> Dict
 	active_branch["master_notes"] = _duplicate_notes(master_chart.notes)
 	active_branch.erase("lane_states")
 	_merge_branch_diagnostics(chart, [normal_chart, expert_chart, master_chart])
+	_merge_branch_raw_note_codes(chart, [normal_chart, expert_chart, master_chart])
 	chart.branch_events.append(active_branch.duplicate(true))
 	_append_notes_to_chart(chart, normal_chart.notes)
 
@@ -550,6 +580,12 @@ static func _merge_branch_diagnostics(chart: TaikoChart, branch_charts: Array) -
 			chart.diagnostics.append(diagnostic)
 		for warning in branch_chart.warnings:
 			chart.warnings.append(warning)
+
+
+static func _merge_branch_raw_note_codes(chart: TaikoChart, branch_charts: Array) -> void:
+	for branch_chart: TaikoChart in branch_charts:
+		for raw_note_code in branch_chart.raw_note_codes:
+			chart.raw_note_codes.append(raw_note_code.duplicate(true))
 
 
 static func _add_missing_audio_diagnostic(chart: TaikoChart, source_path: String, metadata_line_numbers: Dictionary) -> void:

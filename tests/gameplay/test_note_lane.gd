@@ -15,7 +15,11 @@ func _init() -> void:
 func _run_tests() -> void:
 	_test_model_constants()
 	_test_spawn_notes()
+	_test_big_notes_spawn_larger_than_small_notes()
+	_test_balloon_notes_use_distinct_texture_and_scale()
+	_test_balloon_inflates_as_hits_increase()
 	_test_update_notes_position()
+	_test_active_balloon_stays_on_hit_target()
 	_test_update_notes_uses_scroll()
 	_test_update_notes_visibility()
 	_test_unknown_id_ignored()
@@ -56,6 +60,8 @@ func _new_notes() -> Array[Dictionary]:
 func _test_model_constants() -> void:
 	_assert(NoteModelScript.DON == "don", "NoteModel.DON should be \"don\"")
 	_assert(NoteModelScript.KA == "ka", "NoteModel.KA should be \"ka\"")
+	_assert(NoteModelScript.BIG_DON == "big_don", "NoteModel.BIG_DON should be \"big_don\"")
+	_assert(NoteModelScript.BIG_KA == "big_ka", "NoteModel.BIG_KA should be \"big_ka\"")
 	_assert(NoteModelScript.PENDING == "pending", "NoteModel.PENDING should be \"pending\"")
 	_assert(NoteModelScript.HIT == "hit", "NoteModel.HIT should be \"hit\"")
 	_assert(NoteModelScript.MISSED == "missed", "NoteModel.MISSED should be \"missed\"")
@@ -95,6 +101,58 @@ func _test_spawn_notes() -> void:
 	lane.queue_free()
 
 
+func _test_big_notes_spawn_larger_than_small_notes() -> void:
+	var lane: Node2D = _new_lane()
+	var notes: Array[Dictionary] = [
+		{"id": "don_a", "lane": NoteModelScript.DON, "kind": NoteModelScript.DON, "time_sec": 2.5, "state": NoteModelScript.PENDING},
+		{"id": "big_don_a", "lane": NoteModelScript.DON, "kind": NoteModelScript.BIG_DON, "time_sec": 3.0, "state": NoteModelScript.PENDING},
+		{"id": "big_ka_a", "lane": NoteModelScript.KA, "kind": NoteModelScript.BIG_KA, "time_sec": 3.5, "state": NoteModelScript.PENDING},
+	]
+	lane.spawn_notes(notes)
+
+	var small_scale := (lane.note_nodes["don_a"] as Sprite2D).scale.x
+	_assert((lane.note_nodes["big_don_a"] as Sprite2D).scale.x > small_scale, "Big Don sprite should be larger than small Don")
+	_assert((lane.note_nodes["big_ka_a"] as Sprite2D).scale.x > small_scale, "Big Ka sprite should be larger than small Don")
+	lane.queue_free()
+
+
+func _test_balloon_notes_use_distinct_texture_and_scale() -> void:
+	var lane: Node2D = _new_lane()
+	var notes: Array[Dictionary] = [
+		{"id": "ka_a", "lane": NoteModelScript.KA, "kind": NoteModelScript.KA, "time_sec": 2.5, "state": NoteModelScript.PENDING},
+		{"id": "balloon_a", "lane": "balloon", "kind": "balloon_start", "time_sec": 3.0, "duration_sec": 1.5, "state": NoteModelScript.PENDING},
+	]
+	lane.spawn_notes(notes)
+
+	var ka_sprite := lane.note_nodes["ka_a"] as Sprite2D
+	var balloon_sprite := lane.note_nodes["balloon_a"] as Sprite2D
+	_assert(balloon_sprite.texture != ka_sprite.texture, "Balloon note should use a distinct texture instead of the Ka texture")
+	_assert(balloon_sprite.scale.x > ka_sprite.scale.x, "Balloon note should be visually larger than a normal Ka")
+	lane.queue_free()
+
+
+func _test_balloon_inflates_as_hits_increase() -> void:
+	var lane: Node2D = _new_lane()
+	var notes: Array[Dictionary] = [
+		{"id": "balloon_a", "lane": "balloon", "kind": "balloon_start", "time_sec": 1.0, "duration_sec": 2.0, "required_hits": 4, "balloon_hits": 0, "state": NoteModelScript.PENDING},
+	]
+	lane.spawn_notes(notes)
+	lane.update_notes(notes, 1.0)
+	var base_scale := (lane.note_nodes["balloon_a"] as Sprite2D).scale.x
+
+	notes[0]["balloon_hits"] = 2
+	lane.update_notes(notes, 1.0)
+	var inflated_scale := (lane.note_nodes["balloon_a"] as Sprite2D).scale.x
+
+	notes[0]["balloon_hits"] = 4
+	lane.update_notes(notes, 1.0)
+	var full_scale := (lane.note_nodes["balloon_a"] as Sprite2D).scale.x
+
+	_assert(inflated_scale > base_scale, "Balloon should inflate as hit count increases")
+	_assert(full_scale > inflated_scale, "Balloon should keep inflating toward required hit count")
+	lane.queue_free()
+
+
 func _test_update_notes_position() -> void:
 	var lane: Node2D = _new_lane()
 	lane.spawn_notes(_new_notes())
@@ -126,6 +184,20 @@ func _test_update_notes_position() -> void:
 		is_equal_approx((lane.note_nodes["don_a"] as Sprite2D).position.y, NoteLaneScript.NOTE_Y),
 		"note y should stay fixed"
 	)
+	lane.queue_free()
+
+
+func _test_active_balloon_stays_on_hit_target() -> void:
+	var lane: Node2D = _new_lane()
+	var notes: Array[Dictionary] = [
+		{"id": "balloon_a", "lane": "balloon", "kind": "balloon_start", "time_sec": 1.0, "duration_sec": 1.5, "state": NoteModelScript.PENDING},
+	]
+	lane.spawn_notes(notes)
+	lane.update_notes(notes, 1.75)
+
+	var sprite := lane.note_nodes["balloon_a"] as Sprite2D
+	_assert(is_equal_approx(sprite.position.x, NoteLaneScript.HIT_X), "Active balloon should stay on the hit target during its duration")
+	_assert(sprite.visible, "Active balloon should remain visible while pending")
 	lane.queue_free()
 
 

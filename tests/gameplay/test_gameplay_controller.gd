@@ -16,6 +16,7 @@ func _run_tests() -> void:
 	DirAccess.remove_absolute("user://config.json")
 	_test_instantiates_gameplay_scene()
 	_test_ready_builds_scene_and_loads_sample()
+	_test_pause_controls_are_built_hidden()
 	_test_config_can_hide_debug_monitor()
 	_test_result_layer_draws_above_hud()
 	_test_user_skin_colors_apply_to_gameplay()
@@ -25,11 +26,17 @@ func _run_tests() -> void:
 	_test_loads_sample_chart()
 	_test_textures_and_spawned_notes()
 	_test_start_song_resets_state()
+	_test_escape_toggles_pause_and_resume()
+	_test_pause_freezes_song_clock()
+	_test_restart_from_pause_restarts_song()
+	_test_return_to_song_select_requests_scene_change()
 	_test_input_feedback_before_song_start()
 	_test_input_actions_start_and_hit()
 	_test_ka_input_action_hits_ka()
 	_test_process_moves_notes()
 	_test_immediate_don_hit()
+	_test_big_don_input_hits_and_scores_distinctly()
+	_test_big_ka_input_hits_and_scores_distinctly()
 	_test_immediate_don_hit_spawns_effect()
 	_test_process_misses_marks_pending_as_missed()
 	_test_empty_miss_spawns_effect()
@@ -38,6 +45,7 @@ func _run_tests() -> void:
 	_test_roll_finishes_without_miss_after_duration()
 	_test_normal_note_inside_roll_window_takes_priority()
 	_test_balloon_hits_clear_note()
+	_test_balloon_hit_immediately_inflates_sprite()
 	_test_balloon_expires_without_miss_when_not_cleared()
 	_test_cleared_balloon_does_not_score_again()
 	_test_gogo_event_updates_scoring_before_hit()
@@ -91,6 +99,17 @@ func _test_ready_builds_scene_and_loads_sample() -> void:
 	_assert(controller.frame_monitor != null, "FrameMonitor should be built")
 	_assert(not controller.frame_monitor.visible, "FrameMonitor should be hidden by default")
 	_assert(controller.frame_monitor.position.x >= 1000.0, "FrameMonitor should be positioned away from the left HUD")
+	controller.free()
+
+
+func _test_pause_controls_are_built_hidden() -> void:
+	var controller := _new_controller()
+	_assert(controller.get_node_or_null("PauseButton") is Button, "Gameplay should include a pause button")
+	_assert(controller.get_node_or_null("PauseMenu") is CanvasLayer, "Gameplay should include a pause menu layer")
+	_assert(controller.pause_menu.visible == false, "Pause menu should start hidden")
+	_assert(controller.resume_button is Button, "Pause menu should include a resume button")
+	_assert(controller.restart_button is Button, "Pause menu should include a restart button")
+	_assert(controller.back_to_select_button is Button, "Pause menu should include a back-to-select button")
 	controller.free()
 
 
@@ -295,6 +314,68 @@ func _test_input_actions_start_and_hit() -> void:
 	controller.free()
 
 
+func _test_escape_toggles_pause_and_resume() -> void:
+	var controller := _new_controller()
+	controller._start_song()
+
+	var escape_event := InputEventKey.new()
+	escape_event.keycode = KEY_ESCAPE
+	escape_event.pressed = true
+	controller._unhandled_input(escape_event)
+	_assert(controller.gameplay_paused, "Escape should pause gameplay")
+	_assert(controller.pause_menu.visible, "Escape should show pause menu")
+
+	controller._unhandled_input(escape_event)
+	_assert(not controller.gameplay_paused, "Escape should resume gameplay when paused")
+	_assert(not controller.pause_menu.visible, "Resume should hide pause menu")
+	controller.free()
+
+
+func _test_pause_freezes_song_clock() -> void:
+	var controller := _new_controller()
+	controller._start_song()
+	controller.audio_player.stop()
+	controller.clock.configure(null, 0.0)
+	controller._process(0.5)
+	var before_pause: float = controller.clock.time_sec()
+
+	controller._set_paused(true)
+	controller._process(0.5)
+	_assert(is_equal_approx(controller.clock.time_sec(), before_pause), "Paused gameplay should not advance the song clock")
+
+	controller._set_paused(false)
+	controller._process(0.5)
+	_assert(controller.clock.time_sec() > before_pause, "Resumed gameplay should advance the song clock")
+	controller.free()
+
+
+func _test_restart_from_pause_restarts_song() -> void:
+	var controller := _new_controller()
+	controller._start_song()
+	controller._hit(NoteModel.DON)
+	_assert(controller.scoring.score > 0, "Precondition: first hit should score before restart")
+
+	controller._set_paused(true)
+	controller._restart_song()
+	_assert(controller.playing, "Restart from pause should keep gameplay playing")
+	_assert(not controller.gameplay_paused, "Restart should clear paused state")
+	_assert(not controller.pause_menu.visible, "Restart should hide pause menu")
+	_assert(controller.scoring.score == 0, "Restart should reset score")
+	_assert(controller.chart.notes[0]["state"] == NoteModel.PENDING, "Restart should reset note states")
+	controller.free()
+
+
+func _test_return_to_song_select_requests_scene_change() -> void:
+	var controller := _new_controller()
+	controller._start_song()
+	controller._set_paused(true)
+	controller._return_to_song_select()
+	_assert(not controller.playing, "Returning to song select should stop gameplay")
+	_assert(not controller.gameplay_paused, "Returning to song select should clear paused state")
+	_assert(controller.get_meta("last_scene_request", "") == "res://scenes/SongSelect.tscn", "Return action should request the song select scene")
+	controller.free()
+
+
 func _test_input_feedback_before_song_start() -> void:
 	var controller := _new_controller()
 	var don_event := InputEventAction.new()
@@ -346,6 +427,42 @@ func _test_immediate_don_hit() -> void:
 	_assert(controller.scoring.combo == 1, "Hitting first Don should increment combo to 1")
 	_assert(controller.chart.notes[0]["state"] == NoteModel.HIT, "First sample note should become hit")
 	_assert(controller.lane.get_meta("last_feedback_lane", "") == NoteModel.DON, "Don hit should pulse the note lane skin")
+	controller.free()
+
+
+func _test_big_don_input_hits_and_scores_distinctly() -> void:
+	var controller := _new_controller()
+	controller.chart.notes.clear()
+	controller.chart.notes.append({
+		"id": "big_don_1",
+		"time_sec": 0.0,
+		"lane": NoteModel.DON,
+		"kind": NoteModel.BIG_DON,
+		"state": NoteModel.PENDING,
+	})
+	controller._start_song()
+	controller._hit(NoteModel.DON)
+	_assert(controller.chart.notes[0]["state"] == NoteModel.HIT, "Don input should hit big Don notes")
+	_assert(controller.scoring.score == 2000, "Big Don perfect should score double a small Don")
+	_assert(_has_effect(controller.hit_effects, "hit", "perfect", NoteModel.BIG_DON), "Big Don hit should spawn a distinct hit effect")
+	controller.free()
+
+
+func _test_big_ka_input_hits_and_scores_distinctly() -> void:
+	var controller := _new_controller()
+	controller.chart.notes.clear()
+	controller.chart.notes.append({
+		"id": "big_ka_1",
+		"time_sec": 0.0,
+		"lane": NoteModel.KA,
+		"kind": NoteModel.BIG_KA,
+		"state": NoteModel.PENDING,
+	})
+	controller._start_song()
+	controller._hit(NoteModel.KA)
+	_assert(controller.chart.notes[0]["state"] == NoteModel.HIT, "Ka input should hit big Ka notes")
+	_assert(controller.scoring.score == 2000, "Big Ka perfect should score double a small Ka")
+	_assert(_has_effect(controller.hit_effects, "hit", "perfect", NoteModel.BIG_KA), "Big Ka hit should spawn a distinct hit effect")
 	controller.free()
 
 
@@ -512,6 +629,36 @@ func _test_balloon_hits_clear_note() -> void:
 	controller.free()
 
 
+func _test_balloon_hit_immediately_inflates_sprite() -> void:
+	var controller := _new_controller()
+	controller.chart.notes.clear()
+	controller.chart.notes.append({
+		"id": "balloon_1",
+		"time_sec": 1.0,
+		"duration_sec": 2.0,
+		"lane": "balloon",
+		"kind": "balloon_start",
+		"required_hits": 4,
+		"state": NoteModel.PENDING,
+	})
+	controller._start_song()
+	controller.audio_player.stop()
+	controller.clock.configure(null, 0.0)
+	controller.clock.advance(1.0)
+	controller.lane.update_notes(controller.chart.notes, 1.0, controller.timing_map)
+	var before_scale := (controller.lane.note_nodes["balloon_1"] as Sprite2D).scale.x
+
+	var don_event := InputEventAction.new()
+	don_event.action = "taiko_don"
+	don_event.pressed = true
+	controller._unhandled_input(don_event)
+
+	var after_scale := (controller.lane.note_nodes["balloon_1"] as Sprite2D).scale.x
+	_assert(controller.chart.notes[0]["balloon_hits"] == 1, "Balloon hit should store hit count on the note")
+	_assert(after_scale > before_scale, "Balloon hit should immediately inflate the visible sprite")
+	controller.free()
+
+
 func _test_balloon_expires_without_miss_when_not_cleared() -> void:
 	var controller := _new_controller()
 	controller.chart.notes.clear()
@@ -662,8 +809,10 @@ func _assert(condition: bool, message: String) -> void:
 		push_error("ASSERTION FAILED: " + message)
 
 
-func _has_effect(hit_effects: Node, kind: String, judgment: String) -> bool:
+func _has_effect(hit_effects: Node, kind: String, judgment: String, note_kind: String = "") -> bool:
 	for effect in hit_effects.effects:
 		if effect.get_meta("effect_type", "") == kind and effect.get_meta("judgment", "") == judgment:
+			if note_kind != "" and effect.get_meta("note_kind", "") != note_kind:
+				continue
 			return true
 	return false

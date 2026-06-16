@@ -67,7 +67,7 @@ static func _looks_like_note_line(line: String) -> bool:
 
 	for i in range(line.length()):
 		match line[i]:
-			"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", ",":
+			"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "F", "G", "H", "I", ",":
 				pass
 			_:
 				return false

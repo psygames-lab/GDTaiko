@@ -26,20 +26,20 @@ func reset() -> void:
 	gogo_active = false
 
 
-func apply_judgment(judgment: String) -> void:
+func apply_judgment(judgment: String, note_kind: String = "") -> void:
 	match judgment:
 		"perfect":
 			perfects += 1
 			combo += 1
-			score += _apply_multiplier(1000)
+			score += _apply_multiplier(1000 * _note_score_multiplier(note_kind))
 		"good":
 			goods += 1
 			combo += 1
-			score += _apply_multiplier(600)
+			score += _apply_multiplier(600 * _note_score_multiplier(note_kind))
 		"bad":
 			bads += 1
 			combo = 0
-			score += _apply_multiplier(100)
+			score += _apply_multiplier(100 * _note_score_multiplier(note_kind))
 		"miss":
 			misses += 1
 			combo = 0
@@ -66,3 +66,9 @@ func _apply_multiplier(points: int) -> int:
 	if gogo_active:
 		return int(round(float(points) * 1.2))
 	return points
+
+
+func _note_score_multiplier(note_kind: String) -> int:
+	if note_kind == "big_don" or note_kind == "big_ka":
+		return 2
+	return 1

@@ -24,6 +24,8 @@ func _init() -> void:
 	_test_config_loading_and_updates()
 	_test_real_game_config_updates()
 	_test_key_rebind_updates_config()
+	_test_fullscreen_shortcut_updates_checkbox()
+	_test_options_layout_uses_current_viewport_size()
 
 	if failed_count == 0:
 		print("PASS: OptionsMenu")
@@ -42,13 +44,20 @@ func _test_defaults() -> void:
 	var background := menu.get_node_or_null("Background") as TextureRect
 	_assert(background != null and background.stretch_mode == TextureRect.STRETCH_SCALE, "Options background should scale the full image without cropping")
 	_assert(background != null and background.expand_mode == TextureRect.EXPAND_IGNORE_SIZE, "Options background should ignore texture minimum size")
-	_assert(background != null and background.size == Vector2(1280, 720), "Options background should fill the 1280x720 viewport")
-	_assert(menu.get_node_or_null("OptionsPanel") is TextureRect, "Options menu should use the generated UI panel texture")
+	_assert(background != null and background.anchor_right == 1.0 and background.anchor_bottom == 1.0, "Options background should anchor to the full viewport")
+	_assert(menu.get_node_or_null("OptionsPanel") is Panel, "Options menu should use a native themed panel like the main menu")
 	var panel := menu.get_node_or_null("OptionsPanel") as Control
-	_assert(panel != null and panel.position.x >= 260.0, "Options panel should be centered away from the left edge")
-	_assert(panel != null and panel.size.x <= 760.0, "Options panel should keep a focused content width")
+	_assert(panel != null and panel.position.x >= 220.0, "Options panel should be centered away from the left edge")
+	_assert(panel != null and panel.size.x <= 860.0, "Options panel should keep a focused content width")
+	_assert(panel != null and panel.modulate.a <= 0.9, "Options panel should blend with the background instead of sitting as an opaque card")
 	var container := menu.get_node_or_null("OptionsPanel/OptionsContainer") as VBoxContainer
 	_assert(container != null and container.position.x >= 48.0, "Options content should have panel padding")
+	var title := menu.get_node_or_null("OptionsPanel/OptionsContainer/Header/Title") as Label
+	_assert(title != null and title.get_theme_font_size("font_size") >= 44, "Options title should use the larger menu heading size")
+	var chart_label: Label = null
+	if container != null:
+		chart_label = container.get_child(1).get_child(0) as Label
+	_assert(chart_label != null and chart_label.get_theme_font_size("font_size") >= 32, "Options setting labels should be larger and readable")
 	_assert(menu.chart_offset_spin.value == float(0), "Default chart offset should be 0 ms")
 	_assert(menu.input_offset_spin.value == float(0), "Default input offset should be 0 ms")
 	_assert(is_equal_approx(menu.master_volume_slider.value, 1.0), "Default master volume should be 1.0")
@@ -157,6 +166,45 @@ func _test_key_rebind_updates_config() -> void:
 	menu._unhandled_input(ka_key_event)
 	_assert(config.ka_keys == [KEY_L], "Ka rebind should update config key list")
 	_assert(menu.ka_button.text == "Ka: L", "Ka button should show rebound key")
+
+	menu.free()
+
+
+func _test_fullscreen_shortcut_updates_checkbox() -> void:
+	var path := "user://options_fullscreen_shortcut_test.json"
+	DirAccess.remove_absolute(path)
+
+	var menu := OptionsMenuScript.new() as Node
+	var config := GameConfig.new()
+	config.config_path = path
+	config.fullscreen = false
+	menu.set_config(config)
+
+	var event := InputEventKey.new()
+	event.keycode = KEY_F11
+	event.pressed = true
+	menu._unhandled_input(event)
+
+	var loaded := GameConfig.new()
+	loaded.config_path = path
+	_assert(config.fullscreen, "Options F11 should toggle config fullscreen")
+	_assert(menu.fullscreen_checkbox.button_pressed, "Options F11 should update the fullscreen checkbox")
+	_assert(loaded.load_config(), "Options F11 should save config")
+	_assert(loaded.fullscreen, "Options F11 should persist fullscreen")
+
+	menu.free()
+	DirAccess.remove_absolute(path)
+
+
+func _test_options_layout_uses_current_viewport_size() -> void:
+	var menu := OptionsMenuScript.new() as Control
+	menu.size = Vector2(1920, 1080)
+	menu.build()
+
+	var background := menu.get_node_or_null("Background") as TextureRect
+	_assert(background != null and background.anchor_right == 1.0 and background.anchor_bottom == 1.0, "Options background should expand with the current viewport")
+	var panel := menu.get_node_or_null("OptionsPanel") as Control
+	_assert(panel != null and panel.position == Vector2(550, 210), "Options panel should center in the current viewport size")
 
 	menu.free()
 

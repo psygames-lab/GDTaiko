@@ -8,6 +8,7 @@ const SongCourse := preload("res://scripts/song/song_course.gd")
 const SONG_SELECT_BACKGROUND := "res://assets/skin/night_festival/backgrounds/main_menu.png"
 const UI_PANEL_SHEET := "res://assets/skin/night_festival/ui/ui_panels.png"
 const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
+const DEFAULT_SONG_ROOTS := ["res://songs", "res://local_songs", "user://songs"]
 
 var songs: Array[SongEntry] = []
 var selected_song_index := 0
@@ -24,7 +25,7 @@ var preview_fade_tween: Tween
 
 func _ready() -> void:
 	build()
-	load_song_roots(["res://songs", "user://songs"])
+	load_song_roots(default_song_roots())
 
 
 func build() -> void:
@@ -100,6 +101,10 @@ func load_songs(root_path: String) -> void:
 	selected_song_index = 0
 	selected_course_index = 0
 	_update_selection()
+
+
+static func default_song_roots() -> Array:
+	return DEFAULT_SONG_ROOTS.duplicate()
 
 
 func load_song_roots(root_paths: Array) -> void:

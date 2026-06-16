@@ -29,6 +29,7 @@ func _run_tests() -> void:
 	_assert(background != null and background.size == Vector2(1280, 720), "Song select background should fill the 1280x720 viewport")
 	_assert(select.get_node_or_null("Root/Content/ListPanel") is TextureRect, "Song select list should use the generated UI panel texture")
 	_assert(select.get_node_or_null("Root/Content/DetailPanel") is TextureRect, "Song select details should use the generated UI panel texture")
+	_assert(SongSelect.default_song_roots().has("res://local_songs"), "Song select should scan project-local ignored songs")
 	var content := select.get_node_or_null("Root/Content") as Control
 	_assert(content != null and content.position.x >= 40.0, "Song select content should keep a safe left margin")
 	var detail_panel := select.get_node_or_null("Root/Content/DetailPanel") as Control

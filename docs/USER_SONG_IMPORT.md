@@ -1,22 +1,24 @@
 # User Song Import
 
-GDTaiko does not bundle music by default. Users can place their own `.tja`
-charts and matching audio files in:
+GDTaiko does not bundle music by default. For local development, place your own
+`.tja` charts and matching audio files in the project-local ignored folder:
+
+```text
+local_songs/
+```
+
+This folder is scanned as `res://local_songs` and is ignored by git.
+
+The older per-user import folder is still scanned as a fallback:
 
 ```text
 user://songs/
 ```
 
-On Windows, Godot usually maps this project path to:
-
-```text
-%APPDATA%\Godot\app_userdata\GDTaiko\songs\
-```
-
 Recommended folder layout:
 
 ```text
-user://songs/My Song/
+local_songs/My Song/
   chart.tja
   song.ogg
 ```
@@ -38,5 +40,5 @@ Songs with a missing `WAVE` audio file still appear in song select, but gameplay
 launch is blocked until the expected audio file is added.
 
 For generated or converted songs whose redistribution license is not confirmed,
-keep the `.tja` and audio under `user://songs/` instead of committing them to the
+keep the `.tja` and audio under `local_songs/` instead of committing them to the
 repository.

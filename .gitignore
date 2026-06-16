@@ -1,6 +1,7 @@
 .godot/
 .import/
 .worktrees/
+local_songs/
 export.cfg
 builds/
 *.tmp

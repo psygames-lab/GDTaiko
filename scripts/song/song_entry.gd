@@ -10,6 +10,7 @@ var maker: String = ""
 var folder_path: String = ""
 var preview_audio_path: String = ""
 var preview_start_sec: float = 0.0
+var cover_path: String = ""
 var courses: Array[SongCourse] = []
 
 

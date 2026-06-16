@@ -6,6 +6,7 @@ const SongEntry := preload("res://scripts/song/song_entry.gd")
 const SongCourse := preload("res://scripts/song/song_course.gd")
 
 const SONG_SELECT_BACKGROUND := "res://assets/skin/night_festival/backgrounds/main_menu.png"
+const DEFAULT_COVER_PATH := "res://assets/skin/night_festival/ui/default_cover.png"
 const VIEWPORT_SIZE := Vector2(1280.0, 720.0)
 const DEFAULT_SONG_ROOTS := ["res://songs", "res://local_songs", "user://songs"]
 const WHEEL_ROW_COUNT := 5
@@ -18,6 +19,7 @@ var subtitle_label: Label
 var detail_label: Label
 var metadata_label: Label
 var list_label: Label
+var cover_rect: TextureRect
 var song_wheel: Control
 var course_strip: HBoxContainer
 var options_button: Button
@@ -95,18 +97,26 @@ func build() -> void:
 	detail_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.92, 0.82, 0.63, 0.86), Color(0.78, 0.52, 0.24, 0.84), 2))
 	content.add_child(detail_panel)
 
+	cover_rect = TextureRect.new()
+	cover_rect.name = "CoverImage"
+	cover_rect.position = Vector2(36, 36)
+	cover_rect.size = Vector2(180, 180)
+	cover_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	cover_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	detail_panel.add_child(cover_rect)
+
 	list_label = _label(song_wheel, "", Vector2.ZERO, 18, Vector2(1, 1))
 	list_label.visible = false
-	title_label = _label(detail_panel, "No songs", Vector2(38, 34), 34, Vector2(650, 92))
-	subtitle_label = _label(detail_panel, "", Vector2(38, 126), 21, Vector2(640, 34))
-	detail_label = _label(detail_panel, "", Vector2(38, 176), 26, Vector2(650, 46))
+	title_label = _label(detail_panel, "No songs", Vector2(244, 34), 32, Vector2(448, 92))
+	subtitle_label = _label(detail_panel, "", Vector2(244, 126), 20, Vector2(448, 34))
+	detail_label = _label(detail_panel, "", Vector2(244, 176), 25, Vector2(448, 46))
 	metadata_label = _label(detail_panel, "", Vector2(38, 290), 19, Vector2(650, 62))
 	for label in [title_label, subtitle_label, detail_label, metadata_label]:
 		label.add_theme_color_override("font_color", Color(0.12, 0.105, 0.085))
 	course_strip = HBoxContainer.new()
 	course_strip.name = "CourseStrip"
-	course_strip.position = Vector2(38, 234)
-	course_strip.size = Vector2(650, 44)
+	course_strip.position = Vector2(244, 234)
+	course_strip.size = Vector2(448, 44)
 	course_strip.add_theme_constant_override("separation", 10)
 	detail_panel.add_child(course_strip)
 	preview_player = AudioStreamPlayer.new()
@@ -232,6 +242,7 @@ func _update_selection(restart_preview: bool = true) -> void:
 		subtitle_label.text = ""
 		detail_label.text = ""
 		metadata_label.text = ""
+		_update_cover(null)
 		_update_course_strip(null)
 		_stop_preview()
 		return
@@ -242,6 +253,7 @@ func _update_selection(restart_preview: bool = true) -> void:
 	title_label.text = _normalize_display_text(song.title)
 	subtitle_label.text = _normalize_display_text(song.subtitle)
 	metadata_label.text = _metadata_text(song)
+	_update_cover(song)
 	_update_course_strip(song)
 	if course == null:
 		detail_label.text = "No courses"
@@ -304,6 +316,20 @@ func _load_png_texture(path: String) -> Texture2D:
 	if image == null or image.is_empty():
 		return null
 	return ImageTexture.create_from_image(image)
+
+
+func _update_cover(song: SongEntry) -> void:
+	if cover_rect == null:
+		return
+	var cover_path := DEFAULT_COVER_PATH
+	if song != null and song.cover_path != "" and FileAccess.file_exists(song.cover_path):
+		cover_path = song.cover_path
+	var texture := _load_png_texture(cover_path)
+	if texture == null and cover_path != DEFAULT_COVER_PATH:
+		texture = _load_png_texture(DEFAULT_COVER_PATH)
+		cover_path = DEFAULT_COVER_PATH
+	cover_rect.texture = texture
+	cover_rect.set_meta("cover_path", cover_path)
 
 
 func _song_has_missing_audio(song: SongEntry) -> bool:

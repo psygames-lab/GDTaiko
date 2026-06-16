@@ -40,6 +40,9 @@ BPM:120
 	var audio := FileAccess.open(root + "/sample/sample.ogg", FileAccess.WRITE)
 	audio.store_buffer(PackedByteArray())
 	audio.close()
+	var cover := FileAccess.open(root + "/sample/cover.png", FileAccess.WRITE)
+	cover.store_buffer(FileAccess.get_file_as_bytes("res://assets/notes/note_don.png"))
+	cover.close()
 	var alpha_chart := FileAccess.open(root + "/alpha/alpha.tja", FileAccess.WRITE)
 	alpha_chart.store_string("""TITLE:Alpha Song
 WAVE:alpha.ogg
@@ -100,6 +103,7 @@ LEVEL:6
 		_assert(songs[2].courses[1].audio_missing, "Scanner should mark missing audio")
 		_assert(songs[2].courses[1].expected_audio_path.ends_with("/sample/hard.ogg"), "Scanner should record expected missing audio path")
 		_assert(songs[2].preview_audio_path.ends_with("/sample/sample.ogg"), "Scanner should use WAVE for preview audio")
+		_assert(songs[2].cover_path.ends_with("/sample/cover.png"), "Scanner should detect a cover image in the song folder")
 
 	_remove_dir_recursive(root)
 

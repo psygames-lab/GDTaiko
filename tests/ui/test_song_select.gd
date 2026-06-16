@@ -31,6 +31,7 @@ func _run_tests() -> void:
 	_assert(select.get_node_or_null("Root/Content/ListPanel") is Panel, "Song select list should use a native themed panel")
 	_assert(select.get_node_or_null("Root/Content/ListPanel/SongWheel") is Control, "Song select should use a focused song wheel")
 	_assert(select.get_node_or_null("Root/Content/DetailPanel") is Panel, "Song select details should use a native themed panel")
+	_assert(select.get_node_or_null("Root/Content/DetailPanel/CoverImage") is TextureRect, "Song select details should show a cover image")
 	_assert(select.get_node_or_null("Root/Content/DetailPanel/CourseStrip") is HBoxContainer, "Song select should show course icon buttons")
 	_assert(SongSelect.default_song_roots().has("res://local_songs"), "Song select should scan project-local ignored songs")
 	var content := select.get_node_or_null("Root/Content") as Control
@@ -46,6 +47,7 @@ func _run_tests() -> void:
 	select.songs[0].subtitle = "First"
 	select.songs[0].genre = "Variety"
 	select.songs[0].maker = "Mapper"
+	select.songs[0].cover_path = "res://assets/notes/note_don.png"
 	select.songs[0].preview_audio_path = "res://assets/sample/sample.ogg"
 	select.songs[0].preview_start_sec = 2.25
 	select._update_selection()
@@ -56,8 +58,11 @@ func _run_tests() -> void:
 	_assert(select.metadata_label.text.contains("Variety"), "Song select should show genre metadata")
 	_assert(select.metadata_label.text.contains("Mapper"), "Song select should show maker metadata")
 	_assert(select.metadata_label.text.contains("[O] Oni  Level 7"), "Song select should show course list with difficulty icon")
+	_assert(select.cover_rect.texture != null, "Song select should load the selected song cover texture")
+	_assert(select.cover_rect.get_meta("cover_path", "") == "res://assets/notes/note_don.png", "Song select should prefer the song folder cover when present")
 	select.select_next_song()
 	_assert(select.title_label.text == "Beta", "Down navigation should select next song")
+	_assert(select.cover_rect.texture != null and select.cover_rect.get_meta("cover_path", "") == SongSelect.DEFAULT_COVER_PATH, "Song select should use the default cover when a song has no cover image")
 	_assert(select.preview_player != null, "Song select should create a preview player")
 	_assert(select.preview_player.bus == "Music", "Song preview should use the Music audio bus")
 	select.select_previous_song()

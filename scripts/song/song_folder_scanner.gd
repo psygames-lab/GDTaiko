@@ -33,6 +33,7 @@ static func _scan_song_folder(folder_path: String) -> SongEntry:
 
 	var entry := SongEntry.new()
 	entry.folder_path = folder_path
+	entry.cover_path = _find_cover_path(folder_path)
 	var tja_files: Array[String] = []
 	folder.list_dir_begin()
 	var file_name := folder.get_next()
@@ -76,3 +77,32 @@ static func _resolve_wave_path(folder_path: String, wave_path: String) -> String
 	if wave_path.begins_with("res://") or wave_path.begins_with("user://"):
 		return wave_path
 	return folder_path.path_join(wave_path)
+
+
+static func _find_cover_path(folder_path: String) -> String:
+	var folder := DirAccess.open(folder_path)
+	if folder == null:
+		return ""
+	var image_files: Array[String] = []
+	folder.list_dir_begin()
+	var file_name := folder.get_next()
+	while file_name != "":
+		if not folder.current_is_dir() and _is_image_file(file_name):
+			image_files.append(file_name)
+		file_name = folder.get_next()
+	folder.list_dir_end()
+	if image_files.is_empty():
+		return ""
+	image_files.sort_custom(func(a: String, b: String) -> bool: return a.naturalnocasecmp_to(b) < 0)
+	var folder_name := folder_path.get_file().to_lower()
+	var preferred_stems := [folder_name, "cover", "jacket", "preview"]
+	for stem in preferred_stems:
+		for image_file in image_files:
+			if image_file.get_basename().to_lower() == stem:
+				return folder_path.path_join(image_file)
+	return folder_path.path_join(image_files[0])
+
+
+static func _is_image_file(file_name: String) -> bool:
+	var extension := file_name.get_extension().to_lower()
+	return extension == "png" or extension == "jpg" or extension == "jpeg" or extension == "webp"

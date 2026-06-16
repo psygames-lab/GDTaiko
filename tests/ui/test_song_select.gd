@@ -19,6 +19,7 @@ func _run_tests() -> void:
 	scene.free()
 
 	var select := SongSelect.new()
+	select.auto_load_on_ready = false
 	select.build()
 	get_root().add_child(select)
 	_assert(select.get_node_or_null("Root/TopBar/OptionsButton") != null, "Song select should show an Options button")
@@ -27,14 +28,16 @@ func _run_tests() -> void:
 	_assert(background != null and background.stretch_mode == TextureRect.STRETCH_SCALE, "Song select background should scale the full image without cropping")
 	_assert(background != null and background.expand_mode == TextureRect.EXPAND_IGNORE_SIZE, "Song select background should ignore texture minimum size")
 	_assert(background != null and background.size == Vector2(1280, 720), "Song select background should fill the 1280x720 viewport")
-	_assert(select.get_node_or_null("Root/Content/ListPanel") is TextureRect, "Song select list should use the generated UI panel texture")
-	_assert(select.get_node_or_null("Root/Content/DetailPanel") is TextureRect, "Song select details should use the generated UI panel texture")
+	_assert(select.get_node_or_null("Root/Content/ListPanel") is Panel, "Song select list should use a native themed panel")
+	_assert(select.get_node_or_null("Root/Content/ListPanel/SongWheel") is Control, "Song select should use a focused song wheel")
+	_assert(select.get_node_or_null("Root/Content/DetailPanel") is Panel, "Song select details should use a native themed panel")
+	_assert(select.get_node_or_null("Root/Content/DetailPanel/CourseStrip") is HBoxContainer, "Song select should show course icon buttons")
 	_assert(SongSelect.default_song_roots().has("res://local_songs"), "Song select should scan project-local ignored songs")
 	var content := select.get_node_or_null("Root/Content") as Control
 	_assert(content != null and content.position.x >= 40.0, "Song select content should keep a safe left margin")
 	var detail_panel := select.get_node_or_null("Root/Content/DetailPanel") as Control
 	_assert(detail_panel != null and detail_panel.position.x >= 450.0, "Song select detail panel should stay in the right column")
-	_assert(select.list_label != null and select.list_label.get_parent().name == "ListPanel", "Song list text should be inside the list panel")
+	_assert(select.list_label != null and select.list_label.get_parent().name == "SongWheel", "Song list text should be inside the song wheel")
 	_assert(select.title_label != null and select.title_label.get_parent().name == "DetailPanel", "Song title should be inside the detail panel")
 	select.songs = [
 		_song("Alpha", "res://songs/alpha", "Oni", 7, "alpha_oni.tja", "alpha.ogg"),
@@ -43,6 +46,7 @@ func _run_tests() -> void:
 	select.songs[0].subtitle = "First"
 	select.songs[0].genre = "Variety"
 	select.songs[0].maker = "Mapper"
+	select.songs[0].preview_audio_path = "res://assets/sample/sample.ogg"
 	select.songs[0].preview_start_sec = 2.25
 	select._update_selection()
 
@@ -51,7 +55,7 @@ func _run_tests() -> void:
 	_assert(select.detail_label.text.contains("Oni"), "Song select should show selected course")
 	_assert(select.metadata_label.text.contains("Variety"), "Song select should show genre metadata")
 	_assert(select.metadata_label.text.contains("Mapper"), "Song select should show maker metadata")
-	_assert(select.metadata_label.text.contains("Oni 7"), "Song select should show course list")
+	_assert(select.metadata_label.text.contains("[O] Oni  Level 7"), "Song select should show course list with difficulty icon")
 	select.select_next_song()
 	_assert(select.title_label.text == "Beta", "Down navigation should select next song")
 	_assert(select.preview_player != null, "Song select should create a preview player")
@@ -64,9 +68,12 @@ func _run_tests() -> void:
 	course.tja_path = "res://songs/alpha/alpha_hard.tja"
 	course.wave = "res://songs/alpha/hard.ogg"
 	select.songs[0].courses.append(course)
+	var preview_restart_count := select.preview_restart_count
 	select.select_next_course()
 	_assert(select.selected_course_index == 1, "Right navigation should select next course")
 	_assert(select.selected_course().course == "Hard", "Selected course should update")
+	_assert(select.detail_label.text.contains("[H]"), "Selected course should show a difficulty icon")
+	_assert(select.preview_restart_count == preview_restart_count, "Changing course difficulty should not restart song preview audio")
 	var state = get_root().get_node_or_null("SessionState")
 	if state == null:
 		state = SessionStateScript.new()

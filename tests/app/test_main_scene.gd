@@ -13,7 +13,7 @@ func _init() -> void:
 	scene._ready()
 	_assert(scene.get_node_or_null("MenuPanel/MainMenu/PlayButton") != null, "Main menu should show a Play button")
 	_assert(scene.get_node_or_null("MenuPanel/MainMenu/OptionsButton") != null, "Main menu should show an Options button")
-	_assert(scene.get_node_or_null("MenuPanel") is TextureRect, "Main menu should use the generated UI panel texture")
+	_assert(scene.get_node_or_null("MenuPanel") is Panel, "Main menu should use a native themed panel")
 	_assert(scene.get_node_or_null("BackgroundDim") is ColorRect, "Main menu should dim the busy background behind UI")
 	var background := scene.get_node_or_null("Background") as TextureRect
 	_assert(background != null and background.stretch_mode == TextureRect.STRETCH_SCALE, "Main menu background should scale the full image without cropping")
@@ -22,6 +22,7 @@ func _init() -> void:
 	var panel := scene.get_node_or_null("MenuPanel") as Control
 	_assert(panel != null and panel.size.x <= 560.0, "Main menu panel should stay compact")
 	_assert(panel != null and panel.position.x >= 340.0, "Main menu panel should be centered with safe margins")
+	_assert(panel != null and panel.modulate.a <= 0.9, "Main menu panel should blend with the background instead of sitting as an opaque card")
 	var menu := scene.get_node_or_null("MenuPanel/MainMenu") as VBoxContainer
 	_assert(menu != null, "Main menu controls should live inside the menu panel")
 	_assert(menu != null and menu.position.x >= 48.0, "Main menu content should have panel padding")

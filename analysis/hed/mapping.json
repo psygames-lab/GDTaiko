@@ -1,6 +1,8 @@
 {
-  "mapping_version": "1.0.0",
+  "catalog_id": "gdtaiko.default",
+  "catalog_version": "1.0.0",
   "game_name": "gdtaiko",
+  "mapping_version": "1.0.0",
   "raw_schema_version": "0.2.0",
   "hed_schema_version": "8.3.0",
   "sidecar": "events.json",
@@ -11,11 +13,12 @@
         "event_tag": "song_start"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "song_start",
+        "duration": 0,
         "observed_timestamp_usec": {
           "path": "payload.observed_timestamp_usec"
-        }
+        },
+        "marker_code": 1
       }
     },
     {
@@ -24,8 +27,8 @@
         "event_tag": "song_end"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "song_end",
+        "duration": 0,
         "reason": {
           "path": "payload.reason"
         },
@@ -34,7 +37,8 @@
         },
         "score": {
           "path": "payload.result.score"
-        }
+        },
+        "marker_code": 2
       }
     },
     {
@@ -43,11 +47,12 @@
         "event_tag": "pause"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "pause",
+        "duration": 0,
         "song_time": {
           "path": "payload.last_observed_song_time_sec"
-        }
+        },
+        "marker_code": 3
       }
     },
     {
@@ -56,11 +61,12 @@
         "event_tag": "resume"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "resume",
+        "duration": 0,
         "song_time": {
           "path": "payload.last_observed_song_time_sec"
-        }
+        },
+        "marker_code": 4
       }
     },
     {
@@ -70,8 +76,8 @@
         "payload.source": "manual"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "manual_response",
+        "duration": 0,
         "input_source": {
           "path": "payload.source"
         },
@@ -83,7 +89,8 @@
         },
         "song_time": {
           "path": "payload.song_time_sec"
-        }
+        },
+        "marker_code": 12
       }
     },
     {
@@ -93,8 +100,8 @@
         "payload.source": "replay"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "replay_response",
+        "duration": 0,
         "input_source": {
           "path": "payload.source"
         },
@@ -106,7 +113,8 @@
         },
         "song_time": {
           "path": "payload.song_time_sec"
-        }
+        },
+        "marker_code": 13
       }
     },
     {
@@ -115,8 +123,8 @@
         "event_tag": "note_hit"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "note_hit",
+        "duration": 0,
         "input_source": {
           "path": "payload.source"
         },
@@ -147,7 +155,8 @@
         "timing_error": {
           "path": "payload.timing_error_ms",
           "scale": 0.001
-        }
+        },
+        "marker_code": 20
       }
     },
     {
@@ -156,8 +165,8 @@
         "event_tag": "empty_hit"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "empty_hit",
+        "duration": 0,
         "input_source": {
           "path": "payload.source"
         },
@@ -175,7 +184,8 @@
         },
         "combo": {
           "path": "payload.combo"
-        }
+        },
+        "marker_code": 21
       }
     },
     {
@@ -184,8 +194,8 @@
         "event_tag": "note_miss"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "note_miss",
+        "duration": 0,
         "input_source": {
           "path": "payload.source"
         },
@@ -212,7 +222,8 @@
         },
         "reason": {
           "path": "payload.reason"
-        }
+        },
+        "marker_code": 22
       }
     },
     {
@@ -221,8 +232,8 @@
         "event_tag": "roll_hit"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "roll_hit",
+        "duration": 0,
         "input_source": {
           "path": "payload.source"
         },
@@ -249,7 +260,8 @@
         },
         "hit_count": {
           "path": "payload.hits"
-        }
+        },
+        "marker_code": 23
       }
     },
     {
@@ -258,8 +270,8 @@
         "event_tag": "roll_end"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "roll_end",
+        "duration": 0,
         "input_source": {
           "path": "payload.source"
         },
@@ -286,7 +298,8 @@
         },
         "hit_count": {
           "path": "payload.hits"
-        }
+        },
+        "marker_code": 24
       }
     },
     {
@@ -295,8 +308,8 @@
         "event_tag": "balloon_hit"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "balloon_hit",
+        "duration": 0,
         "input_source": {
           "path": "payload.source"
         },
@@ -326,7 +339,8 @@
         },
         "balloon_cleared": {
           "path": "payload.cleared"
-        }
+        },
+        "marker_code": 25
       }
     },
     {
@@ -335,8 +349,8 @@
         "event_tag": "balloon_end"
       },
       "columns": {
-        "duration": 0,
         "event_kind": "balloon_end",
+        "duration": 0,
         "input_source": {
           "path": "payload.source"
         },
@@ -366,7 +380,8 @@
         },
         "balloon_cleared": {
           "path": "payload.cleared"
-        }
+        },
+        "marker_code": 26
       }
     },
     {
@@ -382,6 +397,14 @@
         "event_tag": "session_end"
       },
       "exclude": "Recorder lifecycle is retained in the raw file and manifest; gameplay song boundaries are exported separately."
+    },
+    {
+      "match": {
+        "event_type": "marker",
+        "event_tag": "marker_sent",
+        "payload.marker.driver": "mock"
+      },
+      "exclude": "Simulated marker transport audit, not another gameplay event or an observed physical EEG trigger; linked source remains in the raw recording."
     }
   ]
 }

@@ -1,7 +1,7 @@
 # PsyGodot source
 
 These seven GDScript files are an unchanged copy of the generic framework at
-https://github.com/psygames-lab/psygodot/tree/e32507a8762085247eff45b3ca107d0e17c9afc4/addons/psygodot
+https://github.com/psygames-lab/psygodot/tree/c91ead6f67b397e5f7c5fdb098f446acbed68ef5/addons/psygodot
 (schema 0.2.0).
 
 Make framework improvements in the PsyGodot repository, then copy the core

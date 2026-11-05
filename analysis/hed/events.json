@@ -89,5 +89,8 @@
   },
   "balloon_cleared": {
     "Description": "Whether the balloon hit requirement was reached."
+  },
+  "marker_code": {
+    "Description": "Assigned catalog marker code; not evidence of transmission or EEG receipt."
   }
 }

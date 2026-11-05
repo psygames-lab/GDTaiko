@@ -1,5 +1,8 @@
 # Rendered PsyGodot A/B benchmark
 
+See [the event catalog integration measurement](CATALOG_RESULTS.md) for the
+repeat run after generated marker configuration was integrated (mock markers off).
+
 From the repository root:
 
 ```powershell

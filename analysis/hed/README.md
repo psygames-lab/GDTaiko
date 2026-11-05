@@ -1,9 +1,40 @@
 # GDTaiko offline HED mapping
 
-`mapping.json` extracts captured game facts. `events.json` supplies standard HED
-8.3.0 annotations. Neither file is read by the game or PsyGodot capture runtime.
-The converter belongs to the sibling PsyGodot repository; no game-specific
-conversion code is added there.
+Maintain `telemetry/event_catalog.json` as the single source for event IDs,
+selectors, optional marker codes, field extraction and HED 8.3.0 annotations.
+`mapping.json` and `events.json` are generated files; do not edit them directly.
+Neither HED file nor the catalog is read during gameplay. The runtime reads
+only the generated `telemetry/marker_config.json`. The generator and converter
+belong to the sibling PsyGodot repository; no game-specific conversion code is
+added there.
+
+From the GDTaiko directory, generate both products together after changing the
+catalog, or check that committed products are current:
+
+```powershell
+python ../psygodot/analysis/generate_catalog.py telemetry/event_catalog.json --markers telemetry/marker_config.json --hed-dir analysis/hed
+python ../psygodot/analysis/generate_catalog.py telemetry/event_catalog.json --markers telemetry/marker_config.json --hed-dir analysis/hed --check
+```
+
+`gdtaiko.default` version `1.0.0` assigns example study codes: song start/end
+1/2, pause/resume 3/4, manual/replay responses 12/13, and outcomes 20 through 26.
+These are editable study assignments, not EEG hardware standards. Repeated
+occurrences reuse a code; the source event ID identifies a particular instance.
+Change the catalog version when changing its meanings or assignments. Runtime
+marker rules use the same selectors as HED, including `payload.source`, so live
+and replay responses cannot collapse into a single code by event name alone.
+Hardware sending is not implemented; any marker simulation is an explicit
+software audit and never establishes a physical trigger time.
+
+Normal capture still uses `-- --psygodot`. To additionally record simulated
+marker audit rows, launch with `-- --psygodot --psygodot-markers`. For the fixture
+script below use only `-- --psygodot-markers`, because it attaches its own bridge.
+
+The session manifest records the catalog ID and version. Generated HED mappings
+must match that identity before conversion; keep the corresponding catalog
+version for old recordings instead of relabelling them after a catalog change.
+The exported `marker_code` column is the catalog assignment even when marker
+simulation is disabled, not evidence that anything was transmitted.
 
 With the repositories next to each other, install PsyGodot's offline HED
 requirements and run its converter with the Python environment containing
@@ -46,9 +77,10 @@ the export is accepted.
 - Recorder `session_start` and `session_end` are explicitly excluded as
   bookkeeping. Their raw records and manifest remain available and validated.
   Song boundaries are exported. All other unknown events fail conversion.
-- This mapping targets the default bridge with raw input and frame sampling
-  disabled. Optional raw-input, frame-sample or marker records require explicit
-  study-specific mapping or exclusion; they are not silently discarded.
+- The catalog explicitly excludes simulated `marker_sent` audit records so a
+  source gameplay event is not duplicated in HED. Source/marker links remain in
+  the raw data. Raw input and frame samples remain disabled by default; enabling
+  them requires explicit study-specific catalog entries, not silent omission.
 - Game scores and perfect/good/bad labels are retained as game data. No
   cognitive construct, scientific correctness, handedness or physical key is
   inferred from lane names or performance.
@@ -74,10 +106,12 @@ Then check the fixture's converted data against its source facts:
 python tests/telemetry/check_hed_export.py RAW_JSONL output/hed_run
 ```
 
-This verifies coverage of all 15 rules (13 exported kinds and two explicit
-exclusions), manual/replay separation, response-to-outcome links, source timing
-and millisecond-to-second conversion. The fixture contains 27 raw events and
-exports 25 gameplay rows; HED 8.3.0 validation must report no issues.
+This verifies all gameplay and lifecycle rules, manual/replay separation,
+response-to-outcome links, source timing and millisecond-to-second conversion.
+Without marker simulation the fixture contains 27 raw events and exports 25
+gameplay rows. Simulated marker rows, when enabled, are checked against their
+source event's catalog code and explicitly excluded from HED. HED 8.3.0
+validation must report no issues in either case.
 
 Generated recordings and exports remain under ignored `output/`; no participant
 recording, copyrighted chart or audio is included as a repository fixture.

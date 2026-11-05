@@ -1,0 +1,113 @@
+{
+  "catalog_id": "gdtaiko.default",
+  "catalog_version": "1.0.0",
+  "game_name": "gdtaiko",
+  "rules": [
+    {
+      "id": "song_start",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "song_start"
+      },
+      "code": 1
+    },
+    {
+      "id": "song_end",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "song_end"
+      },
+      "code": 2
+    },
+    {
+      "id": "pause",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "pause"
+      },
+      "code": 3
+    },
+    {
+      "id": "resume",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "resume"
+      },
+      "code": 4
+    },
+    {
+      "id": "manual_response",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "player_response",
+        "payload.source": "manual"
+      },
+      "code": 12
+    },
+    {
+      "id": "replay_response",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "player_response",
+        "payload.source": "replay"
+      },
+      "code": 13
+    },
+    {
+      "id": "note_hit",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "note_hit"
+      },
+      "code": 20
+    },
+    {
+      "id": "empty_hit",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "empty_hit"
+      },
+      "code": 21
+    },
+    {
+      "id": "note_miss",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "note_miss"
+      },
+      "code": 22
+    },
+    {
+      "id": "roll_hit",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "roll_hit"
+      },
+      "code": 23
+    },
+    {
+      "id": "roll_end",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "roll_end"
+      },
+      "code": 24
+    },
+    {
+      "id": "balloon_hit",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "balloon_hit"
+      },
+      "code": 25
+    },
+    {
+      "id": "balloon_end",
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "balloon_end"
+      },
+      "code": 26
+    }
+  ]
+}

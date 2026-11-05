@@ -3973,3 +3973,10 @@ captured gameplay facts. The shared PsyGodot offline converter performs export
 and standard HED validation; gameplay and runtime capture are unchanged.
 Manual and replay input remain distinct, judgment timestamps are not treated
 as physical stimulus onset, and copyrighted songs are not export fixtures.
+
+## Unified event catalog (2026-11-05)
+
+- Maintain event selectors, optional study marker codes, field extraction and HED annotations in telemetry/event_catalog.json.
+- Generate the small runtime marker configuration and offline HED files; do not hand-edit generated products.
+- Keep actual EEG hardware transport deferred and any mock-marker audit records separate from gameplay observations.
+- Verify manual/replay codes remain distinct and generated HED preserves existing interpretation.

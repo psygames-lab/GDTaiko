@@ -18,17 +18,31 @@ def main():
         rows = list(csv.DictReader(handle, delimiter="\t"))
     report = json.loads((args.export / "conversion_report.json").read_text(encoding="utf-8"))
     assert report["success"] and not report["hed_issues"], report
-    assert (len(events), len(rows), report["excluded_events"]) == (27, 25, 2)
-    assert all(rule["count"] > 0 for rule in report["rules"]), "Fixture must exercise every mapping rule"
+    markers = [event for event in events if event["event_type"] == "marker"]
+    assert (len(events), len(rows), report["excluded_events"]) == (27 + len(markers), 25, 2 + len(markers))
+    assert all(rule["count"] > 0 for rule in report["rules"] if rule["match"].get("event_type") != "marker"), "Fixture must exercise every gameplay and lifecycle mapping rule"
     assert {row["source_event_id"] for row in rows} == {
         event["event_id"] for event in events if event["event_type"] == "gameplay"
     }, "Every gameplay record must survive export exactly once"
     responses = {row["input_index"]: row for row in rows if row["event_tag"] == "player_response"}
     assert sum(row["event_kind"] == "manual_response" for row in rows) == 5
     assert sum(row["event_kind"] == "replay_response" for row in rows) == 4
+    project = Path(__file__).resolve().parents[2]
+    catalog = json.loads((project / "telemetry/event_catalog.json").read_text(encoding="utf-8"))
+    definitions = {entry["id"]: entry for entry in catalog["events"]}
+    assert definitions["manual_response"]["marker_code"] != definitions["replay_response"]["marker_code"], "Live and replay responses must have distinct study codes"
+    assert report["catalog_id"] == catalog["catalog_id"]
+    assert report["catalog_version"] == catalog["catalog_version"]
+    exported = {row["source_event_id"]: row for row in rows}
+    for event in markers:
+        marker = event["payload"]["marker"]
+        source_row = exported[marker["linked_event_id"]]
+        assert marker["driver"] == "mock"
+        assert marker["code"] == definitions[source_row["event_kind"]]["marker_code"]
     for row in rows:
         event = raw[row["source_event_id"]]
         payload = event["payload"]
+        assert int(row["marker_code"]) == definitions[row["event_kind"]]["marker_code"], "HED carries the catalog assignment, not a separately maintained code"
         assert float(row["onset"]) == event["session_elapsed_usec"] / 1_000_000
         assert float(row["duration"]) == 0
         if event["event_tag"] == "player_response":
@@ -43,7 +57,7 @@ def main():
             assert math.isclose(float(row["timing_error"]), payload["timing_error_ms"] / 1000, abs_tol=1e-12)
             assert float(row["scheduled_time"]) == payload["scheduled_time_sec"]
             assert float(row["onset"]) != float(row["scheduled_time"]), "Scheduled notes must not replace observed timestamps"
-    print("PASS: all HED mapping rules, manual/replay distinction, response/outcome links, timing units and source timestamps")
+    print("PASS: catalog provenance/codes, gameplay coverage, manual/replay distinction, response/outcome links and timing")
 
 
 if __name__ == "__main__":

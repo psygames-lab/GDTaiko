@@ -42,7 +42,9 @@ serialized/written by a background worker. Output goes to `user://psygodot`
 (`%APPDATA%/Godot/app_userdata/GDTaiko/psygodot` on Windows). Each song creates
 a raw JSONL file and a session manifest with chart metadata and recording counts.
 Check the manifest's `recording.complete` before analysis. Offline HED conversion
-uses the game-owned mapping in `analysis/hed/`; it adds no runtime processing.
+uses files generated from `telemetry/event_catalog.json`; event matching, marker
+codes and HED annotations are maintained there once. Generated HED files remain
+in `analysis/hed/`; they add no runtime HED processing. See its README for generation.
 
 Focused integration verification:
 

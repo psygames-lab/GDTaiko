@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.6")
 [autoload]
 
 SessionState="*res://scripts/app/session_state.gd"
+PsyGodotBridge="*res://scripts/telemetry/psygodot_bridge.gd"
 
 [display]
 

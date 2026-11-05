@@ -2,6 +2,14 @@
 
 No third-party assets have been imported yet.
 
+Repository publication review (2026-11-05): the tracked tree and all reachable
+history contain only three audio paths: `assets/sample/sample.ogg`,
+`assets/sfx/don.wav`, and `assets/sfx/ka.wav`. These are the original assets
+listed below. Local music, charts, covers, and packages under `local_songs/` stay
+on the developer's machine and must not be force-added. Git ignores other audio
+files and song archives; the export preset also excludes the local song library.
+No new third-party asset permission is granted by this review.
+
 Release gate status as of 2026-06-14: only rows explicitly marked
 `release_allowed` with `Include In Release` set to `yes` may be bundled in
 exports. OpenTaiko-related skins, fonts, SFX, voices, songs, jackets, BGA, and

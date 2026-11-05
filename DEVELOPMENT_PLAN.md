@@ -51,6 +51,20 @@ OpenTaiko should not be used as:
 
 The project should be built in phases.
 
+### Current Work: Optional PsyGodot Integration
+
+- Develop GDTaiko independently at `E:\03_tools\psygames-lab\GDTaiko`.
+- Keep PsyGodot generic in the sibling `psygodot` repository.
+- Add game-neutral event notifications and a separate optional capture bridge.
+- Preserve game timing, judgment, scoring, and UI behavior.
+- Use bounded buffering and background writes; no HED conversion or synchronous
+  disk flushing in gameplay callbacks.
+- Compare judgments and scores with fixed inputs and capture enabled/disabled.
+- Measure rendered frame times separately from deterministic correctness tests.
+- Keep local music outside Git and exported builds when publishing to
+  `psygames-lab/GDTaiko`.
+- Defer HED conversion and old-version compatibility work.
+
 ### Phase 0: Project Bootstrap
 
 Outcome: The repository is initialized, the Godot project opens, the test command pattern is proven, and asset tracking exists before any gameplay or asset work starts.

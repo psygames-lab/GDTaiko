@@ -1,6 +1,8 @@
 extends Node2D
 class_name GameplayController
 
+signal game_event(tag: String, payload: Dictionary, timestamp_usec: int)
+
 const TjaParser := preload("res://scripts/chart/tja_parser.gd")
 const TimingMap := preload("res://scripts/chart/timing_map.gd")
 const Judge := preload("res://scripts/gameplay/judge.gd")
@@ -60,6 +62,10 @@ var playing := false
 var gameplay_paused := false
 var last_result: Dictionary = {}
 var current_chart_path := SAMPLE_CHART_PATH
+var _event_song_active := false
+var _event_song_time_sec := 0.0
+var _event_input_source := "manual"
+var _event_input_index := 0
 
 
 func _ready() -> void:
@@ -73,6 +79,7 @@ func _process(delta: float) -> void:
 		return
 	clock.advance(delta)
 	var song_time := clock.time_sec()
+	_event_song_time_sec = song_time
 	_update_timing_states(song_time)
 	lane.update_notes(chart.notes, song_time, timing_map)
 	_process_misses(song_time)
@@ -247,6 +254,7 @@ func _load_sample_chart() -> void:
 func _start_song() -> void:
 	if chart == null:
 		return
+	_end_song_event("restarted")
 	_set_paused(false)
 	for note in chart.notes:
 		note["state"] = NoteModel.PENDING
@@ -264,6 +272,17 @@ func _start_song() -> void:
 	replay_recorder = ReplayRecorder.new()
 	replay_recorder.start(_chart_replay_hash(current_chart_path), chart.course, int(round((chart.offset_sec + (float(game_config.chart_offset_ms) / 1000.0)) * 1000.0)), game_config.input_offset_ms)
 	clock.reset()
+	_event_input_index = 0
+	_event_song_time_sec = clock.chart_offset_sec
+	_event_song_active = true
+	if game_event.has_connections():
+		game_event.emit("song_start", {
+			"chart_path": current_chart_path,
+			"course": chart.course,
+			"chart_offset_sec": clock.chart_offset_sec,
+			"input_offset_ms": game_config.input_offset_ms,
+			"notes": chart.notes,
+		}, Time.get_ticks_usec())
 	if audio_player.stream != null:
 		audio_player.stop()
 		audio_player.play()
@@ -352,6 +371,7 @@ func _restart_song() -> void:
 
 
 func _return_to_song_select() -> void:
+	_end_song_event("song_select")
 	playing = false
 	_set_paused(false)
 	if audio_player != null:
@@ -366,6 +386,7 @@ func _change_scene_to_file(path: String) -> void:
 
 
 func _set_paused(paused: bool) -> void:
+	var changed := gameplay_paused != paused
 	gameplay_paused = paused
 	if pause_menu != null:
 		pause_menu.visible = gameplay_paused
@@ -373,6 +394,10 @@ func _set_paused(paused: bool) -> void:
 		audio_player.stream_paused = gameplay_paused
 	if hud != null:
 		hud.set_status("Paused" if gameplay_paused else ("Playing" if playing else "Ready"))
+	if changed and _event_song_active and game_event.has_connections():
+		game_event.emit("pause" if paused else "resume", {
+			"last_observed_song_time_sec": _event_song_time_sec,
+		}, Time.get_ticks_usec())
 
 
 func _hit(lane_name: String, record_replay_input: bool = true) -> void:
@@ -392,6 +417,16 @@ func apply_replay_input(lane_name: String, replay_song_time_sec: Variant = null)
 
 
 func _apply_hit_at(lane_name: String, song_time: float, record_replay_input: bool) -> void:
+	_event_song_time_sec = song_time
+	_event_input_source = "manual" if record_replay_input else "replay"
+	_event_input_index += 1
+	if game_event.has_connections():
+		game_event.emit("player_response", {
+			"lane": lane_name,
+			"song_time_sec": song_time,
+			"source": _event_input_source,
+			"input_index": _event_input_index,
+		}, Time.get_ticks_usec())
 	if replay_recorder != null and record_replay_input:
 		replay_recorder.record_input(song_time, lane_name)
 	_update_timing_states(song_time)
@@ -415,14 +450,14 @@ func _apply_hit_at(lane_name: String, song_time: float, record_replay_input: boo
 	if best_note.is_empty():
 		if _apply_active_long_note_hit(song_time):
 			return
-		_apply_empty_miss()
+		_apply_empty_miss(lane_name, song_time)
 		return
 
 	var result := judge.judge(float(best_note["time_sec"]), song_time)
 	if result["judgment"] == "miss":
 		if _apply_active_long_note_hit(song_time):
 			return
-		_apply_empty_miss()
+		_apply_empty_miss(lane_name, song_time)
 		return
 
 	best_note["state"] = NoteModel.HIT
@@ -434,6 +469,11 @@ func _apply_hit_at(lane_name: String, song_time: float, record_replay_input: boo
 	hud.update_score(scoring.score, scoring.combo)
 	hud.update_gauge(soul_gauge.value)
 	hud.show_judgment(result["judgment"], result["timing_error_ms"])
+	if game_event.has_connections():
+		_emit_note_event("note_hit", best_note, song_time, {
+			"judgment": result["judgment"],
+			"timing_error_ms": result["timing_error_ms"],
+		})
 	_process_song_finished()
 
 
@@ -455,10 +495,18 @@ func _apply_active_balloon_hit(song_time: float) -> bool:
 			note["state"] = NoteModel.HIT
 			lane.update_notes(chart.notes, song_time, timing_map)
 			scoring.apply_balloon_clear()
+			if game_event.has_connections():
+				_emit_note_event("balloon_hit", note, song_time, {
+					"hits": note["balloon_hits"], "cleared": true,
+				})
 			_process_song_finished()
 		else:
 			scoring.apply_roll_hit()
 			lane.update_notes(chart.notes, song_time, timing_map)
+			if game_event.has_connections():
+				_emit_note_event("balloon_hit", note, song_time, {
+					"hits": note["balloon_hits"], "cleared": false,
+				})
 		hud.update_score(scoring.score, scoring.combo)
 		return true
 	return false
@@ -473,11 +521,15 @@ func _apply_active_roll_hit(song_time: float) -> bool:
 		roll_manager.register_hit(note)
 		scoring.apply_roll_hit()
 		hud.update_score(scoring.score, scoring.combo)
+		if game_event.has_connections():
+			_emit_note_event("roll_hit", note, song_time, {
+				"hits": roll_manager.hit_count(String(note["id"])),
+			})
 		return true
 	return false
 
 
-func _apply_empty_miss() -> void:
+func _apply_empty_miss(lane_name: String = "", song_time: float = 0.0) -> void:
 	lane.show_input_feedback("miss")
 	scoring.apply_judgment("miss")
 	soul_gauge.apply_judgment("miss")
@@ -485,6 +537,12 @@ func _apply_empty_miss() -> void:
 	hud.update_score(scoring.score, scoring.combo)
 	hud.update_gauge(soul_gauge.value)
 	hud.show_judgment("miss", 0.0)
+	if game_event.has_connections():
+		game_event.emit("empty_hit", {
+			"lane": lane_name, "song_time_sec": song_time,
+			"source": _event_input_source, "input_index": _event_input_index,
+			"score": scoring.score, "combo": scoring.combo,
+		}, Time.get_ticks_usec())
 
 
 func _build_timing_map() -> void:
@@ -506,6 +564,7 @@ func _update_timing_states(song_time: float) -> void:
 func _process_misses(song_time: float) -> void:
 	if chart == null:
 		return
+	_event_song_time_sec = song_time
 	for note in chart.notes:
 		if String(note.get("state", NoteModel.PENDING)) != NoteModel.PENDING:
 			continue
@@ -515,6 +574,11 @@ func _process_misses(song_time: float) -> void:
 			if judge.is_expired(expiry_time, song_time):
 				note["state"] = NoteModel.HIT
 				lane.update_notes(chart.notes, song_time, timing_map)
+				if game_event.has_connections():
+					_emit_note_event("balloon_end", note, song_time, {
+						"source": "game", "input_index": 0, "cleared": false,
+						"hits": int(note.get("balloon_hits", 0)),
+					})
 				_process_song_finished()
 			continue
 		if roll_manager.is_roll(note):
@@ -522,6 +586,11 @@ func _process_misses(song_time: float) -> void:
 			if judge.is_expired(expiry_time, song_time):
 				note["state"] = NoteModel.HIT
 				lane.update_notes(chart.notes, song_time, timing_map)
+				if game_event.has_connections():
+					_emit_note_event("roll_end", note, song_time, {
+						"source": "game", "input_index": 0,
+						"hits": roll_manager.hit_count(String(note["id"])),
+					})
 				_process_song_finished()
 			continue
 		if judge.is_expired(expiry_time, song_time):
@@ -534,6 +603,10 @@ func _process_misses(song_time: float) -> void:
 			hud.update_gauge(soul_gauge.value)
 			hud.show_judgment("miss", 0.0)
 			lane.update_notes(chart.notes, song_time, timing_map)
+			if game_event.has_connections():
+				_emit_note_event("note_miss", note, song_time, {
+					"source": "game", "input_index": 0, "reason": "expired",
+				})
 			_process_song_finished()
 
 
@@ -547,7 +620,36 @@ func _process_song_finished() -> void:
 	last_result = _build_result_payload()
 	if replay_recorder != null:
 		replay_recorder.set_result(last_result)
+	_end_song_event("completed")
 	result_screen.show_result(last_result)
+
+
+func _emit_note_event(tag: String, note: Dictionary, song_time: float, details: Dictionary) -> void:
+	if not game_event.has_connections():
+		return
+	var payload := {
+		"note_id": note["id"], "lane": note["lane"],
+		"scheduled_time_sec": note["time_sec"], "song_time_sec": song_time,
+		"source": _event_input_source, "input_index": _event_input_index,
+		"score": scoring.score, "combo": scoring.combo,
+	}
+	payload.merge(details, true)
+	game_event.emit(tag, payload, Time.get_ticks_usec())
+
+
+func _end_song_event(reason: String) -> void:
+	if not _event_song_active:
+		return
+	_event_song_active = false
+	if game_event.has_connections():
+		game_event.emit("song_end", {
+			"reason": reason, "result": _build_result_payload(),
+			"last_observed_song_time_sec": _event_song_time_sec,
+		}, Time.get_ticks_usec())
+
+
+func _exit_tree() -> void:
+	_end_song_event("scene_exit")
 
 
 func _build_result_payload() -> Dictionary:

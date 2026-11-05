@@ -23,6 +23,43 @@ GDTaiko is an independent Godot Taiko rhythm game. OpenTaiko is used as a behavi
 
 The plain `godot` command is not currently on this machine's PATH.
 
+## Optional PsyGodot Capture
+
+GDTaiko remains an independent game. The optional integration sends gameplay
+events to the shared PsyGodot framework through a game-specific bridge; scoring,
+judgment rules, and the song clock remain owned by GDTaiko.
+
+Capture is off by default. Enable it with:
+
+```powershell
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --path . -- --psygodot
+```
+
+The game-specific bridge lives in `scripts/telemetry/psygodot_bridge.gd`.
+The shared framework is vendored unchanged in `addons/psygodot/`; see its
+`UPSTREAM.md` before updating it. Events are buffered on the game thread and
+serialized/written by a background worker. Output goes to `user://psygodot`
+(`%APPDATA%/Godot/app_userdata/GDTaiko/psygodot` on Windows). Each song creates
+a raw JSONL file and a session manifest with chart metadata and recording counts.
+Check the manifest's `recording.complete` before analysis. HED conversion is deferred.
+
+Focused integration verification:
+
+```powershell
+& 'D:\Godot\Godot_v4.6.2-stable_win64_console.exe' --headless --path . --script tests/telemetry/test_psygodot_integration.gd
+```
+
+This compares manual/replay judgments, score, gauge, and note state with capture
+off and on. See `tools/telemetry_benchmark/` for reproducible rendered measurements.
+
+## Local Music
+
+Keep imported charts, music, covers, and song packs in `local_songs/` (ignored by
+Git and excluded from exports). Do not force-add this directory. The repository
+includes only the audited original sample tone, original hit SFX, original sample
+charts, and compatibility fixtures; it does not include the local music library.
+See `docs/USER_SONG_IMPORT.md` and `docs/ASSET_AUDIT.md`.
+
 ## Tests
 
 ```powershell

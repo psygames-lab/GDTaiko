@@ -1,0 +1,326 @@
+{
+  "runs": [
+    {
+      "pair": 1,
+      "capture": false,
+      "display": "Windows",
+      "engine": "4.6.2-stable (official)",
+      "frame_ms": {
+        "count": 17098,
+        "max": 4.806,
+        "mean": 0.584855889577722,
+        "p50": 0.446,
+        "p95": 2.101,
+        "p99": 2.339
+      },
+      "frames_over_16_67_ms": 0,
+      "frames_over_33_33_ms": 0,
+      "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+      "input_call_usec": {
+        "count": 86,
+        "max": 732,
+        "mean": 247.325581395349,
+        "p50": 219,
+        "p95": 444,
+        "p99": 519
+      },
+      "inputs": 98,
+      "max_fps": 0,
+      "measured_sec": 10.0,
+      "recording": {},
+      "renderer": "forward_plus",
+      "result": {
+        "bads": 0,
+        "clear": true,
+        "course": "Oni",
+        "gauge": 100.0,
+        "goods": 33,
+        "max_combo": 7,
+        "misses": 17,
+        "perfects": 65,
+        "score": 84800,
+        "song_key": "original_generated_benchmark"
+      },
+      "simulation_steps": 1440,
+      "vsync": false,
+      "warmup_sec": 2.0,
+      "window_size": "1280x720"
+    },
+    {
+      "pair": 1,
+      "capture": true,
+      "display": "Windows",
+      "engine": "4.6.2-stable (official)",
+      "frame_ms": {
+        "count": 18447,
+        "max": 5.25,
+        "mean": 0.542120073724727,
+        "p50": 0.443,
+        "p95": 2.076,
+        "p99": 2.343
+      },
+      "frames_over_16_67_ms": 0,
+      "frames_over_33_33_ms": 0,
+      "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+      "input_call_usec": {
+        "count": 86,
+        "max": 488,
+        "mean": 262.941860465116,
+        "p50": 248,
+        "p95": 351,
+        "p99": 444
+      },
+      "inputs": 98,
+      "max_fps": 0,
+      "measured_sec": 10.0,
+      "recording": {
+        "accepted_events": 217,
+        "complete": true,
+        "dropped_events": 0,
+        "dropped_samples": 0,
+        "queue_peak": 3,
+        "rejected_sessions": 0,
+        "write_error": 0,
+        "written_events": 217
+      },
+      "renderer": "forward_plus",
+      "result": {
+        "bads": 0,
+        "clear": true,
+        "course": "Oni",
+        "gauge": 100.0,
+        "goods": 33,
+        "max_combo": 7,
+        "misses": 17,
+        "perfects": 65,
+        "score": 84800,
+        "song_key": "original_generated_benchmark"
+      },
+      "simulation_steps": 1440,
+      "vsync": false,
+      "warmup_sec": 2.0,
+      "window_size": "1280x720"
+    },
+    {
+      "pair": 2,
+      "capture": true,
+      "display": "Windows",
+      "engine": "4.6.2-stable (official)",
+      "frame_ms": {
+        "count": 25126,
+        "max": 9.007,
+        "mean": 0.397991642123698,
+        "p50": 0.283,
+        "p95": 1.143,
+        "p99": 2.693
+      },
+      "frames_over_16_67_ms": 0,
+      "frames_over_33_33_ms": 0,
+      "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+      "input_call_usec": {
+        "count": 86,
+        "max": 747,
+        "mean": 335.732558139535,
+        "p50": 283,
+        "p95": 543,
+        "p99": 705
+      },
+      "inputs": 98,
+      "max_fps": 0,
+      "measured_sec": 10.0,
+      "recording": {
+        "accepted_events": 217,
+        "complete": true,
+        "dropped_events": 0,
+        "dropped_samples": 0,
+        "queue_peak": 3,
+        "rejected_sessions": 0,
+        "write_error": 0,
+        "written_events": 217
+      },
+      "renderer": "forward_plus",
+      "result": {
+        "bads": 0,
+        "clear": true,
+        "course": "Oni",
+        "gauge": 100.0,
+        "goods": 33,
+        "max_combo": 7,
+        "misses": 17,
+        "perfects": 65,
+        "score": 84800,
+        "song_key": "original_generated_benchmark"
+      },
+      "simulation_steps": 1440,
+      "vsync": false,
+      "warmup_sec": 2.0,
+      "window_size": "1280x720"
+    },
+    {
+      "pair": 2,
+      "capture": false,
+      "display": "Windows",
+      "engine": "4.6.2-stable (official)",
+      "frame_ms": {
+        "count": 24544,
+        "max": 5.022,
+        "mean": 0.407396390156449,
+        "p50": 0.282,
+        "p95": 1.265,
+        "p99": 2.848
+      },
+      "frames_over_16_67_ms": 0,
+      "frames_over_33_33_ms": 0,
+      "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+      "input_call_usec": {
+        "count": 86,
+        "max": 752,
+        "mean": 305.895348837209,
+        "p50": 264,
+        "p95": 471,
+        "p99": 612
+      },
+      "inputs": 98,
+      "max_fps": 0,
+      "measured_sec": 10.0,
+      "recording": {},
+      "renderer": "forward_plus",
+      "result": {
+        "bads": 0,
+        "clear": true,
+        "course": "Oni",
+        "gauge": 100.0,
+        "goods": 33,
+        "max_combo": 7,
+        "misses": 17,
+        "perfects": 65,
+        "score": 84800,
+        "song_key": "original_generated_benchmark"
+      },
+      "simulation_steps": 1440,
+      "vsync": false,
+      "warmup_sec": 2.0,
+      "window_size": "1280x720"
+    },
+    {
+      "pair": 3,
+      "capture": false,
+      "display": "Windows",
+      "engine": "4.6.2-stable (official)",
+      "frame_ms": {
+        "count": 23871,
+        "max": 21.18,
+        "mean": 0.418909848770471,
+        "p50": 0.278,
+        "p95": 1.341,
+        "p99": 3.026
+      },
+      "frames_over_16_67_ms": 2,
+      "frames_over_33_33_ms": 0,
+      "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+      "input_call_usec": {
+        "count": 86,
+        "max": 681,
+        "mean": 328.581395348837,
+        "p50": 296,
+        "p95": 491,
+        "p99": 553
+      },
+      "inputs": 98,
+      "max_fps": 0,
+      "measured_sec": 10.0,
+      "recording": {},
+      "renderer": "forward_plus",
+      "result": {
+        "bads": 0,
+        "clear": true,
+        "course": "Oni",
+        "gauge": 100.0,
+        "goods": 33,
+        "max_combo": 7,
+        "misses": 17,
+        "perfects": 65,
+        "score": 84800,
+        "song_key": "original_generated_benchmark"
+      },
+      "simulation_steps": 1440,
+      "vsync": false,
+      "warmup_sec": 2.0,
+      "window_size": "1280x720"
+    },
+    {
+      "pair": 3,
+      "capture": true,
+      "display": "Windows",
+      "engine": "4.6.2-stable (official)",
+      "frame_ms": {
+        "count": 22036,
+        "max": 5.829,
+        "mean": 0.453906017426026,
+        "p50": 0.286,
+        "p95": 1.985,
+        "p99": 3.33
+      },
+      "frames_over_16_67_ms": 0,
+      "frames_over_33_33_ms": 0,
+      "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+      "input_call_usec": {
+        "count": 86,
+        "max": 667,
+        "mean": 382.93023255814,
+        "p50": 352,
+        "p95": 593,
+        "p99": 662
+      },
+      "inputs": 98,
+      "max_fps": 0,
+      "measured_sec": 10.0,
+      "recording": {
+        "accepted_events": 217,
+        "complete": true,
+        "dropped_events": 0,
+        "dropped_samples": 0,
+        "queue_peak": 3,
+        "rejected_sessions": 0,
+        "write_error": 0,
+        "written_events": 217
+      },
+      "renderer": "forward_plus",
+      "result": {
+        "bads": 0,
+        "clear": true,
+        "course": "Oni",
+        "gauge": 100.0,
+        "goods": 33,
+        "max_combo": 7,
+        "misses": 17,
+        "perfects": 65,
+        "score": 84800,
+        "song_key": "original_generated_benchmark"
+      },
+      "simulation_steps": 1440,
+      "vsync": false,
+      "warmup_sec": 2.0,
+      "window_size": "1280x720"
+    }
+  ],
+  "comparisons": [
+    {
+      "pair": 1,
+      "exact_judgments_equal": true,
+      "capture_complete": true
+    },
+    {
+      "pair": 2,
+      "exact_judgments_equal": true,
+      "capture_complete": true
+    },
+    {
+      "pair": 3,
+      "exact_judgments_equal": true,
+      "capture_complete": true
+    }
+  ],
+  "measured_date": "2026-11-05",
+  "cpu": "Intel Core Ultra 9 275HX"
+}

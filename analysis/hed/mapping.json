@@ -1,0 +1,387 @@
+{
+  "mapping_version": "1.0.0",
+  "game_name": "gdtaiko",
+  "raw_schema_version": "0.2.0",
+  "hed_schema_version": "8.3.0",
+  "sidecar": "events.json",
+  "rules": [
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "song_start"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "song_start",
+        "observed_timestamp_usec": {
+          "path": "payload.observed_timestamp_usec"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "song_end"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "song_end",
+        "reason": {
+          "path": "payload.reason"
+        },
+        "song_time": {
+          "path": "payload.last_observed_song_time_sec"
+        },
+        "score": {
+          "path": "payload.result.score"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "pause"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "pause",
+        "song_time": {
+          "path": "payload.last_observed_song_time_sec"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "resume"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "resume",
+        "song_time": {
+          "path": "payload.last_observed_song_time_sec"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "player_response",
+        "payload.source": "manual"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "manual_response",
+        "input_source": {
+          "path": "payload.source"
+        },
+        "input_index": {
+          "path": "payload.input_index"
+        },
+        "response_lane": {
+          "path": "payload.lane"
+        },
+        "song_time": {
+          "path": "payload.song_time_sec"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "player_response",
+        "payload.source": "replay"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "replay_response",
+        "input_source": {
+          "path": "payload.source"
+        },
+        "input_index": {
+          "path": "payload.input_index"
+        },
+        "response_lane": {
+          "path": "payload.lane"
+        },
+        "song_time": {
+          "path": "payload.song_time_sec"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "note_hit"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "note_hit",
+        "input_source": {
+          "path": "payload.source"
+        },
+        "input_index": {
+          "path": "payload.input_index"
+        },
+        "response_lane": {
+          "path": "payload.lane"
+        },
+        "song_time": {
+          "path": "payload.song_time_sec"
+        },
+        "score": {
+          "path": "payload.score"
+        },
+        "combo": {
+          "path": "payload.combo"
+        },
+        "note_id": {
+          "path": "payload.note_id"
+        },
+        "scheduled_time": {
+          "path": "payload.scheduled_time_sec"
+        },
+        "judgment": {
+          "path": "payload.judgment"
+        },
+        "timing_error": {
+          "path": "payload.timing_error_ms",
+          "scale": 0.001
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "empty_hit"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "empty_hit",
+        "input_source": {
+          "path": "payload.source"
+        },
+        "input_index": {
+          "path": "payload.input_index"
+        },
+        "response_lane": {
+          "path": "payload.lane"
+        },
+        "song_time": {
+          "path": "payload.song_time_sec"
+        },
+        "score": {
+          "path": "payload.score"
+        },
+        "combo": {
+          "path": "payload.combo"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "note_miss"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "note_miss",
+        "input_source": {
+          "path": "payload.source"
+        },
+        "input_index": {
+          "path": "payload.input_index"
+        },
+        "response_lane": {
+          "path": "payload.lane"
+        },
+        "song_time": {
+          "path": "payload.song_time_sec"
+        },
+        "score": {
+          "path": "payload.score"
+        },
+        "combo": {
+          "path": "payload.combo"
+        },
+        "note_id": {
+          "path": "payload.note_id"
+        },
+        "scheduled_time": {
+          "path": "payload.scheduled_time_sec"
+        },
+        "reason": {
+          "path": "payload.reason"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "roll_hit"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "roll_hit",
+        "input_source": {
+          "path": "payload.source"
+        },
+        "input_index": {
+          "path": "payload.input_index"
+        },
+        "response_lane": {
+          "path": "payload.lane"
+        },
+        "song_time": {
+          "path": "payload.song_time_sec"
+        },
+        "score": {
+          "path": "payload.score"
+        },
+        "combo": {
+          "path": "payload.combo"
+        },
+        "note_id": {
+          "path": "payload.note_id"
+        },
+        "scheduled_time": {
+          "path": "payload.scheduled_time_sec"
+        },
+        "hit_count": {
+          "path": "payload.hits"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "roll_end"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "roll_end",
+        "input_source": {
+          "path": "payload.source"
+        },
+        "input_index": {
+          "path": "payload.input_index"
+        },
+        "response_lane": {
+          "path": "payload.lane"
+        },
+        "song_time": {
+          "path": "payload.song_time_sec"
+        },
+        "score": {
+          "path": "payload.score"
+        },
+        "combo": {
+          "path": "payload.combo"
+        },
+        "note_id": {
+          "path": "payload.note_id"
+        },
+        "scheduled_time": {
+          "path": "payload.scheduled_time_sec"
+        },
+        "hit_count": {
+          "path": "payload.hits"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "balloon_hit"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "balloon_hit",
+        "input_source": {
+          "path": "payload.source"
+        },
+        "input_index": {
+          "path": "payload.input_index"
+        },
+        "response_lane": {
+          "path": "payload.lane"
+        },
+        "song_time": {
+          "path": "payload.song_time_sec"
+        },
+        "score": {
+          "path": "payload.score"
+        },
+        "combo": {
+          "path": "payload.combo"
+        },
+        "note_id": {
+          "path": "payload.note_id"
+        },
+        "scheduled_time": {
+          "path": "payload.scheduled_time_sec"
+        },
+        "hit_count": {
+          "path": "payload.hits"
+        },
+        "balloon_cleared": {
+          "path": "payload.cleared"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "gameplay",
+        "event_tag": "balloon_end"
+      },
+      "columns": {
+        "duration": 0,
+        "event_kind": "balloon_end",
+        "input_source": {
+          "path": "payload.source"
+        },
+        "input_index": {
+          "path": "payload.input_index"
+        },
+        "response_lane": {
+          "path": "payload.lane"
+        },
+        "song_time": {
+          "path": "payload.song_time_sec"
+        },
+        "score": {
+          "path": "payload.score"
+        },
+        "combo": {
+          "path": "payload.combo"
+        },
+        "note_id": {
+          "path": "payload.note_id"
+        },
+        "scheduled_time": {
+          "path": "payload.scheduled_time_sec"
+        },
+        "hit_count": {
+          "path": "payload.hits"
+        },
+        "balloon_cleared": {
+          "path": "payload.cleared"
+        }
+      }
+    },
+    {
+      "match": {
+        "event_type": "session",
+        "event_tag": "session_start"
+      },
+      "exclude": "Recorder lifecycle is retained in the raw file and manifest; gameplay song boundaries are exported separately."
+    },
+    {
+      "match": {
+        "event_type": "session",
+        "event_tag": "session_end"
+      },
+      "exclude": "Recorder lifecycle is retained in the raw file and manifest; gameplay song boundaries are exported separately."
+    }
+  ]
+}

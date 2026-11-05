@@ -3965,3 +3965,11 @@ Non-goals even for a "perfect" GDTaiko:
 - OpenTaiko compatibility is fixture-driven.
 - No task requires copying commercial assets.
 - No direct C# to GDScript translation is assumed.
+
+## Offline HED export (2026-11-05)
+
+Game-owned mapping and HED sidecar files under `analysis/hed/` will describe
+captured gameplay facts. The shared PsyGodot offline converter performs export
+and standard HED validation; gameplay and runtime capture are unchanged.
+Manual and replay input remain distinct, judgment timestamps are not treated
+as physical stimulus onset, and copyrighted songs are not export fixtures.

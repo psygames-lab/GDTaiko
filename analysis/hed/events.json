@@ -1,0 +1,93 @@
+{
+  "onset": {
+    "Description": "Software observation time in seconds relative to PsyGodot session origin, not physical display/audio onset.",
+    "Units": "s"
+  },
+  "duration": {
+    "Description": "Zero marks a discrete observation or transition; it is not a note, song or pause interval duration.",
+    "Units": "s"
+  },
+  "source_event_id": {
+    "Description": "Original event ID within the paired raw session."
+  },
+  "event_type": {
+    "Description": "Original PsyGodot event category."
+  },
+  "event_tag": {
+    "Description": "Original GDTaiko event name."
+  },
+  "event_kind": {
+    "Description": "Offline event classification; judgments describe controller processing, not visual or auditory presentation.",
+    "HED": {
+      "song_start": "Experiment-structure, Label/GDTaiko-song-start",
+      "song_end": "Experiment-structure, Label/GDTaiko-song-end",
+      "pause": "Experiment-control, Label/GDTaiko-pause",
+      "resume": "Experiment-control, Label/GDTaiko-resume",
+      "manual_response": "Agent-action, Participant-response, (Human-agent, Experiment-participant, Press)",
+      "replay_response": "Agent-action, Task-activity, (Controller-agent, Label/GDTaiko-replay-input)",
+      "note_hit": "Agent-action, Task-activity, (Controller-agent, Label/GDTaiko-note-hit)",
+      "empty_hit": "Agent-action, Task-activity, (Controller-agent, Label/GDTaiko-empty-hit)",
+      "note_miss": "Agent-action, Task-activity, (Controller-agent, Label/GDTaiko-note-miss)",
+      "roll_hit": "Agent-action, Task-activity, (Controller-agent, Label/GDTaiko-roll-hit)",
+      "roll_end": "Agent-action, Task-activity, (Controller-agent, Label/GDTaiko-roll-end)",
+      "balloon_hit": "Agent-action, Task-activity, (Controller-agent, Label/GDTaiko-balloon-hit)",
+      "balloon_end": "Agent-action, Task-activity, (Controller-agent, Label/GDTaiko-balloon-end)"
+    }
+  },
+  "input_source": {
+    "Description": "Origin of the triggering input or game update.",
+    "Levels": {
+      "manual": "Live input path.",
+      "replay": "Recorded or scripted input path; not a participant response at this observation time.",
+      "game": "Autonomous expiry processing."
+    }
+  },
+  "input_index": {
+    "Description": "Input sequence within this song. Zero marks autonomous processing; positive values link responses and outcomes."
+  },
+  "response_lane": {
+    "Description": "Game lane or long-note kind, not physical hand or keyboard key."
+  },
+  "song_time": {
+    "Description": "Game-computed song time used by processing; distinct from the monotonic observation time.",
+    "Units": "s"
+  },
+  "scheduled_time": {
+    "Description": "Planned note time from the chart, not observed stimulus onset.",
+    "Units": "s"
+  },
+  "observed_timestamp_usec": {
+    "Description": "Godot monotonic song-start observation before the recorder session was initialized; retained verbatim.",
+    "Units": "us"
+  },
+  "note_id": {
+    "Description": "Note identity within the song, linking judgments and long-note updates."
+  },
+  "judgment": {
+    "Description": "Game timing judgment retained verbatim; does not infer scientific correctness.",
+    "Levels": {
+      "perfect": "Within the perfect timing window.",
+      "good": "Within the good timing window.",
+      "bad": "Within the bad timing window."
+    }
+  },
+  "timing_error": {
+    "Description": "Signed game-computed input minus planned note time, converted from milliseconds; not reaction time or device latency.",
+    "Units": "s"
+  },
+  "score": {
+    "Description": "Game score at the recorded controller operation."
+  },
+  "combo": {
+    "Description": "Game combo at the recorded controller operation."
+  },
+  "reason": {
+    "Description": "Game-reported reason for termination or note expiry."
+  },
+  "hit_count": {
+    "Description": "Registered cumulative hits on this roll or balloon note."
+  },
+  "balloon_cleared": {
+    "Description": "Whether the balloon hit requirement was reached."
+  }
+}

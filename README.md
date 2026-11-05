@@ -41,7 +41,8 @@ The shared framework is vendored unchanged in `addons/psygodot/`; see its
 serialized/written by a background worker. Output goes to `user://psygodot`
 (`%APPDATA%/Godot/app_userdata/GDTaiko/psygodot` on Windows). Each song creates
 a raw JSONL file and a session manifest with chart metadata and recording counts.
-Check the manifest's `recording.complete` before analysis. HED conversion is deferred.
+Check the manifest's `recording.complete` before analysis. Offline HED conversion
+uses the game-owned mapping in `analysis/hed/`; it adds no runtime processing.
 
 Focused integration verification:
 
